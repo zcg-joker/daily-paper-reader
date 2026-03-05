@@ -1,0 +1,524 @@
+Title: TraceMem: Weaving Narrative Memory Schemata from User Conversational Traces
+
+URL Source: https://arxiv.org/pdf/2602.09712v1
+
+Published Time: Wed, 11 Feb 2026 02:02:02 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# TraceMem: Weaving Narrative Memory Schemata from User Conversational Traces 
+
+## Yiming Shu 
+
+The University of Hong Kong Hong Kong, China yiming.shu@connect.hku.hk 
+
+## Pei Liu 
+
+The Hong Kong University of Science and Technology (Guangzhou) Guangzhou, China pliu061@connect.hkust-gz.edu.cn 
+
+## Tiange Zhang 
+
+Nankai University Tianjin, China 2211123@mail.nankai.edu.cn 
+
+## Ruiyang Gao 
+
+The University of Hong Kong Hong Kong, China gaoruiyang@connect.hku.hk 
+
+## Jun Ma 
+
+The Hong Kong University of Science and Technology (Guangzhou) Guangzhou, China jun.ma@ust.hk 
+
+## Chen Sun 
+
+The University of Hong Kong Hong Kong, China c87sun@hku.hk 
+
+Abstract 
+
+Sustaining long-term interactions remains a bottleneck for Large Language Models (LLMs), as their limited context windows strug-gle to manage dialogue histories that extend over time. Existing memory systems often treat interactions as disjointed snippets, fail-ing to capture the underlying narrative coherence of the dialogue stream. We propose TraceMem, a cognitively-inspired framework that weaves structured, narrative memory schemata from user con-versational traces through a three-stage pipeline: (1) Short-term Memory Processing, which employs a deductive topic segmentation approach to demarcate episode boundaries and extract semantic representation; (2) Synaptic Memory Consolidation, a process that summarizes episodes into episodic memories before distilling them alongside semantics into user-specific traces; and (3) Systems Mem-ory Consolidation, which utilizes two-stage hierarchical clustering to organize these traces into coherent, time-evolving narrative threads under unifying themes. These threads are encapsulated into structured user memory cards, forming narrative memory schemata. For memory utilization, we provide an agentic search mechanism to enhance reasoning process. Evaluation on the Lo-CoMo benchmark shows that TraceMem achieves state-of-the-art performance with a brain-inspired architecture. Analysis shows that by constructing coherent narratives, it surpasses baselines in multi-hop and temporal reasoning, underscoring its essential role in deep narrative comprehension. Additionally, we provide an open discussion on memory systems, offering our perspectives and fu-ture outlook on the field. Our code implementation is available at: https://github.com/YimingShu-teay/TraceMem 
+
+Keywords 
+
+Memory System, Long-term Dialogue, Large Language Model 
+
+1 Introduction 
+
+Despite broad competencies, Large Language Models (LLMs) strug-gle in long multi-turn dialogues due to their limited context win-dow [ 31 , 39 , 40 ]. This bottleneck prevents them from building upon historical context, undermining dialogue coherence [ 18 , 26 ]. There-fore, memory systems that facilitate continuous memory manage-ment are essential for achieving long-term conversational intelli-gence [24, 33]. …
+
+…             
+
+> Meanwhile, many dialogue
+> scenarios come to mind …
+> Which card should Ichoose? OK! Let me see …
+> Thinking …
+> What type of jewelry does
+> Andrew make?
+
+Figure 1: "Remembering" of Tracemem paradigm mimics the human cognitive process of memory recall. When queried about an individual, humans evoke a coherent personal im-pression while simultaneously tracing back to the specific episodes from which that knowledge was acquired. 
+
+Existing memory systems for dialogue agents have alleviated this problem to some extent, such as those based on Retrieval-Augmented Generation (RAG) [ 10 , 11 , 15 ] and operating system-inspired systems like MemOS [ 17 ]. However, most of them store information as fragmented units, which leads to incoherence in long - term interactions. Moving forward, cognitively-inspired ap-proaches emerge as a promising direction, exemplified by recent works like A-Mem [ 34 ] and Nemori [ 23 ]. While these methods draw upon cognitive concepts such as episode segmentation or short-and long-term memory distinctions, their underlying memories often lack dynamic reorganization—a process central to human memory consolidation. Memory consolidation involves two principal mechanisms: the synaptic consolidation, which rapidly stabilizes recent memory traces, and the systems consolidation, a process that gradually reor-ganizes memory representations into enduring, long-term forms [ 5,7, 14]. Traditionally, long-term memory has been categorized into two primary systems: episodic memory, which records specific events., and semantic memory, which stores general world knowl-edge. Renoult et al. [ 28 ] conceptualized personal semantics as re-siding at the crossroads of episodic and semantic memories. They 
+
+> arXiv:2602.09712v1 [cs.CL] 10 Feb 2026
+
+Trovato et al. <session >   
+
+> ……
+> <D4>Tom: Are you going to the supermarket near the park?</D4>
+> <D5>Sarah: Yes, that one has the best prices. Do you need anything?</D5>
+> <D6>Tom: Actually, could you pick up some coffee for me?</D6>
+> <D7>Sarah: Sure, what brand do you prefer?</D7>
+> <D8>Tom: The medium roast in the blue package. Thanks!</D8>
+> <D9>Sarah: No problem. By the way, did you finish that report?</D9>
+> <D10>Tom: Almost. I just need to check a few numbers.</D10>
+> <D11>Sarah: When is it due?</D11>
+> <D12>Tom: Tomorrow morning. I'll finish it tonight.</D12>
+> ……
+> </ session >
+> episode 1 episode 2 episode 3 episode k ……
+
+Raw Conversation 
+
+with multiple sessions 
+
+## STAGE I  Short -Term Memory Processing  Deductive Episodic Segmentation 
+
+> User A semantics
+
+Segmented Episodes 
+
+Extracted Semantics    
+
+> 2:15 pm on 21 May, 2022 1:18 pm on 25 May, 2022 …… User B semantics
+
+## STAGE III Systems Memory Consolidation 
+
+Users 
+
+User B 
+
+traces 
+
+User A 
+
+traces 
+
+Topic -level 
+
+clustering 
+
+topics 
+
+topics 
+
+> ……
+> ……
+
+threads 
+
+threads 
+
+Thread -level 
+
+clustering 
+
+> time
+> time
+
+## STAGE II Synaptic Memory Consolidation 
+
+Episode Summarization 
+
+Episode Summary 
+
+storage 
+
+Database                          
+
+> Emma asked Jack to reschedule, so they
+> moved their coffee meetup to 10 AM at a
+> new café on Main Street .Emma inquired
+> about the book Jack had borrowed ……
+
+Tim is interested in honey 
+
+garlic chicken recipe …… 
+
+John signed with the Minnesota 
+
+Wolves as a shooting guard …… 
+
+> theme
+> topic 1
+> topic 2
+> thread 1
+> ……
+> ……
+> theme
+> topic 1
+> topic 2
+> thread 1
+> ……
+> ……
+
+A
+
+B
+
+A conversation session between Tom and Sarah 
+
+Reason,  Discard,  Retain 
+
+Two -stage  Clustering 
+
+> thread 1
+> thread 2
+> thread 1
+> thread 2
+> Determine Dn's intent by analyzing its surrounding context.
+
+User -specific Traces Distillation 
+
+> aggregation
+> summarization
+> aggregation
+> summarization
+
+Figure 2: TraceMem Memory Construction Pipeline. TraceMem transforms raw dialogues into long-term patterns through three progressive stages. Initially, short-term memory processing partitions interaction sessions into episodes and extracts semantic representations through structured XML-based prompting. Subsequently, synaptic memory consolidation facilitates the refinement of information, distilling specific user traces from these episodic segments via a process of summarization and experience distillation. Finally, systems memory consolidation orchestrates the long-term organization through a two-stage clustering mechanism, ultimately encapsulating them into persistent, structured user memory cards. 
+
+posited it as a heterogeneous construct encompassing autobio-graphical facts, repeated events, self-knowledge, and personally important concepts, which thus cannot be simply categorized as either episodic or semantic memories. Inspired by the theory of memory consolidation and personal semantics, we propose TraceMem, a cognitively grounded memory system that weaves long-term conversational contexts into coherent narrative memory schemata, as shown in Fig. 2. The core objec-tive is to orchestrate fragmented conversational histories into a structured, self-evolving long-term memory that supports proactive agentic retrieval. The framework consists of two primary compo-nents: memory construction and agentic search. The construction process operates through a three-stage procedure: First, in short-term memory processing, the system partitions the continuous dialogue stream into discrete episodes by detecting topic shifts and extracting their corresponding semantic representations. Building upon this, synaptic memory consolidation synthesizes each episode into a structured episodic memory. From these, user-specific per-sonal experience traces are distilled by aligning episodic contexts with underlying semantic knowledge. In the system consolidation stage, we cluster dispersed experience traces into hierarchical nar-rative threads. These threads are then encapsulated into structured memory cards, yielding dynamic and coherent narrative memory schemata for long-term conversational intelligence. Agentic Search mimics the human cognitive ability to maintain a coherent persona of an individual while retaining the capacity to recall the specific episodes from which that knowledge was acquired. To this end, TraceMem: Weaving Narrative Memory Schemata from User Conversational Traces 
+
+the system concurrently retrieves episodic memories and strategi-cally selects user memory cards to retrieve the narrative threads required for agentic reasoning, as shown in Fig. 1. In summary, our key contributions are threefold: 
+
+• Cognitive-Inspired Framework: We propose TraceMem, a cog-nitively grounded memory system that transforms fragmented dialogue histories into coherent, self-evolving narrative memory schemata. 
+
+• Memory Consolidation and Agentic Search: We develop a memory consolidation mechanism including synaptic and sys-tems consolidation to enable a persistent persona. Agentic search enables human-like source-attribution, empowering the agent with more precise reasoning. 
+
+• Empirical Validation: We conduct extensive experiments across different backbones, demonstrating that TraceMem significantly outperforms state-of-the-art memory systems in both retrieval accuracy and complex reasoning. 
+
+2 Related Works 2.1 From Long Context to Memory Systems 
+
+While various techniques extend context windows of Large Lan-guage Models (LLMs), raw capacity does not equate to effective utilization. Mere context extension remains an incomplete solution for true memory persistency, as it is plagued by inherent utilization bottlenecks like the “Lost-in-the-Middle” phenomenon [ 9, 19 , 38 ], This suggests that as the input space grows, the model’s ability to selectively recall and reason over distributed information actually diminishes, necessitating a shift from passive expansion to active memory management. Accordingly, there are several existing cat-egories of memory systems. Mem0 [ 3] coordinates a two-stage process to synchronize salient facts within vector storage, utilizing a graph-based alternative to refine the persistence and retrieval of long-term history. Hierarchical and structured approaches like H-MEM [ 30 ] and G-Memory [ 37 ] organize data into multi-level structures to improve retrieval quality. To incorporate temporal-aware capabilities, Zep [ 27 ] uses its Graphiti engine to dynamically track relationships among entities. TiMem [ 16 ] organizes inter-action histories into hierarchical representations across increas-ing temporal scales. MemoTime [ 32 ] enforces monotonic times-tamp constraints by decomposing complex queries into a Tree of Time. Another direction is operating system-inspired management, including frameworks like MemGPT [ 25 ], MemoryOS [ 13 ], and MemOS [ 17 ]. However, despite these advancements in memory management, existing systems still fail to establish a well-defined user persona from accumulated interactions. More critically, they often lack the effective utilization of agentic search to actively navigate and synthesize complex histories. 
+
+2.2 Cognitive-Inspired Memory Architectures 
+
+Current research is gradually moving beyond simple passive storage mechanisms by introducing more advanced cognitively inspired memory models that draw upon cognitive theories to organize information more effectively. For instance, A-Mem [ 34 ] draws on the core idea of the Zettelkasten note-taking method [ 12 ], orga-nizing fragmented memory entries into dynamic, interconnected knowledge networks. Nemori [ 23 ], grounded in Event Segmenta-tion Theory [ 35 , 36 ], employs a predict-calibrate mechanism to seg-ment dialogue streams into semantically bounded event episodes. LightMem [ 6], inspired by the Atkinson-Shiffrin human memory model [ 2], facilitates the gradual transition of information from transient perception to long-term storage through lightweight sen-sory filtering and offline sleep-time updates. Current models tend to archive user experiences as discrete and independent episodes, lacking the necessary structural glue to interlink them. This frag-mentation prevents the system from synthesizing isolated interac-tions into a coherent, diachronic body of user-specific cognition, thereby limiting its ability to grasp the broader context of a user’s life evolution. TraceMem addresses this gap by systematically orga-nizing disjointed interaction traces into evolving narrative threads that represent the user’s ongoing life story. 
+
+3 TraceMem 
+
+This section outlines the architectural workflow, covering the pro-gression from short-term memory processing to synaptic and sys-tems consolidation, followed by a description of the agentic search mechanism. 
+
+3.1 Short-Term Memory Processing 
+
+Short-term memory is the capacity for holding a small amount of information in an active, readily available state for a short interval. In our framework, short-term memory serves as the session process-ing buffer, where raw conversational input is analyzed in real time for topic segmentation and semantic representation generation. 
+
+3.1.1 Deductive Episodic Segmentation. Our system employs a deductive reasoning approach for dialogue episode segmentation, implemented using XML-based structured prompts. The method classifies each utterance into one of two intent categories: topic change (TC), indicating the introduction of a new subject, activity, or domain shift, and topic development (TD), referring to direct responses or elaborations on the current topic without introducing new content. This classification maintains conversational coherence while preventing excessive topic accumulation. Formally, for each dialogue utterance 𝐷 𝑛 in a session, the system analyzes its bidirectional relationships with preceding context 𝐷 𝑝𝑟𝑒 
+
+and subsequent context 𝐷 𝑠𝑢𝑏 to infer discourse intent. This process is defined as a mapping function F that determines the intent 𝐼 𝑛 :
+
+𝐼 𝑛 = F ( 𝐷 𝑛 , D𝑝𝑟𝑒 , 𝐷 𝑠𝑢𝑏 ) =
+
+(
+
+TC , if G( 𝐷 𝑛 , D𝑝𝑟𝑒 , 𝐷 𝑠𝑢𝑏 )
+
+TD , otherwise (1) where G( 𝐷 𝑛 , C𝑝𝑟𝑒 , 𝐷 𝑠𝑢𝑏 ) evaluates whether the utterance 𝐷 𝑛 indi-cates a topic shift. This classification mechanism maintains conver-sational coherence while enforcing structured boundaries. Thus, the system partitions sessions in a conversation into a se-quence of episodes Mepi = {𝐸 1, 𝐸 2, . . . , 𝐸 𝑘 }, where 𝑘 represents the number of segments. Each episode 𝐸 𝑖 is a contiguous subsequence of utterances sharing the same topic. 
+
+3.1.2 Semantic Memory Extraction. During short-term mem-ory processing, the system generates semantic representations in Trovato et al. "topic_title" : "Melanie's  Artistic  Journey : Painting,  Pottery,  and  Personal  Growth",                                                                                          
+
+> "threads" :[
+> {
+> "thread_title" :"Melanie's Artistic Journey :Paintings and Inspirations",
+> “summary ”:“Melanie shares her painting experiences, including alake sunrise painting
+> from last year …… ",
+> "thread_id" :"dde 86437 -ff 0f-4b04 -9499 -2b8652769855 "
+> },
+> {
+> "thread_title" :"Melanie's Creative Family Activities",
+> "summary" :"Melanie took her kids to apottery workshop where they made pots ……
+> "thread_id" :"835 c5931 -9931 -406 b-bcd 7-05 e60 a08 d1df"
+> },
+> {
+> "thread_title" :"Melanie's Joyful Moments :Flowers, Weddings, and Music",
+> "summary" :"Melanie shares that flowers symbolize growth, beauty, and appreciating
+> small moments, significant in her wedding décor ……
+> "thread_id" :"2d280471 -6834 -4f78 -9e25 -ea 3c40062360 "
+> },
+> {
+> "thread_title" :"Melanie's Reflections on Caroline's Art and Life Experiences",
+> "summary" :"Melanie expresses excitement about Caroline's art show, asking for
+> previews and praising the vivid colors and unified appearance of Caroline's painting ……
+> "thread_id" :"4158003 a-299 c-4038 -96 e9-eda 521125200 "
+> },
+> ……
+> ……
+> ]
+
+(a) A topic in Melanie’s Memory Card (Melanie’s Journey of Self-Care, Family Activities, and Community Involvement) "topic_title ": "Melanie's  Journey  of  Self -Care,  Family  Activities,  and  Community  Involvement",                                                                                              
+
+> "threads" :[
+> {
+> "thread_title" :"Melanie's Summer Plans and Family Activities",
+> “summary ”:“Melanie expresses gratitude to Caroline, mentions her current project as a
+> work in progress, and shares her children ‘sexcitement for summer break and potential
+> camping next month .…..
+> "thread_id" :"cfb 3d35 a-3961 -42 ad -b941 -ddca 37 b92 b2e"
+> },
+> {
+> "thread_title" :"Melanie's Journey to Self -Care",
+> "summary" :"Melanie, overwhelmed with responsibilities related to children and work,
+> acknowledges the importance of self -care …... ",
+> "thread_id" :"2fa 2ed 6a-e7c1-4d22 -b5e4-2c270255623 a"
+> },
+> {
+> "thread_title" :"Melanie's Joyful Family Experiences",
+> "summary" :"Melanie took her children to the museum, describing the experience as
+> wonderful, highlighting their excitement at the dinosaur exhibit ……
+> "thread_id" :"7ccbcbd 2-eb 4c-4d19 -86 ab -4607798 b38 a6"
+> },
+> {
+> "thread_title" :"Melanie's Reflections on Volunteering and Adoption",
+> "summary" :"Melanie shares her experience of volunteering at ahomeless shelter with
+> her family …… .",
+> "thread_id" :"733 dff 45 -132 b-449 e-ae 72 -745 f56244 e60 "
+> }
+> ]
+
+(b) A topic in Melanie’s Memory Card (Melanie’s Artistic Journey: Painting, Pottery, and Personal Growth) 
+
+Figure 3: Examples of topics in a user memory card. 
+
+real-time to extract and structure key information from the dia-logue flow. These transient memories provide a structured content base for subsequent memory consolidation. Upon segmenting the topic, the system extracts structured fac-tual information to form transient semantics. Let 𝑠 𝑛 be the struc-tured semantics extracted from utterance 𝐷 𝑛 . The extraction pro-cess is formulated as a transformation T that maps raw dialogue and associated visual metadata into a fact-based space: 
+
+𝑠 𝑛 = T ( 𝐷 𝑛 | 𝐷 𝑛 −1, 𝐷 𝑛 −2, Img 𝑛 ) (2) where 𝑠 𝑛 is defined as a union of exhaustive factual elements derived from both textual and visual inputs. The system then generates a corresponding semantic set sequence Msem = {𝑆 1, 𝑆 2, . . . , 𝑆 𝑘 }, each 
+
+𝑆 𝑖 = {𝑠 1, 𝑠 2, . . . , 𝑠 𝑚 } represents a set of semantics whose source is the 𝑖 -th episode 𝐸 𝑖 .The segmented episodes Mepi and semantic set Msem forms the output of the short - term memory module, providing foundation for subsequent long-term memory consolidation. 
+
+3.2 Synaptic Memory Consolidation 
+
+Our system formally models this process through two sequential: episode summarization and user experience distillation. For each conversational episode 𝐸 𝑖 , the system will generates a episodic summary 𝐸 𝑠,𝑖 . Subsequently, user experience distillation distills experience traces by jointly processing the episode sum-maries and the semantic set Msem . It applies a rule - based filter R
+
+defined in the prompt to extract concrete biographical facts. The output is a user experience trace 𝐸𝑇 𝑖 , defined by the function Φ:
+
+𝐸𝑇 𝑖 = Φ(𝐸 𝑠,𝑖 , 𝑆 𝑖 ; R) . The filter R retains only the users’ own per-sonal experiences and contextual details. The Synaptic Memory Consolidation (Syna-MC) process is for-mulated as a transformation that maps episodes and their associated semantic memories into a dual-output: a set of condensed episode summaries and a sequence of experience traces: Syna-MC  Mepi , Msem 
+
+ →  Mepi,s , 𝑈 , (3) where Mepi,s = {𝐸 𝑠, 1, 𝐸 𝑠, 2, . . . , 𝐸 𝑠,𝑘 } is the set of episode summaries. 
+
+𝑈 = {𝐸𝑇 1, 𝐸𝑇 2, . . . , 𝐸𝑇 𝑧 } is the set of personal experience traces distilled by the function Φ, where 𝑧 represents the total number of identified traces in a conversation. 
+
+3.3 Systems Memory Consolidation 
+
+In our framework, systems memory consolidation translates to the transformation of the experience-level traces obtained from synap-tic memory consolidation into persistent, organized user memory cards. This process operates on two interconnected levels: (1) Traces Clustering and Narrative Thread Formation that uncovers latent narrative threads, and (2) Constructing the User Narrative Schemata that encapsulates these threads into a coherent story under topics. 
+
+3.3.1 Traces Clustering and Narrative Thread Formation. 
+
+We employ a two -stage clustering pipeline. First, PCA [ 1] reduces the dimensionality of the high - dimensional embeddings to retain essential variance. The reduced vectors are then processed by UMAP [ 22 ], which learns a low - dimensional manifold that pre-serves both local and global semantic relationships. Then HDB-SCAN [ 21 ] performs density - based clustering on this manifold to identify core groups while flagging low -density points as noise. Finally, a KNN [ 8 ] classifier reassigns these noise points to the nearest coherent cluster. The atomic units for system consolidation are the experience traces 𝑈 generated during synaptic consolidation. We employ a two-stage hierarchical clustering strategy: 
+
+Topic-level (coarse) clustering : It groups the entire set of ex-perience traces into distinct topic clusters based on their seman-tic similarity. Formally, given the set of experience embeddings 
+
+E = {e1, e2, . . . , e𝑘 }, the coarse clustering operation Ctopic produces a partition into 𝑚 topic clusters: 
+
+{𝑇 1,𝑇 2, . . . ,𝑇 𝑐 } = Ctopic (E , 𝜃 topic ), (4) where each cluster 𝑇 𝑖 corresponds to a macro - topic. where 𝜃 topic 
+
+denotes the clustering parameters. TraceMem: Weaving Narrative Memory Schemata from User Conversational Traces thread ids  directly get 
+
+> top k
+
+## +
+
+Figure 4: Agentic Search. The system retrieves top-𝑘 episodic memories (blue line) while searching the user card to iden-tify and directly fetch relevant thread traces via their IDs (purple line). This retrieved information is then integrated into the reasoning engine to generate historically consistent responses (red line). Thread -level (fine - grained) clustering : It organizes the tempo-rally ordered experiences within each topic cluster into coherent narrative threads based on their fine -grained semantic similarity. Formally, for each topic cluster 𝑇 𝑖 , the fine - grained clustering oper-ation Cthread yields a set of threads: 
+
+{𝑡 𝑖 1, 𝑡 𝑖 2, . . . , 𝑡 𝑖 𝑓 } = Cthread (𝑇 𝑖 ; 𝜃 thread ), (5) Each resulting thread 𝑡 𝑖 𝑗 aggregates a subset of experiences from 𝑇 𝑖 
+
+that are both semantically proximate and chronologically sequen-tial, thereby forming a cohesive narrative unit under the broader topic 𝑇 𝑖 . This two -stage hierarchical clustering thus transforms a temporal stream of experiences into a structured set of narra-tive threads, ready for encapsulation into higher - level memory schemata. 
+
+3.3.2 Constructing the User Narrative Schemata. The con-struction of memory cards organizes the thematically clustered narrative threads into a structured knowledge representation with clear semantic hierarchy. This process integrates discrete narrative units into a coherent memory schema, manifesting as a three -level encapsulation: a top - level theme title that summarizes the overall narrative arc; a middle layer of topical sections, each corresponding to one coarse - level thematic cluster; and a bottom layer of thread entries, where each narrative thread is represented by a descrip-tive title, a coherent summary, and a unique identifier, as shown in Fig. 3. Through this structured encapsulation, the clustering outputs are transformed into persistent and structured narrative memory schemata. 
+
+3.4 Agentic Search 
+
+Upon receiving a query, the Agentic Search mechanism proceeds through three sequential stages, as shown in Fig. 4: 
+
+• Episodic Memory Retrieval: The query is used as a seman-tic key to search a global vector database of episodic memory, retrieving the top-𝐾 most relevant memory fragments. 
+
+• Memory Card Selection: Based on user or topic cues identified directly from the query, the system selects one or more relevant memory cards. 
+
+• Thread Extraction: For each selected memory card, the agent examines its internal structure, including topic titles and the associated thread entries each comprising a title, summary, and unique thread ID, to pinpoint relevant narrative threads. The corresponding thread content is then retrieved directly from the vector database. The system subsequently integrates the discrete episodic memo-ries with the personal narrative threads extracted from the selected cards. This fusion creates a multi-dimensional contextual founda-tion, enabling coherent reasoning and response generation. 
+
+4 Experiement 
+
+This section details the experimental evaluation of TraceMem. We first describe the setup, followed by a presentation of our primary results and subsequent ablation studies. 
+
+4.1 Experiement Setup 
+
+4.1.1 Benchmark Dataset. We validate our memory system on LoCoMo benchmark dataset [ 20 ]. The dataset comprises 10 long di-alogues with an average of 600 turns per dialogue. It includes 1,540 annotated questions spanning four reasoning categories: single-hop, multi-hop, open-domain, and temporal reasoning. Multi-hop reasoning: Questions that require synthesizing information from multiple, distinct dialogue turns or sessions. Temporal reasoning: Questions that necessitate understanding temporal cues and event sequences within the dialogue history. Open-domain reasoning: Questions that demand integration of dialogue content with exter-nal commonsense. Single-hop reasoning: Questions answerable by retrieving information from a single dialogue turn. 
+
+Table 1: Key Characteristics of Evaluated Methods. System Traits TraceMem A-Mem LightMem Nemori 
+
+Persona Model ✓ ✗ ✗ ✗
+
+Agentic Search ✓ ✗ ✗ ✗
+
+Conginitive ✓ ✓ ✓ ✓
+
+Episode Seg. ✓ ✗ ✓ ✓
+
+4.1.2 Baselines. To assess the performance of our proposed mem-ory system, TraceMem, a comprehensive evaluation is conducted by comparing it against a range of baseline approaches. The following is a list of all the baseline methods used in the comparison: 
+
+• FullText Full Context provides the entire dialogue history to the LLM, serving as the theoretical upper bound for information availability. 
+
+• NaiveRAG NaiveRAG is a standard RAG implemention where dialogues are first chunked into fixed-length segments and re-trieve relevant segments to augment generation. 
+
+• A-mem [34 ] A-Mem organizes memories into structured notes, establishes connections between related memories, drawing in-spiration from the Zettelkasten method. 
+
+• LightMem [6] LightMem is a lightweight memory system for LLMs, inspired by the Atkinson-Shiffrin human memory model. Trovato et al. 
+
+Table 2: Main Comparison Results on Different Backbones. Backbone Method SingleHop MultiHop Temporal OpenDomain Overall Acc. 
+
+> GPT-4o-mini
+
+FullText 0.8395 0.6986 0.5171 0.5833 0.7305 NaiveRAG 0.5660 0.3369 0.3084 0.4375 0.4623 A-Mem 0.4792 0.3298 0.3832 0.1771 0.4130 LightMem 0.7414 0.6069 0.7422 0.4819 0.7007 Nemori 0.8252 0.6312 0.6854 0.5000 0.7403 
+
+TraceMem 0.9310 0.9220 0.8660 0.7083 0.9019 
+
+> GPT-4.1-mini
+
+FullText 0.9203 0.8723 0.8162 0.6667 0.8740 NaiveRAG 0.6207 0.3901 0.3769 0.4792 0.5188 A-Mem 0.6147 0.5603 0.6355 0.3958 0.5955 LightMem 0.8121 0.7057 0.7882 0.4792 0.7669 Nemori 0.8704 0.7482 0.7632 0.5417 0.8052 
+
+TraceMem 0.9512 0.8936 0.9097 0.8021 0.9227 
+
+• Nemori [23 ] Nemori is a cognitively-inspired memory system that incorporates the Two-Step Alignment Principle and the Predict-Calibrate Principle. Table 1 compares the configurations of four memory manage-ment methods across key system traits. Specifically, TraceMem is the only system that supports both the persona model and agentic search. Inspiration from cognitive principles is consistent across all systems. TraceMem, LightMem, and Nemori implement episodic segmentation, whereas A-Mem lacks this mechanism. 
+
+4.1.3 Evaluation Scheme. We use accuracy as the evaluation metric to assess whether model outputs semantically match the ground truth. Our evaluation utilizes GPT-4o-mini as an LLM judge, guided by the prompt template provided by Nemori [ 23 ]. To ensure a fair and consistent comparison, all models are evaluated under the same judge prompt. Detailed specifications of the judge prompt is documented in the Appendix. 
+
+4.1.4 Implemetation Details. We use GPT-4o-mini and GPT-4.1-mini as the backbone language models. Text embeddings are generated with the text-embedding-3-small model and indexed in a ChromaDB [ 4] vector database for similarity search. Our hier-archical clustering approach combines UMAP for dimensionality reduction and HDBSCAN for clustering. We define 𝜃 nei and 𝜃 mc 
+
+as the key parameters for UMAP ( n_neighbors ) and HDBSCAN (min_cluster_size ), respectively. The parameters are set to 𝜃 nei =
+
+10 , 𝜃 mc = 5 for topic-level clustering ( 𝜃 topic ) and 𝜃 nei = 2, 𝜃 mc = 2
+
+for thread-level clustering ( 𝜃 thread ). For episodic memory retrieval, the top 𝐾 = 10 most relevant memories are selected. 
+
+4.2 Primary Results 
+
+The proposed framework was evaluated across two backbones: GPT-4o-mini and GPT-4.1-mini. As illustrated in Table 2, TraceMem achieves a decisive lead in overall accuracy across both settings. On the GPT-4o-mini backbone, TraceMem attains an overall score of 
+
+0.9019 , outperforming the strongest baseline, Nemori, by approxi-mately 16%. This performance exceeds the FullText upper bound by roughly 17%. This dominance is consistent on the GPT-4.1-mini, where TraceMem’s overall score rises to 0.9227, maintaining about 30% lead over A-mem and 16% lead over LightMem. These results demonstrate that TraceMem delivers substantial and stable per-formance gains across different backbone models. Furthermore, TraceMem exhibits consistent performance across all four task categories, with a particular capacity for integrating long-term information in MultiHop and Temporal reasoning tasks. TraceMem demonstrates marked superiority in Temporal tasks requiring chronological reasoning. On the GPT-4o-mini backbone, TraceMem achieves a high score of 0.8660, surpassing the best-performing baseline LightMem (+12%). On the GPT-4.1-mini back-bone, performance reaches 0.9097, outperforming the best baseline FullText by approximately 10%. In sharp contrast, the traditional NaiveRAG struggles significantly, with TraceMem outperforming it by more than 50% across both backbones. These results indicate that the design of TraceMem facilitates more precise temporal as-sociation, thereby effectively addressing the challenges of complex time-sensitive reasoning. In MultiHop tasks, TraceMem exhibits a consistent performance advantage. On GPT-4o-mini, TraceMem achieves a score of 0.9220, outperforming the FullText baseline by about 20.0%. On the GPT-4.1-mini backbone, its score of 0.8936 firmly holds the first place. Notably, while almost all baseline meth-ods suffer a significant drop in MultiHop tasks compared to their SingleHop results, TraceMem consistently maintains its accuracy near or above the 0.90 threshold. Compared to NaiveRAG, Trace-Mem achieves a 60% improvement (0.3369 on GPT-4o-mini and 0.3901 on GPT-4.1-mini), demonstrating enhanced performance in multi-step inference and information integration. 
+
+Table 3: Statistical Summary of Processed Memory Compo-nents of TraceMem Backbone Episode Exper. Thread Discard Dis. Rate 
+
+GPT-4o-mini 925 1379 475 235.5 25.46% GPT-4.1-mini 1212 2104 736 160 13.20% Table 3 presents the cumulative counts, aggregated across all conversations in the dataset, for two backbone models at different TraceMem: Weaving Narrative Memory Schemata from User Conversational Traces 
+
+Table 4: Ablation Study Results. Method SingleHop MultiHop Temporal OpenDomain Overall 
+
+Episodic Memory Only 0.8954 0.8262 0.7664 0.6875 0.8429 Episodic Memory + Semantic Representation (20) 0.9298 0.8617 0.7726 0.6979 0.8701 Episodic Memory + Semantic Representation (40) 0.9334 0.8901 0.7850 0.6875 0.8792 Without Agentic Search 0.9287 0.8652 0.8349 0.7188 0.8844 Complete TraceMem 0.9310 0.9220 0.8660 0.7083 0.9019 
+
+stages of memory construction. In this table, Episode refers to the total number of event units shared by both users within each conversation, whereas Experience and Thread represent the sum of the corresponding memory instances from both individual users. The data shows that GPT-4.1-mini generated 1,212 shared episodes, compared to 925 for GPT-4o-mini. The higher number of episodes produced by GPT-4.1-mini indicates that it is more sensitive to topic shifts in dialogue. Experience counts total 2,104 for GPT-4.1-mini and 1,379 for GPT-4o-mini, with corresponding memory threads of 736 and 475. The number of discarded items is determined by 
+
+𝑁 𝑑𝑖𝑠𝑐𝑎𝑟𝑑 = 𝑁 𝑒𝑝𝑖 − 12 𝑁 𝑒𝑥𝑝 , where 𝑁 𝑒𝑥𝑝 and 𝑁 𝑒𝑝𝑖 represent the total counts of experiences and episodes, respectively. The discard rate is defined as the ratio of discarded entries to the total number of episodes per user. According to the results, GPT-4.1-mini has a discard quantity of 160 and a Discard Rate of 13.20%, while GPT-4o-mini shows a discard quantity of 235.5 and a Discard Rate of 25.46%. The lower discard rate of GPT-4.1-mini demonstrates a more conservative strategy during information distillation. Moreover, Fig. 5 and Fig. 6 visualize the clustering in systems memory consolidation process for a randomly selected dialogue between John and Maria, utilizing GPT-4o-mini and GPT-4.1-mini backbones, respectively. These diagrams represent the memory embedding space as a density distribution via Gaussian Kernel Den-sity Estimation (KDE). Each visualization incorporates topic-level clusters alongside the top five thread-level segments to illustrate the system’s organizational hierarchy. 
+
+4.3 Ablation Study 
+
+To evaluate the effectiveness of the individual components within TraceMem, we conduct a series of ablation studies. The ablation baselines are defined as follows: 
+
+• Epidodic Memory Only This configuration retains only the top 𝐾 = 10 episodic memories retrieved via vector similarity. It is designed to evaluate the performance of the system when relying solely on deductive topic segmentation and episodic summarization. 
+
+• Episodic Memory + Semantic Representation (20) This base-line augments the aforementioned episodic memories with 20 semantic representations. These representations are extracted during the short-term memory processing stage. This follows the “episodic + semantic” paradigm, a common practice adopted in many existing studies without memory consolidation. 
+
+• Episodic Memory + Semantic Representation (40) This base-line increases the number of semantic representations to 40. It is intended to test whether further increasing the density of semantic information continues to yield performance gains. 
+
+• Without Agentic Search This configuration deactivates the agentic search mechanism while preserving the complete mem-ory formulation process of TraceMem, thereby enabling a direct assessment of the mechanism’s contribution to the system’s per-formance. As shown in Table 4, the model utilizing only episodic memory achieved an overall score of 0.8429. Specifically, it scored 0.8954 on the SingleHop task, 0.8262 on the MultiHop task, 0.7664 on the Temporal task, and 0.6875 on the OpenDomain task. This pattern demonstrates a clear and progressive decline in performance as task complexity increases, establishing a baseline that highlights the limitations of a single memory module. The introduction of semantic representations led to a system-atic improvement in performance. With a 20 representations, the overall score rose to 0.8701. Expanding the representation to 40 dimensions further increased the overall score to 0.8792. These results confirm that enhancing semantic understanding helps in certain tasks, but also indicates a performance plateau in others, particularly in open-domain and temporal reasoning. Removing the agentic search mechanism resulted in an overall score of 0.8844. This configuration achieved a notably high OpenDomain perfor-mance of 0.7188 and a Temporal score of 0.8349. However, this came at the cost of reduced capability in core reasoning tasks: the SingleHop score dropped to 0.9287 and the MultiHop score fell significantly to 0.8652. This illustrates that a simplified retrieval strategy impairs the model’s ability to perform complex, multi-step reasoning. 
+
+5 Open Discussion 
+
+Delving into the mechanics of human memory, some studies sup-port the fact that memory is rewritten each time it is retreived [ 29 ]. Essentially, it means that every act of recollection holds the poten-tial to update information or trigger subtle reorganizations. This malleability is particularly intriguing for interactive agents, as an agent retrieves past experiences to inform current responses, its memory is not merely accessed but potentially reshaped, contribut-ing to a dynamic where memory may evolve through active conver-sation and internal monologue, potentially leading to alterations over time. Such rewriting could enable the system to learn what to pri-oritize and what to disregard. Much like the human brain, where seldom-accessed knowledge tends to decay, information that re-mains unvisited in long-term interactions may reflect aspects that no longer require reinforcement. Consequently, determining what to forget and at what rate emerges as a pivotal challenge. Therefore, Trovato et al. 
+
+> (a) User A (John) Clustering Results
+> (b) User B (Maria) Clustering Results
+
+Figure 5: An example of clustering result of GPT-4o-mini backbone. 
+
+memory rewriting upon retrieval and regulated forgetting may represent two crucial mechanisms for future development. Looking ahead, we may develop agents endowed with diverse personality traits, ranging from irritable and easy-going to anxious or emotionally complex. What they prioritize or disregard could also stem from these intrinsic characteristics, thereby making the dynamics of memory even more intriguing. But even given such memory, should an agent utilize it at all times? Determining when to invoke memory and when to abstain may be a critical focus for future research. Even in conversations 
+
+> (a) User A (John) Clustering Results
+> (b) User B (Maria) Clustering Results
+
+Figure 6: An example of clustering result of GPT-4.1-mini backbone. 
+
+with the same user, there are instances where a task can be per-formed perfectly well without accessing past data. In fact, incor-porating excessive retrieved memories could potentially introduce interference, hindering the quality of the response. Accordingly, an ideal memory system should evolve into a dynamic cognitive partner that can judiciously activate or suppress memories during exchanges. 
+
+6 Conclusion 
+
+In this paper, we introduced a cognitive-inspired memory system TraceMem. Through a three-stage pipeline, the system transforms TraceMem: Weaving Narrative Memory Schemata from User Conversational Traces 
+
+conversational traces into structured user memory cards and lever-ages an agentic aearch mechanism for precise source attribution. Evaluations on the LoCoMo benchmark show that TraceMem sig-nificantly outperforms state-of-the-art baselines, particularly in MultiHop and Temporal reasoning tasks. 
+
+References 
+
+[1] Hervé Abdi and Lynne J Williams. 2010. Principal component analysis. Wiley interdisciplinary reviews: computational statistics 2, 4 (2010), 433–459. [2] Richard C Atkinson and Richard M Shiffrin. 1968. Human memory: A proposed system and its control processes. In Psychology of learning and motivation . Vol. 2. Elsevier, 89–195. [3] Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, and Deshraj Ya-dav. 2025. Mem0: Building production-ready ai agents with scalable long-term memory. arXiv preprint arXiv:2504.19413 (2025). [4] Chroma. 2022. ChromaDB: The AI-native open-source embedding database. https://github.com/chroma-core/chroma [5] Yadin Dudai, Avi Karni, and Jan Born. 2015. The consolidation and transformation of memory. Neuron 88, 1 (2015), 20–32. [6] Jizhan Fang, Xinle Deng, Haoming Xu, Ziyan Jiang, Yuqi Tang, Ziwen Xu, Shumin Deng, Yunzhi Yao, Mengru Wang, Shuofei Qiao, et al . 2025. Light-mem: Lightweight and efficient memory-augmented generation. arXiv preprint arXiv:2510.18866 (2025). [7] Paul W Frankland and Bruno Bontempi. 2005. The organization of recent and remote memories. Nature reviews neuroscience 6, 2 (2005), 119–130. [8] Gongde Guo, Hui Wang, David Bell, Yaxin Bi, and Kieran Greer. 2003. KNN model-based approach in classification. In OTM Confederated International Conferences" On the Move to Meaningful Internet Systems" . Springer, 986–996. [9] Chuanrui Hu, Xingze Gao, Zuyi Zhou, Dannong Xu, Yi Bai, Xintong Li, Hui Zhang, Tong Li, Chong Zhang, Lidong Bing, et al . 2026. EverMemOS: A Self-Organizing Memory Operating System for Structured Long-Horizon Reasoning. 
+
+arXiv preprint arXiv:2601.02163 (2026). [10] Yuyang Hu, Shichun Liu, Yanwei Yue, Guibin Zhang, Boyang Liu, Fangyi Zhu, Jiahang Lin, Honglin Guo, Shihan Dou, Zhiheng Xi, et al . 2025. Memory in the Age of AI Agents. arXiv preprint arXiv:2512.13564 (2025). [11] Bernal Jimenez Gutierrez, Yiheng Shu, Yu Gu, Michihiro Yasunaga, and Yu Su. 2024. Hipporag: Neurobiologically inspired long-term memory for large language models. Advances in Neural Information Processing Systems 37 (2024), 59532–59569. [12] David Kadavy. 2021. Digital Zettelkasten: Principles, Methods, & Examples . Kadavy, Inc. [13] Jiazheng Kang, Mingming Ji, Zhe Zhao, and Ting Bai. 2025. Memory OS of AI Agent. arXiv preprint arXiv:2506.06326 (2025). [14] Sangyoon Y Ko, Yiming Rong, Adam I Ramsaran, Xiaoyu Chen, Asim J Rashid, Andrew J Mocle, Jagroop Dhaliwal, Ankit Awasthi, Axel Guskjolen, Sheena A Josselyn, et al . 2025. Systems consolidation reorganizes hippocampal engram circuitry. Nature (2025), 1–9. [15] Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rock-täschel, et al . 2020. Retrieval-augmented generation for knowledge-intensive nlp tasks. Advances in neural information processing systems 33 (2020), 9459–9474. [16] Kai Li, Xuanqing Yu, Ziyi Ni, Yi Zeng, Yao Xu, Zheqing Zhang, Xin Li, Jitao Sang, Xiaogang Duan, Xuelei Wang, et al . 2026. TiMem: Temporal-Hierarchical Memory Consolidation for Long-Horizon Conversational Agents. arXiv preprint arXiv:2601.02845 (2026). [17] Zhiyu Li, Chenyang Xi, Chunyu Li, Ding Chen, Boyu Chen, Shichao Song, Simin Niu, Hanyu Wang, Jiawei Yang, Chen Tang, et al . 2025. Memos: A memory os for ai system. arXiv preprint arXiv:2507.03724 (2025). [18] Jiaqi Liu, Yaofeng Su, Peng Xia, Siwei Han, Zeyu Zheng, Cihang Xie, Mingyu Ding, and Huaxiu Yao. 2026. SimpleMem: Efficient Lifelong Memory for LLM Agents. arXiv preprint arXiv:2601.02553 (2026). [19] Nelson F Liu, Kevin Lin, John Hewitt, Ashwin Paranjape, Michele Bevilacqua, Fabio Petroni, and Percy Liang. 2024. Lost in the middle: How language models use long contexts. Transactions of the association for computational linguistics 12 (2024), 157–173. [20] Adyasha Maharana, Dong-Ho Lee, Sergey Tulyakov, Mohit Bansal, Francesco Barbieri, and Yuwei Fang. 2024. Evaluating very long-term conversational memory of llm agents. arXiv preprint arXiv:2402.17753 (2024). [21] Leland McInnes, John Healy, Steve Astels, et al . 2017. hdbscan: Hierarchical density based clustering. J. Open Source Softw. 2, 11 (2017), 205. [22] Leland McInnes, John Healy, and James Melville. 2018. Umap: Uniform man-ifold approximation and projection for dimension reduction. arXiv preprint arXiv:1802.03426 (2018). [23] Jiayan Nan, Wenquan Ma, Wenlong Wu, and Yize Chen. 2025. Nemori: Self-organizing agent memory inspired by cognitive science. arXiv preprint arXiv:2508.03341 (2025). [24] Siru Ouyang, Jun Yan, I Hsu, Yanfei Chen, Ke Jiang, Zifeng Wang, Rujun Han, Long T Le, Samira Daruki, Xiangru Tang, et al . 2025. Reasoningbank: Scaling agent self-evolving with reasoning memory. arXiv preprint arXiv:2509.25140 
+
+(2025). [25] Charles Packer, Vivian Fang, Shishir_G Patil, Kevin Lin, Sarah Wooders, and Joseph_E Gonzalez. 2023. MemGPT: Towards LLMs as Operating Systems. (2023). [26] Zhuoshi Pan, Qianhui Wu, Huiqiang Jiang, Xufang Luo, Hao Cheng, Dongsheng Li, Yuqing Yang, Chin-Yew Lin, H Vicky Zhao, Lili Qiu, et al . 2025. Secom: On memory construction and retrieval for personalized conversational agents. In 
+
+The Thirteenth International Conference on Learning Representations .[27] Preston Rasmussen, Pavlo Paliychuk, Travis Beauvais, Jack Ryan, and Daniel Chalef. 2025. Zep: a temporal knowledge graph architecture for agent memory. 
+
+arXiv preprint arXiv:2501.13956 (2025). [28] Louis Renoult, Patrick SR Davidson, Daniela J Palombo, Morris Moscovitch, and Brian Levine. 2012. Personal semantics: at the crossroads of semantic and episodic memory. Trends in cognitive sciences 16, 11 (2012), 550–558. [29] Lars Schwabe, Karim Nader, and Jens C Pruessner. 2014. Reconsolidation of human memory: brain mechanisms and clinical relevance. Biological psychiatry 
+
+76, 4 (2014), 274–280. [30] Haoran Sun and Shaoning Zeng. 2025. Hierarchical memory for high-efficiency long-term reasoning in llm agents. arXiv preprint arXiv:2507.22925 (2025). [31] Weiwei Sun, Miao Lu, Zhan Ling, Kang Liu, Xuesong Yao, Yiming Yang, and Jiecao Chen. 2025. Scaling long-horizon llm agent via context-folding. arXiv preprint arXiv:2510.11967 (2025). [32] Xingyu Tan, Xiaoyang Wang, Qing Liu, Xiwei Xu, Xin Yuan, Liming Zhu, and Wenjie Zhang. 2025. Memotime: Memory-augmented temporal knowledge graph enhanced large language model reasoning. arXiv preprint arXiv:2510.13614 
+
+(2025). [33] Yu Wang and Xi Chen. 2025. Mirix: Multi-agent memory system for llm-based agents. arXiv preprint arXiv:2507.07957 (2025). [34] Wujiang Xu, Zujie Liang, Kai Mei, Hang Gao, Juntao Tan, and Yongfeng Zhang. 2025. A-mem: Agentic memory for llm agents. arXiv preprint arXiv:2502.12110 
+
+(2025). [35] Jeffrey M Zacks and Khena M Swallow. 2007. Event segmentation. Current directions in psychological science 16, 2 (2007), 80–84. [36] Jeffrey M Zacks and Barbara Tversky. 2001. Event structure in perception and conception. Psychological bulletin 127, 1 (2001), 3. [37] Guibin Zhang, Muxin Fu, Guancheng Wan, Miao Yu, Kun Wang, and Shuicheng Yan. 2025. G-Memory: Tracing Hierarchical Memory for Multi-Agent Systems. 
+
+arXiv preprint arXiv:2506.07398 (2025). [38] Junhao Zhang, Richong Zhang, Fanshuang Kong, Ziyang Miao, Yanhan Ye, and Yaowei Zheng. 2025. Lost-in-the-Middle in Long-Text Generation: Synthetic Dataset, Evaluation Framework, and Mitigation. arXiv preprint arXiv:2503.06868 
+
+(2025). [39] Zeyu Zhang, Quanyu Dai, Rui Li, Xiaohe Bo, Xu Chen, and Zhenhua Dong. 2025. Learn to memorize: Optimizing llm-based agents with adaptive memory framework. arXiv preprint arXiv:2508.16629 (2025). [40] Wanjun Zhong, Lianghong Guo, Qiqi Gao, He Ye, and Yanlin Wang. 2024. Memo-rybank: Enhancing large language models with long-term memory. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38. 19724–19731. Trovato et al. 
+
+A Prompt Templates 
+
+We provide the full suite of prompt templates used in TraceMem, including those for deductive episodic segmentation, episodic summarization, user experience trace distillation, user card selection, agentic search, thread summarization, response generation and the LLM-as-a-judge prompt provided by Nemori. TraceMem: Weaving Narrative Memory Schemata from User Conversational Traces Trovato et al. TraceMem: Weaving Narrative Memory Schemata from User Conversational Traces Trovato et al. Your task is to label an answer to a question as ’CORRECT ’ or ’WRONG ’. You will be given the following data: 
+
+(1) a question (posed by one user to another user), 
+
+(2) a ’gold ’ (ground truth) answer, 
+
+(3) a generated answer 
+
+which you will score as CORRECT/WRONG. 
+
+The point of the question is to ask about something one user should know about the other user based on their prior 
+
+conversations. 
+
+The gold answer will usually be a concise and short answer that includes the referenced topic, for example: 
+
+Question: Do you remember what I got the last time I went to Hawaii? 
+
+Gold answer: A shell necklace 
+
+The generated answer might be much longer, but you should be generous with your grading - as long as it touches on 
+
+the same topic as the gold answer, it should be counted as CORRECT. 
+
+For time related questions, the gold answer will be a specific date, month, year, etc. The generated answer might be 
+
+much longer or use relative time references (like "last Tuesday" or "next month"), but you should be generous with your 
+
+grading  - as long as it refers to the same date or time period as the gold answer, it should be counted as CORRECT. Even 
+
+if the format differs (e.g., "May 7th" vs "7 May"), consider it CORRECT if it's the same date. 
+
+Now it ’s time for the real question: 
+
+Question: {question} 
+
+Gold answer: { gold_answer }
+
+Generated answer: { generated_answer }
+
+First, provide a short (one sentence) explanation of your reasoning, then finish with CORRECT or WRONG. 
+
+Do NOT include both CORRECT and WRONG in your response, or it will break the evaluation script. 
+
+Just return the label CORRECT or WRONG in a  json  format with the key as "label". 
+
+# LLM -as -a-Judge Prompt Template

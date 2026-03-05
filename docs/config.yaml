@@ -26,53 +26,36 @@ subscriptions:
     diff_threshold_pct: 15
   keyword_recall_mode: or
   intent_profiles:
-    - tag: SR
-      description: 符号回归
+    - tag: AGIMEM
+      description: 智能体记忆机制与评估相关论文检索
       enabled: true
       keywords:
-        - keyword: symbolic regression
-          keyword_cn: 符号回归
-          query: fundamental principles and methods of symbolic regression
-        - keyword: genetic programming
-          keyword_cn: 遗传编程
-          query: evolutionary algorithms and genetic programming for symbolic regression
-        - keyword: mathematical expression discovery
-          keyword_cn: 数学表达式发现
-          query: automated discovery of mathematical expressions from data
-        - keyword: equation discovery
-          keyword_cn: 方程发现
-          query: algorithms for scientific equation discovery and modeling
-        - keyword: interpretable machine learning
-          keyword_cn: 可解释机器学习
-          query: interpretability and transparency of symbolic regression models
-        - keyword: PySR
-          keyword_cn: PySR库
-          query: high-performance symbolic regression libraries and tools
-        - keyword: symbolic transformer
-          keyword_cn: 符号Transformer
-          query: neural symbolic regression using transformer architectures
-        - keyword: physics-informed regression
-          keyword_cn: 物理启发回归
-          query: incorporating physical constraints into symbolic regression
+        - keyword: AI agent memory
+          keyword_cn: 智能体记忆机制
+          query: memory mechanisms in autonomous AI agents
+        - keyword: long-term memory
+          keyword_cn: 长期记忆
+          query: long-term memory architectures for large language models
+        - keyword: memory consolidation
+          keyword_cn: 记忆巩固
+          query: memory consolidation and update strategies in LLM agents
+        - keyword: agent memory benchmark
+          keyword_cn: 智能体记忆基准测试
+          query: performance metrics for agent memory and reasoning
       intent_queries:
-        - query: state of the art symbolic regression algorithms
-          query_cn: 最先进的符号回归算法
+        - query: survey of memory mechanisms in large language model agents
+          query_cn: 大语言模型智能体记忆机制综述
           enabled: true
           source: manual
           note: ''
-        - query: comparison between symbolic regression and neural networks
-          query_cn: 符号回归与神经网络的对比
+        - query: evaluation frameworks for autonomous agent memory systems
+          query_cn: 自主智能体记忆系统评估框架
           enabled: true
           source: manual
           note: ''
-        - query: applications of symbolic regression in physics and engineering
-          query_cn: 符号回归在物理与工程中的应用
+        - query: architectures for long term and short term memory in AI agents
+          query_cn: AI智能体长短期记忆架构
           enabled: true
           source: manual
           note: ''
-        - query: how to handle noisy data in symbolic regression
-          query_cn: 符号回归如何处理噪声数据
-          enabled: true
-          source: manual
-          note: ''
-      updated_at: '2026-03-02T03:40:27.571Z'
+      updated_at: '2026-03-05T09:22:01.076Z'

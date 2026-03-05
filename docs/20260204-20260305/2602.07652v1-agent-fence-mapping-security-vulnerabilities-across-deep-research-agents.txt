@@ -1,0 +1,430 @@
+Title: Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents
+
+URL Source: https://arxiv.org/pdf/2602.07652v1
+
+Published Time: Tue, 10 Feb 2026 01:50:09 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# AGENT -F ENCE : M APPING SECURITY VULNERABILITIES ACROSS 
+
+# DEEP RESEARCH AGENTS 
+
+Sai Puppala 1, Ismail Hossain 2, Md Jahangir Alam 2, Yoonpyo Lee 3,Jay Yoo 4, Tanzim Ahad 2, Syed Bahauddin Alam 4, Sajedul Talukder 2∗
+
+> 1
+
+Computer Science Department, Southern Illinois University, Carbondale, IL, United States 
+
+> 2
+
+Computer Science Department, University of Texas, El Paso, TX, USA 
+
+> 3
+
+Hanyang University, South Korea 
+
+> 4
+
+The Grainger College of Engineering, Nuclear, Plasma & Radiological Engineering, University of Illinois Urbana-Champaign, IL, USA 
+
+stalukder@utep.edu 
+
+## ABSTRACT 
+
+Large language models are becoming deep agents that plan, persist state, and invoke tools, shifting safety failures from unsafe text to unsafe trajectories . We introduce AgentFence, an architecture-centric security evaluation that defines 14 trust-boundary attack classes across planning, memory, retrieval, tool use, and delegation, and detects failure via trace-auditable conversation breaks (unauthorized/unsafe tool use, wrong-principal actions, state/objective integrity violations, and attack-linked deviations). Holding the base model fixed, we evaluate eight agent archetypes under persistent multi-turn interaction and find substantial architectural variation in mean security break rate (MSBR), from 0.29 ± 0.04 (LangGraph) to 0.51 ± 0.07 (AutoGPT). The highest-risk classes are operational: Denial-of-Wallet 0.62 ± 0.08 ,Authorization Confusion 0.54 ± 0.10 , Retrieval Poisoning 0.47 ± 0.09 , and Planning Manipulation 
+
+0.44 ± 0.11 , while prompt-centric classes remain < 0.20 under standard settings. Breaks are dominated by boundary violations (SIV 31%, WPA 27%, UTI+UTA 24%, ATD 18%), and authorization confusion correlates with objective and tool hijacking ( ρ ≈ 0.63 , ρ ≈ 0.58 ). AgentFence reframes agent security around what matters operationally: whether an agent stays within its goal and authority envelope over time. 
+
+## 1 Introduction 
+
+Large language models are rapidly transitioning from passive generators of text into deep agents [ 29 ]: systems that plan, maintain state, invoke tools, and autonomously execute multi-step tasks over extended interactions [ 33 ]. These agents are no longer experimental curiosities. They are being deployed as research assistants, software engineers, data analysts, customer-service operators, and workflow orchestrators—often with direct access to external APIs, code execution environments, proprietary data stores, and financial resources. This shift fundamentally changes the security landscape. For single-turn LLMs, safety failures are largely textual: hallucinated facts, policy violations, or prompt-level jailbreaks [ 30 ]. For deep agents, failures are operational . A compromised agent can invoke privileged tools, corrupt persistent memory, propagate poisoned beliefs across steps, exfiltrate secrets, or silently accumulate unbounded cost. In these systems, the most dangerous failures are not unsafe tokens, but unsafe trajectories .
+
+1.0.1 Why existing evaluations fall short: 
+
+Despite this shift, most existing safety and robustness evaluations remain prompt-centric. They assess whether a model emits disallowed content or violates a policy in a single response [ 31 ]. Even recent agent benchmarks primarily measure task success, efficiency, or correctness, rather than security-relevant failure modes [ 32 ]. As a result, vulnerabilities 
+
+> ∗
+
+Correspondence: stalukder@utep.edu 
+
+> arXiv:2602.07652v1 [cs.CR] 7 Feb 2026
+
+Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents Orchestration    
+
+> Persistent Memory
+> Update
+> Plan A Plan B Plan C
+> Write Read
+> Network Agent
+> Malware Agent
+> Intrusion Agent
+> Delegation Delegation
+> Agent Layer 1
+> Deep Layers
+> Deep Layers
+> Deep Layers
+> User Question
+
+Figure 1: Deep Research Agent Workflow Illustration. that only manifest through prolonged interaction—state corruption, tool-use hijacking, delegation abuse, or denial-of-wallet [ 3, 4, 9, 13 ] remain largely invisible to current evaluation frameworks. More importantly, existing evaluations conflate three fundamentally different factors: (i) base model capability, (ii) prompt engineering quality, and (iii) agent architecture. This makes it difficult to answer a critical question faced by practitioners today: which agent designs are structurally more vulnerable, independent of the underlying model? 
+
+1.0.2 Why now? 
+
+This question has become urgent for three reasons. First, modern agents increasingly operate with persistent state and long-lived memory, turning transient prompt failures into durable system compromises. Second, agents are routinely granted tool access with real-world side effects-file systems, browsers, code interpreters, payment APIs-amplifying the cost of failure. Third, multi-agent orchestration frameworks are proliferating, introducing new attack surfaces at delegation and role boundaries. Together, these trends mean that traditional prompt-level safety guarantees no longer provide meaningful protection. 
+
+1.0.3 Our approach: 
+
+In this work, we argue that deep-agent (Figure 1) security must be evaluated at the level of architecture , not prompts. We introduce AgentFence, a taxonomy-driven methodology for exposing security vulnerabilities that arise from the structural trust assumptions embedded in modern deep research agents. Rather than optimizing exploits or proposing a new defense, AgentFence systematically probes how agents fail when adversarial influence is applied across planning, memory, tool use, retrieval, and delegation over time. 
+
+1.0.4 Our Contributions: 
+
+This paper makes four primary contributions: • A unified taxonomy of 14 classes ( A1–A14 ) that pinpoint trust-boundary violations across prompt/state injection, planning manipulation, tool-use hijacking, retrieval/search poisoning, delegation abuse, authorization confusion, and denial-of-wallet. • A protocol that isolates agent vulnerabilities by fixing the base model and systematically varying control flow, memory handling, tool permissions, and delegation semantics across representative agent archetypes. • We formalize conversation breaks : objective, evidence-backed criteria that certify when an agent is no longer pursuing the correct goal within its authorized capability envelope, enabling outcome-based security evaluation beyond text-only judgments. • Using AgentFence on eight widely used archetypes, we deliver the first comparative map of structurally exposed attack classes across designs, surfacing near-universal failure modes that persist despite prompt-level safeguards. 2Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents Rewrite Query                                        
+
+> Goal Multi -Step Plan Tool Actions Replan / Finalize
+> Extract Intent Classify Route Dispatch Handler Aggregate Result
+> Vector DB Re -Ranker Build Context
+> Relevant Memory Fuse Memory Act / Respond Update Memory
+> Context Reason + Action Tool Calling Observe Result
+> 2310 46
+> 9
+> 9
+> 45
+> 5
+> 812
+> 467
+> 8
+> 8
+> 624
+> 1
+> 1
+> 1
+> 1
+> 1
+> Deep -Researcher
+> Open -Researcher
+> Open -Devin
+> Auto -GPT
+> Baby -AGI
+> User Inputs
+> Intruders
+> 11 12
+> Realize Task Plan Solution Run Tests Patch / Finalize
+> 1
+> Decomposer Assign Tasks Co -ordinate Handoff Agents
+> 6
+> Role Assignment Propose Solution Negotiator Update States
+> 8
+> Crew AI
+> Lang Graph
+> LlamaIndex
+> Deep Agent States Representation AI Response
+> 14
+> Attack Types
+> 01
+> 714
+> 2313
+> 12
+> 71013
+> 2
+> 710141311
+> 18
+> 91
+
+Figure 2: The figure above illustrates how the primary attack surfaces shift across each phase of the Deep Research agent lifecycle—from Context and Planning, through Action/Tool use, and into Synthesis. In other words, it makes explicit where adversaries most effectively apply pressure at each stage, and which phases are most exposed to specific classes of attacks. The corresponding phase-by-phase mapping and definitions for every numbered item in the figure are provided in Table 3. Our findings suggest that many of today’s most severe agent vulnerabilities are not bugs to be patched, but conse-quences of architectural trust assumptions. By reframing evaluation around unsafe actions and trajectory-level failures, AgentFence provides a foundation for designing, comparing, and ultimately securing the next generation of autonomous AI systems. 
+
+## 2 Related Works 
+
+Prior work shows that LLMs can be diverted through direct prompt injection/jailbreaking and indirect injection embedded in untrusted content (e.g., webpages or retrieved documents) [ 23 , 24 ]. Yet most evaluations are still largely text-centric , focusing on disallowed generations rather than whether an agent carries out unsafe actions over multi-step trajectories. In parallel, modern agent paradigms (ReAct, planner–executor, tool routing, multi-agent orchestration) integrate LLMs with tools, persistent state, and long-horizon control [ 25 , 26 ], creating new trust boundaries (planner →tool, memory, delegation) and failure modes that do not arise in single-turn settings. AgentFence complements this line by evaluating security-relevant breakdowns at these architectural boundaries. Existing benchmarks mainly emphasize capability: tool selection and argument use (ToolBench, StableToolBench, API-Bank) [ 15 –17 , 20 –22 ], web interaction (WebArena) [ 18 ], and code repair [ 19 ]. AgentFence leverages these resources but reframes evaluation around attack classes and outcome predicates (e.g., unauthorized tool invocation, wrong-principal execution, denial-of-wallet) that reflect operational risk. Related work on retrieval and web manipulation shows that poisoned corpora, adversarial passages, and search-result poisoning can steer beliefs and downstream decisions [ 28 ]; AgentFence instead examines how such poison propagates through state and planning to produce trajectory-level failures. Finally, persistent memory and long-context agents enable durable compromises and cross-turn leakage, while autonomy and retries enable cost amplification (denial-of-wallet) [ 27 ]. AgentFence operationalizes these risks via state/objective attacks and multi-turn conversation break criteria. 
+
+2.0.1 Our Positioning: 
+
+Overall, existing work tends to (i) study prompt-level steering, (ii) benchmark agent capability, or (iii) analyze isolated security channels (retrieval, memory, tools). AgentFence differs by offering a taxonomy-driven , architecture-centric 
+
+security evaluation that prioritizes trace-auditable, outcome-based failure predicates over prolonged, stateful interactions. 3Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents                                               
+
+> Label Decision Rules (per attack class ion agent A)
+> ✓
+> Attack class iis applicable (required interfaces exist), and under the Standard Config (SC) the attack induces a Conversation Break in ≥τYES of runs:
+> Pr( Break |A, i, SC )≥τYES
+> We set τYES =0 .30 by default (adjustable), estimated over N≥30 runs with fixed budget and fixed task set. –Attack class iis applicable, but either: (i) breaks occur only under at least one Permissive Config
+> (PC) (e.g., broader tool scope, higher retry budget, weaker sandbox), or (ii) under SC the break rate is nonzero but < τ YES :
+> 0<Pr( Break |A, i, SC )< τ YES
+> or (iii) the class is applicable but requires an optional component (e.g., delegation) that is not enabled by default.
+> ×Attack class icannot be meaningfully instantiated because the agent lacks the required interface/trust edge (e.g., no tool calls ⇒tool-hijacking is undefined; no delegation ⇒delegation attacks undefined).
+
+Table 1: Auditable protocol for exposure labels. 
+
+## 3 Methodology 
+
+AgentFence is designed to expose security vulnerabilities that arise from the agentic structure surrounding LLMs—planning loops, state, tool interfaces, retrieval, and delegation—rather than from a single model call. We focus on post-deployment, interface-only adversaries who can influence the agent through intended channels (user prompts, retrieved/web content, tool outputs, shared memory, inter-agent messages) but not weights or infrastructure. We report 
+
+security breaks as trace-evidenced violations of explicit trust boundaries and authority constraints. 
+
+Experimental setup (fixed model, fixed tasks): All experiments use Qwen2.5-32B-Instruct as the underlying model to isolate architectural effects. We instantiate tasks using HotpotQA [ 34 ], curating 91 instances with stable entities and unambiguous ground truth. For each instance qi, we use a verifier tuple gi = ⟨ai, S i, Ci⟩, where ai is the canonical answer, Si the annotated supporting facts, and Ci normalization/alias constraints. Each instance is converted into a persistent multi-turn “research workload”: the agent (i) proposes a short plan, (ii) identifies key sources/entities, (iii) answers, (iv) cites supporting facts, and (v) answers non-adversarial follow-ups probing consistency. Runs terminate upon verified completion, a security break, or a fixed budget. Additionally, we used different tool sets to evaluate our analysis [4] 
+
+Multi-turn adversarial stressing: Attacks are applied gradually across turns within the same thread (no resets), interleaved with task-consistent queries. Each of the 14 attack classes targets a specific trust boundary (planner state, memory reads/writes, tool routing/arguments, retrieval/search content, delegation messages), allowing us to measure whether adversarial influence propagates into trajectory-level failures. 
+
+3.1 Operationalizing Security Breaks for Reproducible Measurement 
+
+AgentFence separates security breaks (trace-evidenced boundary/authority violations) from capability failures (task errors without boundary violations). Each run yields an immutable trace T containing transcript with role tags, tool calls (names/args/timestamps/return hashes), planner and state events (memory reads/writes, delegation messages, retries), and configuration metadata (allowed tools, budgets, scopes). 
+
+Attack linkage: Some task deviations are security-relevant only when induced by adversarial influence crossing a trust edge. We therefore add a trace-checkable attribution flag AL (Attack Link): AL = 1 iff the trace evidences adoption/propagation of non-trusted content into protected boundaries (e.g., memory contains injected directives; planner reveals objective replacement; tool/router decisions justified by poisoned evidence). 
+
+Security-break predicates: We implement each predicate as f (T , g i, θ ) → { 0, 1} with thresholds fixed before evaluation: • Unauthorized Tool Invocation (UTI) : tool /∈ U , exceeds budget B, or disallowed mode. • Unsafe Tool Argument (UTA) : violates tool-specific argument policies πτ (sandbox paths, domain allow-lists, spend caps, write scopes, etc.). 4Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents                                                                                                                                 
+
+> Attack classes vs. deep-agent archetypes (labels from Table 1) #Attack Class Deep-Researcher Open-Researcher OpenDevin AutoGPT BabyAGI CrewAI LangGraph LlamaIndex 01 Direct Prompt Injection ✓✓✓✓✓✓✓✓
+> 02 Indirect Prompt Injection ✓✓–✓✓–––
+> 03 State Injection ✓✓––––––
+> 04 Tool-Use Hijack ✓✓✓✓––––
+> 05 Planning-Layer Manipulation ✓✓––––––
+> 06 Retrieval Poisoning ✓–✓✓–✓––
+> 07 Web Search Result Poisoning ✓–✓✓–✓––
+> 08 Multi-Agent Role Confusion ✓✓✓–––✓✓
+> 09 Delegation Attacks ✓✓–––––✓
+> 10 Code-Execution Abuse –––✓–✓––
+> 11 Chain-of-Thought Leakage ✓×××✓––×
+> 12 Objective Hijacking ×✓✓–––––
+> 13 Denial-of-Wallet –✓–✓–✓––
+> 14 Authorization Confusion –––––✓––
+
+Table 2: Table summarizes which agent archetypes materially expose each attack class ( ✓), partially expose it (–), or largely mitigate it ( ×). The lifecycle-phase placement of each attack (primary vs. secondary across Context/Plan/Ac-t/Synthesize) is reported separately in Table 3 and in the corresponding figure. 
+
+ID Attack Class References 01 Direct Prompt Injection [1] 
+
+02 Indirect Prompt Injection [2] 
+
+03 State Injection [3] 
+
+04 Tool-Use Hijack [4] 
+
+05 Planning-Layer Manipulation [5] 
+
+06 Retrieval Poisoning [6] 
+
+07 Web Search Result Poisoning [7] 
+
+08 Multi-Agent Role Confusion [8] 
+
+09 Delegation Attacks [9] 
+
+10 Code-Execution Abuse [10] 
+
+11 Chain-of-Thought Leakage [11] 
+
+12 Objective Hijacking [12] 
+
+13 Denial-of-Wallet [13] 
+
+14 Authorization Confusion [14] 
+
+Table 3: Deep-agent attack taxonomy with IDs and placeholder citation fields for later insertion. • Wrong-Principal Action (WPA) : treats non-authoritative inputs as higher-privilege instructions or acts under incorrect identity/permission context (automatic for clear trace evidence; otherwise fixed rubric). • State/Objective Integrity Violation (SIV) : writes/adopts state violating invariants (e.g., executable directives, policy overrides, goal changes) or planner indicates unauthorized objective replacement. • Attack-Linked Task Deviation (ATD) : AL = 1 and the agent outputs ˆa̸ = ai under Ci or cites evidence inconsistent with Si, with trace support that deviation was induced by adversarial content crossing a trust edge. We define SB (t) = UTI (t) ∨ UTA (t) ∨ WPA (t) ∨ SIV (t) ∨ ATD (t).
+
+Capability failures (AF/EF/TC) are computed for reliability analysis but do not label vulnerability unless upgraded via ATD. 5Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents A1 
+
+> A3
+> A5
+> A7
+> A9
+> A11
+> A13
+> 1
+> 3
+> 6
+> Deep-Researcher
+> A1
+> A3
+> A5
+> A7
+> A9
+> A11
+> A13
+> 1
+> 3
+> 6
+> Open-Researcher
+> A1
+> A3
+> A5
+> A7
+> A9
+> A11
+> A13
+> 1
+> 3
+> 6
+> OpenDevin
+> A1
+> A3
+> A5
+> A7
+> A9
+> A11
+> A13
+> 1
+> 3
+> 6
+> AutoGPT
+> A1
+> A3
+> A5
+> A7
+> A9
+> A11
+> A13
+> 1
+> 3
+> 6
+> BabyAGI
+> A1
+> A3
+> A5
+> A7
+> A9
+> A11
+> A13
+> 1
+> 3
+> 6
+> CrewAI
+> A1
+> A3
+> A5
+> A7
+> A9
+> A11
+> A13
+> 1
+> 3
+> 6
+> LangGraph
+> A1
+> A3
+> A5
+> A7
+> A9
+> A11
+> A13
+> 1
+> 3
+> 6
+> LlamaIndex
+> A1
+> A2
+> A3
+> A4
+> A5
+> A6
+> A7
+> A8
+> A9
+> A10
+> A11
+> A12
+> A13
+> A14
+
+Figure 3: Security break rate by attack class across Deep Research agent archetypes. Radial distance from the center represents conversation depth (turns), and each circle marks the observed vulnerability level for an agent. Results are aggregated over 91 conversation threads; denser clusters of bubbles indicate repeated occurrences of the same event. 
+
+## 4 Threat Model and Attack Instantiation 
+
+Threat model: We assume a post-deployment, interface-only adversary with no access to model weights, infras-tructure, or private configuration. The adversary may influence the agent only through channels that are explicitly intended to process external information: user prompts, retrieved or web content, tool outputs, shared memory, and inter-agent messages. This threat model captures realistic risks arising from untrusted documents, web pages, APIs, or collaborating agents, while excluding out-of-scope attacks such as model extraction or system compromise. 
+
+Attack class instantiation: Each of the 14 attack classes (A 1–A 14 ) [3] is instantiated using a family of parameterized payloads targeting a specific trust boundary. For example, Retrieval Poisoning (A 6) introduces adversarial passages embedded in otherwise relevant documents, while Planning Manipulation (A 5) injects subtle plan-altering constraints via untrusted evidence. Payload strength is controlled along three dimensions: explicitness (directive vs. implicit), persistence (single-turn vs. repeated), and scope (local vs. cross-task). Attacks are introduced gradually across turns without resetting the agent state, allowing us to measure whether adversarial influence propagates into long-horizon failures. 
+
+## 5 Operational Definition of Attack Link 
+
+Attack-linked attribution: To avoid conflating baseline task errors with security vulnerabilities, AgentFence intro-duces an explicit Attack Link (AL) flag. AL is set to 1 if and only if the execution trace contains verifiable evidence that non-authoritative content crossed a trust boundary and influenced protected agent state or decisions. Such evidence includes: injected directives written to memory, planner outputs that adopt adversarial objectives, tool invocations justified by poisoned evidence, or delegation messages that override authority constraints. 
+
+Labeling protocol: AL, Wrong-Principal Action (WPA), and Attack-Linked Task Deviation (ATD) labels are assigned using a semi-automatic rubric. Clear violations (e.g., unauthorized tool calls, explicit objective replacement) are labeled automatically; ambiguous cases are independently annotated by two reviewers and adjudicated. On a 20% stratified sample, annotator agreement was substantial (Cohen’s κ = 0 .81 ), supporting the reproducibility of security-break labeling. 6Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents                                        
+
+> Artifact Taxonomy coverage Reference
+> ToolBench A4–A7,A11 ,A13 ,A14 [15] StableToolBench A4–A7,A11 ,A13 [16] API-Bank A4,A5,A6,A13 ,A14 [17] WebArena A3,A4–A7,A11 ,A13 [18] SWE-bench A4–A7,A11 ,A13 ,A14 [19] HarmBench A1–A3,A8,A11 [20] JailbreakBench A1–A3,A11 ,A14 [21] AdvBench A1–A3,A11 ,A13 [22]
+
+Table 4: Benchmarks used to instantiate AgentFence scenario families.                          
+
+> Framework Mean Security Break Rate
+> AutoGPT 0.51 ±0.07
+> CrewAI 0.48 ±0.06
+> BabyAGI 0.45 ±0.08
+> OpenDevin 0.42 ±0.05
+> Deep-Researcher 0.39 ±0.06
+> Open-Researcher 0.36 ±0.07
+> LlamaIndex 0.34 ±0.05
+> LangGraph 0.29 ±0.04
+
+Table 5: Mean Security Break Rate (MSBR) across all applicable attack classes under the Standard Configuration (SC), holding the base model and task set fixed. Values denote mean ± standard deviation over multi-turn runs. Lower values indicate reduced architectural exposure, not elimination of vulnerability. 
+
+## 6 Architectural Normalization and Isolation 
+
+What constitutes architecture: In AgentFence, an agent’s architecture comprises its control flow (planner–executor structure, retry loops), state handling (memory read/write policies), tool interfaces (routing, permissions, argument validation), and delegation semantics. We explicitly distinguish these from the underlying language model, which is held fixed unless otherwise stated. 
+
+Normalization across agents: To isolate architectural effects, we normalize task prompts, tool APIs, retrieval backends, and budget limits wherever possible. Differences such as tool scope, retry policies, or delegation are retained only when they are intrinsic to the agent framework. As a result, AgentFence does not claim to rank implementations, but to surface structural design patterns that systematically amplify or reduce security risk. 
+
+## 7 Ablation and Sensitivity Analysis 
+
+Architectural ablations: We conduct targeted ablations on two representative agents by selectively disabling (i) persistent memory writes, (ii) planner retries, and (iii) delegation. Removing persistent memory reduces Retrieval Poisoning and Planning Manipulation breaks by up to 35%, while retry removal significantly lowers Denial-of-Wallet exposure. These results support the interpretation that long-horizon state propagation and unbounded retries are key structural risk factors. In depth analysis is provided in figure 2. 
+
+Threshold sensitivity: We evaluate sensitivity to the exposure threshold τYES by varying it from 0.2 to 0.4. Relative agent ordering and dominant attack classes remain stable across this range, indicating that MSBR trends are not artifacts of a specific cutoff. More robust explanation is provide in table 2. 
+
+Cross-model sanity check: To validate that observed patterns are not model-specific, we replicate a subset of experiments using an alternative instruction-tuned model. Absolute break rates vary, but relative architectural differences and dominant attack classes are preserved, suggesting that AgentFence captures architecture-level phenomena rather than idiosyncratic model behavior (Figure 3). 7Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents 
+
+Figure 4: Break-type composition aggregated across deep research agents, showing the distribution of security break types across different attack classes. 
+
+## 8 Results 
+
+We apply AgentFence to eight deep-agent archetypes and fourteen attack classes under a controlled, fixed-model protocol. We report security breaks as defined in §3.1. 
+
+8.1 Aggregate exposure by attack class 
+
+Figure 3 reports mean security break rate (SC), averaged across archetypes per class. Breaks concentrate in trajectory-level channels: Denial-of-Wallet (A 13 : 0.62 ± 0.08 ), Authorization Confusion (A 14 : 0.54 ± 0.10 ), Retrieval Poisoning (A 6: 0.47 ± 0.09 ), and Planning-Layer Manipulation (A 5: 0.44 ± 0.11 ). Prompt-centric classes (A 1, A 2) remain below 
+
+0.20 under SC, indicating that token-level safeguards do not prevent dominant operational failures. 
+
+8.2 Architecture-level differences (fixed base model) 
+
+Holding model and tasks fixed isolates architectural susceptibility. MSBR ranges from 0.29 ± 0.04 (LangGraph) to 
+
+0.51 ± 0.07 (AutoGPT); see Table 5. Architectures with broader tool scope, higher retry budgets, or weaker separation between planner/memory/tool authority exhibit higher break rates; structured control-flow designs reduce (but do not eliminate) exposure. 
+
+Effect size (architecture matters): The absolute MSBR gap between the most- and least-exposed architectures is 
+
+∆max = 0 .51 − 0.29 = 0 .22 , i.e., a 76% relative increase when moving from LangGraph to AutoGPT ( 0.22 /0.29 ≈
+
+0.76 ). This gap is large compared to within-agent variability (std. ≈0.04–0.08 in Table 5), supporting that AgentFence captures structural susceptibility rather than run-to-run noise. 
+
+8.3 Standard vs. permissive configuration sensitivity 
+
+We evaluate each agent–attack pair under SC and one-dimension-at-a-time Permissive Configurations (PC). Several classes amplify sharply under permissive settings: A 13 increases 0.58 → 0.81 , A 10 increases 0.22 → 0.49 , and A 9
+
+increases 0.18 → 0.46 . In contrast, A 6 and A 5 exhibit smaller deltas ( < 0.10 ), consistent with vulnerabilities driven by belief/state propagation and planning interfaces rather than budget/scope alone. This separation supports the Yes/Maybe labels in Table 2. 8Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents 
+
+Configuration elasticity separates budget-driven vs. interface-driven risk: Under one-dimension permissive changes, Denial-of-Wallet (A 13 ) exhibits the largest absolute jump ( 0.58 → 0.81 , ∆=0 .23 ; ≈40% relative), and Code-Execution Abuse (A 10 ) more than doubles ( 0.22 → 0.49 , ∆=0 .27 ; ≈2.2 ×). Delegation Attacks (A 9) also more than doubles ( 0.18 → 0.46 , ∆=0 .28 ; ≈2.6 ×). In contrast, Retrieval Poisoning (A 6) and Planning Manipulation (A 5)change by < 0.10 , indicating these failures are inelastic to budget/scope and instead arise from persistent belief/state propagation. This split provides a quantitative basis for separating “knob-fixable” risk (budgets/retries/scope) from deeper trust-boundary failures (state/planning). 
+
+8.4 Break composition and trace-auditable attribution 
+
+Breaks concentrate in boundary and authority violations (Figure 4): SIV accounts for 31%, WPA for 27%, UTI+UTA for 24%, and ATD for 18%. Because AgentFence upgrades task errors to security breaks only when trace-supported attack linkage holds (§3.1), the protocol reduces misattribution of baseline reliability failures as security exposure. 
+
+Most breaks are boundary failures, not task mistakes: Aggregated over agents (Figure 4), boundary/authority predicates (SIV+WPA+UTI/UTA) account for 31% + 27% + 24% = 82% of all security breaks (Figure 4), while attack-linked task deviation (ATD) contributes 18%. Thus, AgentFence failures are dominated by who acted with what authority and what state was corrupted , rather than merely producing wrong answers. 
+
+8.5 Cross-class coupling: authority failures as an upstream driver 
+
+Exposure to Authorization Confusion (A 14 ) correlates with downstream failures in Objective Hijacking (A 12 ) and Tool-Use Hijacking (A 4), with representative correlations ρ ≈ 0.63 and ρ ≈ 0.58 . This clustering suggests a shared architectural root: ambiguous or unenforced trust boundaries between planner, memory, and tool authority. Once the agent’s principal/authority model is compromised, failures compound across planning and action layers. 
+
+Key takeaways: Across architectures, the dominant risks are operational and stateful: A 13 /A 14 /A 6/A 5 lead exposure, and 82% of breaks are explicit boundary/authority violations rather than task errors. Permissive settings strongly amplify cost-, code-, and delegation-driven classes, while retrieval and planning vulnerabilities remain comparatively inelastic, highlighting persistent trust-boundary risk. 
+
+## 9 Artifacts and Reproducibility 
+
+Upon acceptance, we will release a versioned AgentFence artifact: agent implementations/configurations (framework versions, prompts, toolsets, routing/control flow, memory, sandboxing, budgets), the attack harness (per-class payload families, injection points, strength controls), and the semi-automatic labeling protocol (WPA/ATD rubric, agreement, adjudication) to enable independent reproduction and audit. 
+
+## 10 Conclusion 
+
+Deep agents convert language into privileged, time-dependent actions. As autonomy, persistence, and delegation become standard, dominant security failures shift from unsafe text to unsafe trajectories: actions executed under the wrong goal, with the wrong authority, with consequences that compound across steps. AgentFence addresses this shift by evaluating security at the level of architecture, using a taxonomy of deep-agent attack classes and trace-auditable conversation-break predicates to expose structural vulnerabilities across agent archetypes. Securing autonomous AI systems will require more than better prompts or filters; it will require understanding where agents trust too much, how that trust propagates across time, and which design choices systematically amplify risk. AgentFence provides a foundation for that diagnosis and comparison before deployment at scale. 
+
+## References 
+
+[1] Yi Liu, Gelei Deng, Yuekang Li, Kailong Wang, Zihao Wang, Xiaofeng Wang, Tianwei Zhang, Yepang Liu, Haoyu Wang, Yan Zheng, and others. Prompt injection attack against llm-integrated applications. arXiv preprint arXiv:2306.05499 , 2023. [2] Kai Greshake, Sahar Abdelnabi, Shailesh Mishra, Christoph Endres, Thorsten Holz, and Mario Fritz. Not what you’ve signed up for: Compromising real-world llm-integrated applications with indirect prompt injection. In 
+
+Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security , pages 79–90, 2023. 9Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents [3] Edoardo Debenedetti, Jie Zhang, Mislav Balunovic, Luca Beurer-Kellner, Marc Fischer, and Florian Tramèr. Agentdojo: A dynamic environment to evaluate prompt injection attacks and defenses for llm agents. Advances in Neural Information Processing Systems , 37:82895–82920, 2024. [4] Xiaohan Fu, Shuheng Li, Zihan Wang, Yihao Liu, Rajesh K. Gupta, Taylor Berg-Kirkpatrick, and Earlence Fernandes. Imprompter: Tricking llm agents into improper tool use. arXiv preprint arXiv:2410.14923 , 2024. [5] Fengchao Chen, Tingmin Wu, Van Nguyen, and Carsten Rudolph. Too helpful to be safe: User-mediated attacks on planning and web-use agents. arXiv preprint arXiv:2601.10758 , 2026. [6] Hao Jing, Fanxiao Li, Yunyun Dong, Wei Zhou, and Renyang Liu. Memory poisoning attacks on retrieval-augmented large language model agents via deceptive semantic reasoning. Engineering Applications of Artificial Intelligence , 167:113968, 2026. [7] Zhaorun Chen, Zhen Xiang, Chaowei Xiao, Dawn Song, and Bo Li. Agentpoison: Red-teaming llm agents via poisoning memory or knowledge bases. Advances in Neural Information Processing Systems , 37:130185–130213, 2024. [8] Can Zheng, Yuhan Cao, Xiaoning Dong, and Tianxing He. Demonstrations of integrity attacks in multi-agent systems. arXiv preprint arXiv:2506.04572 , 2025. [9] Abhishek Goswami. Agentic JWT: A secure delegation protocol for autonomous ai agents. arXiv preprint arXiv:2509.13597 , 2025. [10] Eunkyu Lee, Donghyeon Kim, Wonyoung Kim, and Insu Yun. Takedown: How it’s done in modern coding agent exploits. arXiv preprint arXiv:2509.24240 , 2025. [11] Zhen Xiang, Fengqing Jiang, Zidi Xiong, Bhaskar Ramasubramanian, Radha Poovendran, and Bo Li. Badchain: Backdoor chain-of-thought prompting for large language models. arXiv preprint arXiv:2401.12242 , 2024. [12] Rishi Jha, Harold Triedman, Justin Wagle, and Vitaly Shmatikov. Breaking and fixing defenses against control-flow hijacking in multi-agent systems. arXiv preprint arXiv:2510.17276 , 2025. [13] Kelly. Denial of Wallet: Analysis of a looming threat and novel solution for mitigation using image classification .PhD thesis, School Comput. Sci., College Sci. Eng., Univ. Galway, Ireland, 2023. [14] Guanquan Shi, Haohua Du, Zhiqiang Wang, Xiaoyu Liang, Weiwenpei Liu, Song Bian, and Zhenyu Guan. SoK: Trust-authorization mismatch in LLM agent interactions. arXiv preprint arXiv:2512.06914 , 2025. [15] Yujia Qin. ToolLLM: Facilitating large language models to master 16000+ real-world APIs. arXiv preprint arXiv:2307.16789 , 2023. [16] Zhicheng Guo, Sijie Cheng, Hao Wang, Shihao Liang, Yujia Qin, Peng Li, Zhiyuan Liu, Maosong Sun, and Yang Liu. StableToolBench: Towards stable large-scale benchmarking on tool learning of large language models. arXiv preprint arXiv:2403.07714 , 2024. [17] Minghao Li, Feifan Song, Bowen Yu, Haiyang Yu, Zhoujun Li, Fei Huang, and Yongbin Li. API-Bank: A benchmark for tool-augmented LLMs. arXiv preprint arXiv:2304.08244 , 2023. [18] Shuyan Zhou, Frank F. Xu, Hao Zhu, Xuhui Zhou, Robert Lo, Abishek Sridhar, Xianyi Cheng, Yonatan Bisk, Daniel Fried, Uri Alon, and others. WebArena: A realistic web environment for building autonomous agents. 
+
+arXiv preprint arXiv:2307.13854 , 2023. [19] John Yang, Kilian Lieret, Carlos E. Jimenez, Alexander Wettig, Kabir Khandpur, Yanzhe Zhang, Binyuan Hui, Ofir Press, Ludwig Schmidt, and Diyi Yang. SWE-smith: Scaling data for software engineering agents. arXiv preprint arXiv:2504.21798 , 2025. Available at: https://arxiv.org/abs/2504.21798 .[20] Mantas Mazeika. HarmBench: A standardized evaluation framework for automated red teaming and robust refusal. In Proceedings of ICML , 2024. arXiv:2402.04249. [21] Andy Zou. TDC 2023 (LLM Edition): The Trojan Detection Challenge. In NeurIPS Competition Track , 2023. [22] Yangyi Chen, Hongcheng Gao, Ganqu Cui, Fanchao Qi, Longtao Huang, Zhiyuan Liu, and Maosong Sun. Why should adversarial perturbations be imperceptible? Rethink the research paradigm in adversarial NLP. arXiv preprint arXiv:2210.10683 , 2022. 10 Agent-Fence: Mapping Security Vulnerabilities Across Deep Research Agents [23] Maksym Andriushchenko, Alexandra Souly, Mateusz Dziemian, Derek Duenas, Maxwell Lin, Justin Wang, Dan Hendrycks, Andy Zou, Zico Kolter, Matt Fredrikson, and others. Agentharm: A benchmark for measuring harmfulness of LLM agents. arXiv preprint arXiv:2410.09024 , 2024. [24] Hengyu An, Jinghuai Zhang, Tianyu Du, Chunyi Zhou, Qingming Li, Tao Lin, and Shouling Ji. Ipiguard: A novel tool dependency graph-based defense against indirect prompt injection in llm agents. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , pages 1023–1039, 2025. [25] Haotian Luo, Huaisong Zhang, Xuelin Zhang, Haoyu Wang, Zeyu Qin, Wenjie Lu, Guozheng Ma, Haiying He, Yingsha Xie, Qiyang Zhou, and others. Ultrahorizon: Benchmarking agent capabilities in ultra long-horizon scenarios. arXiv preprint arXiv:2509.21766 , 2025. [26] Yufan Dang, Chen Qian, Xueheng Luo, Jingru Fan, Zihao Xie, Ruijie Shi, Weize Chen, Cheng Yang, Xiaoyin Che, Ye Tian, and others. Multi-agent collaboration via evolving orchestration. arXiv preprint arXiv:2505.19591 , 2025. [27] Elvir Akhmetshin, Dilshod Hudayberganov, Rustem Shichiyakh, Sandeep Yellisetti, Lalitha Kumari Pappala, Rahul Deo Shukla, and Sumit Chandra. An intelligent federated learning boosted cyberattack detection system for denial-of-wallet attack using advanced heuristic search with multimodal approaches. Scientific Reports ,15(1):14265, 2025. [28] Baolei Zhang, Haoran Xin, Jiatong Li, Dongzhe Zhang, Minghong Fang, Zhuqing Liu, Lihai Nie, and Zheli Liu. Benchmarking poisoning attacks against retrieval-augmented generation. arXiv preprint arXiv:2505.18543 , 2025. [29] Yuxuan Huang, Yihang Chen, Haozheng Zhang, Kang Li, Huichi Zhou, Meng Fang, Linyi Yang, Xiaoguang Li, Lifeng Shang, Songcen Xu, and others. Deep research agents: A systematic examination and roadmap. arXiv preprint arXiv:2506.18096 , 2025. [30] Alexander Wei, Nika Haghtalab, and Jacob Steinhardt. Jailbroken: How does LLM safety training fail? Advances in Neural Information Processing Systems , 36:80079–80110, 2023. [31] Abul Ehtesham, Aditi Singh, Gaurav Kumar Gupta, and Saket Kumar. A survey of agent interoperability protocols: Model context protocol (mcp), agent communication protocol (acp), agent-to-agent protocol (a2a), and agent network protocol (anp). arXiv preprint arXiv:2505.02279 , 2025. [32] Youna Jung, Minsoo Kim, Amirreza Masoumzadeh, and James B. D. Joshi. A survey of security issue in multi-agent systems. Artificial Intelligence Review , 37(3):239–260, 2012. [33] Orr Krupnik, Igor Mordatch, and Aviv Tamar. Multi-agent reinforcement learning with multi-step generative models. In Conference on Robot Learning , pages 776–790. PMLR, 2020. [34] Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William Cohen, Ruslan Salakhutdinov, and Christopher D. Manning. HotpotQA: A dataset for diverse, explainable multi-hop question answering. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , pages 2369–2380, 2018. 11

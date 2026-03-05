@@ -1,0 +1,847 @@
+Title: MemAdapter: Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval
+
+URL Source: https://arxiv.org/pdf/2602.08369v1
+
+Published Time: Tue, 10 Feb 2026 03:39:40 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# MemAdapter : Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval 
+
+## Xin Zhang 
+
+The University of Manchester United Kingdom 
+
+## Kailai Yang ∗
+
+The University of Manchester United Kingdom klyang990203@gmail.com 
+
+## Chenyue Li 
+
+Stanford University United States 
+
+## Hao Li 
+
+Imperial College London United Kingdom 
+
+## Qiyu Wei 
+
+The University of Manchester United Kingdom 
+
+## Jun’ichi Tsujii 
+
+National Institute of Advanced Industrial Science and Technology Japan 
+
+## Sophia Ananiadou 
+
+The University of Manchester United Kingdom sophia.ananiadou@manchester.ac.uk 
+
+## Abstract 
+
+Memory mechanism is a core component of LLM-based agents, en-abling reasoning and knowledge discovery over long-horizon con-texts. Existing agent memory systems are typically designed within isolated paradigms (e.g., explicit, parametric, or latent memory) with tightly coupled retrieval methods that hinder cross-paradigm generalization and fusion. In this work, we take a first step toward unifying heterogeneous memory paradigms within a single mem-ory system. We propose MemAdapter , a memory retrieval frame-work that enables fast alignment across agent memory paradigms. MemAdapter adopts a two-stage training strategy: (1) training a 
+
+generative subgraph retriever from the unified memory space , and (2) adapting the retriever to unseen memory paradigms by training a lightweight alignment module through contrastive learning. This design improves the flexibility for memory retrieval and substan-tially reduces alignment cost across paradigms. Comprehensive experiments on three public evaluation benchmarks demonstrate that the generative subgraph retriever consistently outperforms five strong agent memory systems across three memory paradigms and agent model scales. Notably, MemAdapter completes cross-paradigm alignment within 13 minutes on a single GPU, achieving superior performance over original memory retrievers with less than 5% of training compute. Furthermore, MemAdapter enables effective zero-shot fusion across memory paradigms, highlighting its potential as a plug-and-play solution for agent memory systems. This project will be publicly available on Github.  
+
+> ∗Corresponding author: Kailai Yang. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+> Conference acronym ’XX, Woodstock, NY
+> ©2018 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM ISBN 978-1-4503-XXXX-X/2018/06 https://doi.org/XXXXXXX.XXXXXXX
+
+## CCS Concepts 
+
+• Computing methodologies → Natural language generation .
+
+## Keywords 
+
+Agent Memory System, Language Model, Generative Retrieval 
+
+ACM Reference Format: 
+
+Xin Zhang, Kailai Yang, Chenyue Li, Hao Li, Qiyu Wei, Jun’ichi Tsujii, and Sophia Ananiadou. 2018. MemAdapter : Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval. In Proceedings of conference (Conference acronym ’XX). ACM, New York, NY, USA, 14 pages. https://doi.org/XXXXXXX.XXXXXXX 
+
+## 1 Introduction 
+
+Memory mechanisms have emerged as a foundational component in the design of modern large language model (LLM)-based agent systems [ 10 , 11 , 45 ]. They enable agents to accumulate, retain, and discover complex information and knowledge beyond the limita-tions imposed by fixed context windows and single-step interac-tions with the environment. Recent taxonomies [ 10 ] broadly catego-rize agent memory into three primary paradigms with consequent highly-coupled memory retrieval designations for downstream ap-plications: (1) Explicit memory represents information as dis-crete, externally stored units organized in structured forms, such as temporal sequence buffers and hierarchical tree/graph topolo-gies [ 12 , 26 , 35 ], accompanied by explicit semantic/graph retrieval methods. (2) Parametric memory is embedded within distributed representations of the model parameters and retrieved directly through model inference. This paradigm encompasses memory encoded in the base model parameters through large-scale train-ing [ 21 , 27 ] or externalized parametric memory implemented via auxiliary modules, such as LoRA and adapters [15, 40]. (3) Latent memory is maintained in separate distributed representations and dynamically updated during task execution, such as key–value caches or latent embedding spaces [ 42 , 46 ]. Relevant information is usually infused through extra trainable modules, such as atten-tion and reasoning mechanisms. The above paradigms emphasize  
+
+> arXiv:2602.08369v1 [cs.AI] 9 Feb 2026 Conference acronym ’XX, June 03–05, 2018, Woodstock, NY xx et al.
+
+Figure 1: Comparison between paradigm-specific memory retrieval and paradigm-agnostic generative retrieval. 
+
+different features, such as interpretability and computational effi-ciency [44]. Despite achieving strong performance, the heavy reliance of ex-isting memory retrieval methods on specific agent memory paradigms introduces several key limitations, as illustrated in Figure 1 (left). First, the tight coupling between memory paradigms and their corresponding retrieval mechanisms substantially constrains cross-paradigm memory alignment and fusion. For example, adapting graph-based memory systems [ 6 , 24 , 35 ] to latent memory settings typically requires extensive architectural redesign and resource-intensive continual training. Such adaptations are further hampered by catastrophic forgetting [ 23 ], which degrades the original graph-based retrieval capabilities and impedes effective fusion between graph-structured and latent memory. Moreover, paradigm-specific retrieval strategies inherently introduce paradigm-dependent weak-nesses into the memory system. In explicit memory frameworks, retrieval commonly relies on semantic or topological similarity to select fragmented memory units, thereby limiting flexibility in the compositionality and granularity of retrieved evidence. In paramet-ric and latent memory systems, relevant information is accessed through model- and task-specific parameter activations, resulting in opaque internal representations that are difficult to disentangle, reuse, or interpret. In light of these limitations, we take a first step toward unifying the major agent memory paradigms via paradigm-agnostic genera-tive retrieval. As shown in Fig 1 (right), we introduce MemAdapter ,a memory retrieval framework designed to enable efficient and fast alignment across memory paradigms (e.g., explicit, paramet-ric, and latent memory). MemAdapter adopts a two-stage training strategy. Firstly, we train a generative subgraph retriever via model distillation, which conditions on task information to generate an explicit memory subgraph from a unified memory space . By inte-grating generative retrieval with graph-structured evidence, this design substantially improves both the flexibility and interpretabil-ity of memory retrieval. Secondly, lightweight alignment modules 
+
+are trained to achieve adaptation to unseen memory paradigms through contrastive learning [ 3, 7 ] in the unified memory space .This alignment is highly efficient, as it optimizes only a lightweight 
+
+alignment module and achieves effective adaptation via sampling from merely 2,500 demonstrations. Comprehensive evaluation on three memory-intensive question answering benchmarks shows that the generative subgraph re-triever consistently outperforms strong baseline methods across explicit, parametric, and latent memory paradigms for agent models with parameter scales ranging from 1.5B to 7B. Notably, MemAdapter attains performance superior to state-of-the-art explicit and implicit memory retrieval approaches after the corresponding alignment stages, which completes within 13 minutes on a single GPU and requires less than 5% of training-time computational resources com-pared to tuning the original memory retrievers on the agent models. Furthermore, MemAdapter exhibits strong paradigm-fusion capa-bilities, as it substantially enhances agent model performance by jointly leveraging complementary information from explicit, para-metric, and latent memory. These results highlight MemAdapter as a promising first step toward plug-and-play memory fusion across heterogeneous memory paradigms. In summary, this work makes the following contributions: 
+
+• We propose MemAdapter , the first memory retrieval framework that unifies multiple memory paradigms. It trains on a moderate scale to perform generative subgraph retrieval, then achieves highly efficient alignment across paradigms via contrastive learn-ing. 
+
+• MemAdapter outperforms competitive memory systems across three public evaluation benchmarks, three memory paradigms, and agent models scaling from 1.5B to 7B. Notably, it can achieve such performance on a fast cross-paradigm alignment basis with less than 5% of training compute. MemAdapter : Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Figure 2: MemAdapter performs generative subgraph retrieval from a unified memory space adapted by paradigm-specific alignment modules. Building on an anchored memory paradigm, the first stage introduces a teacher model to provide imitation-based supervision for the retriever. In stage two, the anchored alignment module is used to supervise a lightweight alignment module for the target paradigm via contrastive learning. At inference, aligned memory paradigms can be used and infused in a plug-and-play manner. 
+
+• MemAdapter performs reliable complementary fusion of explicit, parametric, and latent memory in a zero-shot manner, highlight-ing it as a promising first step toward plug-and-play memory fusion across heterogeneous paradigms. 
+
+## 2 Methodology 2.1 Agent Memory Systems 
+
+Agent memory systems aim to support complex reasoning tasks over long-horizon memory beyond current contexts. The system mainly consists of three components: (1) Memory state builds mem-ory representations constructed from the long-horizon memory. (2) 
+
+Memory retriever extracts task-specific evidence from the memory state conditioned on the query. (3) Agent model produces the final output given the user query and task-relevant evidence provided by the memory retriever .
+
+2.1.1 Memory State. Memory state M is a structured representa-tion constructed from the long-horizon memory D,
+
+M = MemBuild (D) . (1) Memory paradigms usually determine how the building methodol-ogy MemBuild is instantiated. For example, explicit memory stores externalized units such as text records or graphs, parametric mem-ory encodes information in model parameters, and latent memory maintains information in evolving latent representations. 
+
+2.1.2 Memory Retriever. Given the target query 𝑞 and the memory state M, the memory retriever (parameterized by 𝜃 ) produces the task-specific evidence 𝑟 ,
+
+𝑟 = MemRetriever 𝜃 (M , 𝑞 ), (2) The evidence 𝑟 contains relevant information used by the agent model. In MemAdapter, 𝑟 is instantiated as an explicit subgraph. 
+
+2.1.3 Agent Model. Due to the heavy redundancy of long-horizon memory, the agent model Agent usually does not directly access 
+
+M. Instead, it conditions on the task information 𝑞 and 𝑟 as the task-relevant memory information to produce the output 𝑦 :
+
+𝑦 = Agent (𝑞, 𝑟 ). (3) 
+
+## 2.2 MemAdapter 
+
+As shown in Figure 2, MemAdapter follows a two-stage training procedure. Firstly, the generative subgraph retriever is trained via model distillation. We then perform cross-paradigm alignment via contrastive learning. During inference, memory states are efficiently infused in a plug-and-play manner. 
+
+2.2.1 Generative Subgraph Retrieval via Model Distillation. In this stage, we aim to train a generative subgraph retriever to construct structured evidence subgraphs based on the task information and memory from a distributed unified memory space S ∈ R𝐷 𝑠 , where 
+
+𝐷 𝑠 denotes the space dimension. The unified memory space is de-signed to be independent of memory paradigms, a key step towards plug-and-play memory retrieval. During training, a central chal-lenge is the absence of large-scale ground-truth evidence subgraphs for supervision. Moreover, self-supervised learning via in-context learning of the retriever itself can bring inductive biases and be Conference acronym ’XX, June 03–05, 2018, Woodstock, NY xx et al. 
+
+unstable across instances and tasks. We adopt a model distillation framework that constructs imitable supervision directly from a strong teacher model. We start by defining an anchored memory paradigm 𝑎 , which is instantiated as explicit graph-based memory , but can be replaced by any existing memory paradigms. Specifically, the teacher model is first prompted to construct a full memory graph G★ from the memory D. We utilize the generated graph as the input and in-stantiate Eqn. 1 with state-of-the-art method [ 44 ] for memory state construction: 
+
+M (𝑎 ) := MemBuild (G ★) (4) To achieve alignment between the anchored memory paradigm and the unified memory space , we introduce an anchored alignment module Align (𝑎 ) that maps the anchored memory state M (𝑎 ) into the unified memory space: 
+
+ℎ(𝑎 ) = Align (𝑎 ) 
+
+M (𝑎 ) 
+
+. (5) where ℎ(𝑎 ) ∈ S denotes the memory representation of M (𝑎 ) within the unified memory space , and Align (𝑎 ) is parameterized with a lightweight neural network. We formulate memory retrieval as a conditional auto-regressive generation process of a structured evidence subgraph, based on the task information 𝑞 and the anchored memory representation 
+
+ℎ(𝑎 ) . The generated subgraph 𝑟 is expected to aggregate relevant memory units and determine their appropriate relations flexibly. Formally, the memory retriever MemRetrieve 𝜃 produces the evi-dence subgraph as follows: 
+
+𝑟 = MemRetrieve 𝜃 
+
+
+
+ℎ(𝑎 ) , 𝑞 
+
+
+
+(6) During training, the teacher model is further prompted to pro-duce a query-conditioned evidence subgraph 𝑟 ★, constrained to be a subgraph of G★. 𝑟 ★ is serialized into token sequences with a structure-preserving linearization scheme to enable autoregressive supervision. More details about the scheme are shown in Appen-dix B.1. We optimize the student model by directly minimizing a token-level distribution distillation objective: 
+
+Ldistill = 1
+
+|𝑟 ★| 
+
+> |𝑟 ★|
+
+∑︁ 
+
+> 𝑡 =1
+
+KL 
+
+
+
+𝑝 𝑇 (𝑟 𝑡 |𝑟 <𝑡 , 𝑞, ℎ (𝑎 ) ) ∥ 𝑝 𝜃 (𝑟 ★ 
+
+> 𝑡
+
+|𝑟 ★<𝑡 , 𝑞, G★)
+
+
+
+. (7) where 𝑝 𝑇 (·) and 𝑝 𝜃 (·) denote the teacher and student models’ token distributions, and 𝐾𝐿 (·||·) computes the KL-divergence between two distributions. This objective enables the generative subgraph retriever to imitate the teacher model’s behavior in a fine-grained manner. 
+
+2.2.2 Cross-Paradigm Alignment with Contrastive Learning. This stage aims to efficiently adapt the generative subgraph retriever to unseen memory paradigms. Such adaptation is nontrivial since het-erogeneous memory states differ in structure and storage, yielding significantly degraded retrieval performance due to the mismatch of patterns in the unified memory space with the anchored memory paradigm. We resolve this mismatch by achieving fast alignment between the anchored memory paradigm and the current target paradigm 𝑡 . Specifically, we train a lightweight paradigm-specific 
+
+Algorithm 1 Cross-paradigm alignment via contrastive learning in the unified memory space. 
+
+Require: The demonstration number 𝑁 , Negative sample size 𝐶 ,batch size 𝐵 , the anchored memory states {M (𝑎 ) 
+
+> 𝑖
+
+}𝑁 𝑖 =1, target-paradigm memory states {M (𝑡 ) 
+
+> 𝑖
+
+}𝑁 𝑖 =1, the anchored alignment module Align (𝑎 ) .
+
+Ensure: Alignment module Align (𝑡 ) 
+
+> 𝜆
+
+for the target paradigm 𝑡 . 
+
+> 1:
+
+Randomly initialize Align (𝑡 ) 
+
+> 𝜆
+
+with parameters 𝜆 . 
+
+> 2:
+
+Freeze the model parameters for Align (𝑎 ) . 
+
+> 3:
+
+for each training iteration do  
+
+> 4:
+
+Randomly sample a minibatch with size 𝐵 : {M (𝑎 ) 
+
+> 𝑗
+
+}𝐵 𝑗 =1 and 
+
+{M (𝑡 ) 
+
+> 𝑗
+
+}𝐵 𝑗 =1 from {M (𝑎 ) 
+
+> 𝑖
+
+}𝑁 𝑖 =1 and {M (𝑡 ) 
+
+> 𝑖
+
+}𝑁 𝑖 =1 
+
+> 5:
+
+for each M (𝑎 ) 
+
+> 𝑗
+
+∈ {M (𝑎 ) 
+
+> 𝑗
+
+}𝐵 𝑗 =1 and M (𝑡 ) 
+
+> 𝑗
+
+∈ {M (𝑡 ) 
+
+> 𝑗
+
+}𝐵 𝑗 =1 do  
+
+> 6:
+
+Compute ℎ(𝑎 ) 
+
+> 𝑗
+
+= Align (𝑎 ) (M (𝑎 ) 
+
+> 𝑗
+
+) 
+
+> 7:
+
+Compute ℎ(𝑡 ) 
+
+> 𝑗
+
+= Align (𝑡 ) 
+
+> 𝜆
+
+(M (𝑡 ) 
+
+> 𝑗
+
+) 
+
+> 8:
+
+Randomly sample a negative sets with size 𝐶 : {M (𝑎 ) 
+
+> 𝑘
+
+}𝐶 𝑘 =1
+
+from {M (𝑎 ) 
+
+> 𝑖
+
+}𝑁 𝑖 =1 \ {M (𝑎 ) 
+
+> 𝑗
+
+} 
+
+> 9:
+
+Initialize a set 𝐻 𝐶 𝑗 = ∅ 
+
+> 10:
+
+for each M (𝑎 ) 
+
+> 𝑘
+
+∈ {M (𝑎 ) 
+
+> 𝑘
+
+}𝐶 𝑘 =1 do  
+
+> 11:
+
+Compute ℎ(𝑐 ) 
+
+> 𝑘
+
+= Align (𝑎 ) (M (𝑎 ) 
+
+> 𝑘
+
+) 
+
+> 12:
+
+𝐻 𝐶 𝑗 ∪ { ℎ(𝑐 ) 
+
+> 𝑘
+
+} 
+
+> 13:
+
+end for  
+
+> 14:
+
+Compute L 𝑗  
+
+> align
+
+= Lalign (ℎ(𝑎 ) 
+
+> 𝑗
+
+, ℎ (𝑡 ) 
+
+> 𝑗
+
+, 𝐻 𝐶 𝑗 ) using Eq. (9)  
+
+> 15:
+
+end for  
+
+> 16:
+
+Optimize Align (𝑡 ) 
+
+> 𝜆
+
+via gradient: ∇𝜆 1
+
+> 𝐵
+
+Í𝐵 𝑗 =1 L 𝑗  
+
+> align
+> 17:
+
+end for 
+
+alignment module via contrastive learning on merely 2,500 demon-strations in the unified memory space . Firstly, the anchored align-ment module and the target alignment module Align (𝑡 ) 
+
+> 𝜆
+
+map the corresponding memory states into the unified memory space :
+
+ℎ(𝑎 ) = Align (𝑎 ) 
+
+M (𝑎 ) 
+
+, ℎ(𝑡 ) = Align (𝑡 )
+
+> 𝜆
+
+
+
+M (𝑡 ) 
+
+, (8) where ℎ(𝑎 ) , ℎ (𝑡 ) ∈ S , Align (𝑎 ) is fixed, and Align (𝑡 ) 
+
+> 𝜆
+
+is a trainable module parameterized with another lightweight neural network. As depicted in Algorithm 1, Align (𝑡 ) 
+
+> 𝜆
+
+is optimized with a simple yet effective contrastive learning objective that enforces instance-level alignment between the anchored and target memory paradigms. For the 𝑗 -th instance sampled from the demonstration set, we ran-domly select a negative set 𝐻 𝐶 𝑗 , compute the corresponding repre-sentations, and minimize an InfoNCE-like loss: 
+
+L 𝑗  
+
+> align
+
+= − log exp 
+
+
+
+sim (ℎ(𝑎 ) 
+
+> 𝑗
+
+, ℎ (𝑡 ) 
+
+> 𝑗
+
+)/ 𝜏 
+
+
+
+exp 
+
+
+
+sim (ℎ(𝑎 ) 
+
+> 𝑗
+
+, ℎ (𝑡 ) 
+
+> 𝑗
+
+)/ 𝜏 
+
+
+
++ Í
+
+> ℎ∈𝐻 𝐶 𝑗
+
+exp 
+
+
+
+sim (ℎ(𝑎 ) 
+
+> 𝑗
+
+, ℎ )/ 𝜏 
+
+ ,
+
+(9) where sim (· , ·) denotes cosine similarity and 𝜏 is the temperature parameter. For each target memory paradigm, we separately opti-mize its alignment module Align (𝑡 ) 
+
+> 𝜆
+
+using the contrastive objective in Eq. (9) . These alignment modules ensure that heterogeneous MemAdapter : Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+memory states are appropriately projected into the unified memory space to ensure correct generative subgraph retrieval. 
+
+## 2.3 Plug-and-Play Memory Retrieval and Fusion 
+
+MemAdapter enables a unified generative subgraph retrieval pro-cess for heterogeneous memory paradigms without customized architectures for the memory retriever and agent model. Any new memory paradigms can be efficiently adapted to MemAdapter by training a lightweight alignment module via the procedure in Sec. 2.2.2, which normally finishes on a single GPU within 13 min-utes. The alignment module can then be used on any memory states produced under the same paradigm. Changing memory paradigm only requires switching to the new alignment module to obtain memory representations, which enables plug-and-play memory retrieval for any memory paradigms and agent systems. This flexi-bility empowers agent memory systems in many practical scenarios, including supporting agent reasoning with heterogeneous mem-ory states [ 10 , 31 ] and cross-paradigm knowledge infusion in a cold-start manner [19]. MemAdapter also marks the first step towards plug-and-play heterogeneous memory fusion, which leverages memory from mul-tiple paradigms to support the same target agent model system. Specifically, 𝑘 memory states from different paradigms: { M (𝑡 1 ) 
+
+> 0
+
+,
+
+M (𝑡 1 ) 
+
+> 1
+
+, M (𝑡 2 ) 
+
+> 2
+
+, ... M (𝑡 𝑚 ) 
+
+> 𝑘
+
+} are first projected into the unified memory space via their corresponding alignment modules: [ ℎ(𝑡 1 ) 
+
+> 0
+
+, ℎ(𝑡 1 ) 
+
+> 1
+
+, ℎ(𝑡 2 ) 
+
+> 2
+
+,... , ℎ(𝑡 𝑚 ) 
+
+> 𝑘
+
+] These aligned representations can be easily fused via any down-sampling techniques: 
+
+ˆℎ = DownSampling 
+
+
+
+ℎ(𝑡 1 ) 
+
+> 0
+
+, ℎ (𝑡 1 ) 
+
+> 1
+
+, ..., ℎ (𝑡 𝑚 )
+
+> 𝑘
+
+
+
+(10) where ˆℎ ∈ S and we instantiate a simple max-pooling method for down-sampling. ˆℎ is used in Eqn. 6 as memory information to obtain the retrieved memory subgraph ˆ𝑟 , which explicitly combines task-relevant information from heterogeneous memory states and is used to support the agent model as in Eqn. 3. 
+
+## 3 Experiments 3.1 Training Details 
+
+3.1.1 Baseline Methods. We compare MemAdapter with five state-of-the-art agent memory systems that span explicit, parametric, and latent memory paradigms. Explicit memory : We include A-Mem [ 33 ] and Mem0 [ 4], which store and retrieve explicit memory units (e.g., notes or memory entries) via embedding-based or graph-structured retrieval mechanisms. Parametric memory : We select StreamingLLM [ 36 ], which enables efficient long-context inference through attention sink mechanisms without additional fine-tuning. 
+
+Latent memory : We select MemoryLLM [ 32 ], which maintains a trainable latent memory pool embedded within the Transformer layers, and CARE [ 5 ], which encodes retrieved context into compact latent memory tokens via conflict-aware soft prompting. 
+
+3.1.2 Models and Training Data. During the model distillation pro-cess, the generative subgraph retriever is first trained using 40,000 instances sampled from HotpotQA [ 39 ] training set (more details in Appendix B.3). The retriever is based on the Qwen2.5-1.5B [ 38 ]model with LoRA-based [ 9] fine-tuning, and the unified memory space dimension D𝑠 = 1536 , the same as the model’s hidden state to facilitate implementation. The teacher model is instantiated us-ing the Qwen2.5-32B-Instruct model. During the fast alignment stage, we use a fast alignment dataset consisting of merely 2,500 
+
+instances, including 1,200 samples from WikiMultiHopQA [ 8 ] and 1,300 samples from NarrativeQA [ 13 ] training set. All performance on benchmarks is obtained by applying different memory systems on the Qwen2.5-instruct agent model series at three scales: 1.5B, 3B, and 7B, to study the performance of MemAdapter with increased in-context learning capacities of agent models. 
+
+3.1.3 Evaluation Benchmarks. We evaluate all memory systems on three publicly available multi-hop and memory-intensive question answering benchmarks: WikiMultiHopQA [ 8], NarrativeQA [ 13 ], and MuSiQue [ 30 ], yielding 10,000, 10,557, and 2,417 questions re-spectively. Following prior work, we report standard QA metrics: accuracy by Exact Matching, F1, and ROUGE-1 measures to en-sure consistent evaluation protocols across all baselines and model scales. 
+
+3.1.4 Training Settings. All experiments are conducted on NVIDIA H200 GPUs. The generative subgraph retriever is trained on 6 GPUs and completes in approximately 1 hour. The fast alignment pro-cess is conducted on a single GPU. Each new paradigm requires a memory state extraction process for about 10 minutes and 2.5 minutes for alignment module training, with a total of approxi-mately 12-13 minutes. We use AdamW optimization with learning rate 1 × 10 −5 for model distillation and 1 × 10 −4 for fast alignment. Alignment modules are implemented as light-weight feed-forward neural networks. More details are provided in Appendix B.4. 
+
+## 3.2 Main Results 
+
+We compare MemAdapter trained under the anchored memory paradigm with the baseline agent memory systems. The results are summarized in Table 1. The generative subgraph retriever consis-tently achieves the best overall performance across benchmarks and agent model scales, significantly outperforming baseline sys-tems in terms of average EM, F1, and ROUGE-1 under the 1.5B, 3B, and 7B settings. These results demonstrate the effectiveness of generative subgraph retrieval for agent memory. In contrast, explicit memory systems such as A-Mem and Mem0 exhibit lim-ited performance across model scales, as they primarily rely on similarity-based retrieval over fixed memory units. Parametric and latent memory systems show more oscillated performance across tasks and model sizes, reflecting their reliance on paradigm-specific retrieval mechanisms and the internal reasoning capacity of the underlying agent models. These results also highlight benchmark-dependent failure cases that help clarify the limitations of different memory paradigms. For example, StreamingLLM performs competitively on WikiMulti-HopQA and NarrativeQA, but its performance drops substantially on MuSiQue across all agent model scales. StreamingLLM is de-signed to support efficient long-context inference through attention sink and cache mechanisms, rather than to retrieve task-relevant ev-idence explicitly. In contrast, MuSiQue requires preserving sparsely distributed evidence across multi-step reasoning chains, making it highly sensitive to the removal of intermediate information. As a Conference acronym ’XX, June 03–05, 2018, Woodstock, NY xx et al. 
+
+Table 1: Main results on three QA benchmarks. In this case, we report MemAdapter performance by the generative subgraph retriever trained on the anchored memory paradigm. The results are grouped by the scale of agent models, and all methods are evaluated under their best reported configurations with memory enabled. 
+
+Method WikiMultiHopQA NarrativeQA MuSiQue Avg EM F1 R-1 EM F1 R-1 EM F1 R-1 EM F1 R-1 Agent Model: Qwen2.5-1.5B-Instruct 
+
+A-Mem 8.31 17.02 18.94 7.21 24.37 27.46 4.68 9.88 10.41 6.92 16.27 18.03 Mem0 12.04 19.21 20.87 9.73 30.42 32.18 7.21 14.73 16.88 11.63 21.94 23.11 MemoryLLM 7.58 12.96 14.42 4.63 26.71 30.02 1.34 3.67 3.81 4.41 13.88 15.02 StreamingLLM 9.94 20.63 21.48 6.18 28.12 31.57 5.26 10.01 12.17 8.54 18.92 21.36 CARE 0.47 6.18 6.52 0.73 8.87 9.14 0.56 4.83 5.07 0.59 6.63 6.91 
+
+MemAdapter (Ours) 14.08 23.03 23.75 13.30 36.00 37.83 14.36 22.84 23.80 13.91 27.29 28.46 Agent Model: Qwen2.5-3B-Instruct 
+
+A-Mem 14.00 23.99 24.49 20.65 39.62 41.42 8.44 15.89 16.55 14.36 26.50 27.49 Mem0 18.73 28.56 29.27 21.81 43.68 45.24 14.94 24.36 25.25 18.49 32.20 33.25 MemoryLLM 12.10 19.73 20.40 14.24 42.57 44.42 2.44 5.86 6.52 9.59 22.72 23.78 StreamingLLM 15.91 26.01 26.91 15.28 42.77 44.61 8.03 15.98 16.58 13.07 28.25 29.37 CARE 0.69 7.41 7.86 0.94 10.32 10.78 0.63 5.26 5.49 0.75 7.66 8.04 
+
+MemAdapter (Ours) 19.12 29.99 30.81 30.25 55.35 56.99 21.93 34.81 36.38 23.77 40.05 41.39 Agent Model: Qwen2.5-7B-Instruct 
+
+A-Mem 12.87 23.53 24.33 22.13 41.51 43.16 13.74 23.00 23.53 16.25 29.35 30.34 Mem0 8.83 17.92 18.05 26.67 50.01 51.62 23.33 36.73 37.72 22.32 38.75 39.66 MemoryLLM 12.69 19.91 20.43 29.51 56.91 58.73 3.48 7.34 8.35 15.23 28.05 29.17 StreamingLLM 18.49 29.27 30.10 26.67 50.01 51.62 18.74 29.56 30.32 21.30 36.28 37.35 CARE 0.98 8.61 9.03 1.24 12.71 13.18 0.86 6.17 6.42 1.03 9.16 9.58 
+
+MemAdapter (Ours) 19.28 29.73 30.38 34.79 61.59 63.22 27.64 40.20 41.54 27.24 43.84 45.05 
+
+result, partial memory truncation can lead to severe information loss and degraded performance. MemAdapter mitigates this issue by constructing an explicit, task-relevant evidence subgraph, which preserves critical dependencies necessary for multi-step reasoning and improves robustness across benchmarks. As the agent model scales, MemAdapter consistently outper-forms parametric and latent memory systems, even though the per-formance of these baselines generally improves with larger models. Notably, when paired with the strong Qwen2.5-7B-Instruct agent model, MemAdapter still surpasses competitive parametric base-lines across all three benchmarks. They indicate that MemAdapter provides complementary, task-relevant information that extends beyond the intrinsic capacity of the agent model, using only light-weight alignment modules and a generative subgraph retriever. Moreover, they suggest that leveraging the in-context learning ca-pabilities of agent models for memory-dependent reasoning is an effective and scalable approach. 
+
+## 3.3 Cross-paradigm Alignment Performance 
+
+We select one representative memory system from each paradigm and conduct alignment training to project their memory states into the unified memory space, facilitating retrieval using the gener-ative subgraph retriever. MemAdapter completes cross-paradigm alignment with less than 5% of training compute compared to Table 2: Fast alignment performance of MemAdapter. ↑ and 
+
+↓ indicate comparisons to the original memory retrievers.                                           
+
+> Agent Model Method Original Retriever MemAdapter F1 R-1 F1 R-1
+> Qwen2.5-1.5B A-Mem 16.27 18.03 19.08 ↑22.67 ↑
+> MemoryLLM 13.88 15.02 20.41 ↑23.96 ↑
+> StreamingLLM 18.92 21.36 23.71 ↑26.84 ↑
+> Qwen2.5-3B A-Mem 26.50 27.49 27.91 ↑30.14 ↑
+> MemoryLLM 22.72 23.78 29.03 ↑31.88 ↑
+> StreamingLLM 28.25 29.37 31.06 ↑33.92 ↑
+> Qwen2.5-7B A-Mem 29.35 30.34 33.18 ↑36.71 ↑
+> MemoryLLM 28.05 29.17 31.44 ↑35.02 ↑
+> StreamingLLM 36.28 37.35 35.62 ↓41.04 ↑
+
+tuning the original memory retrievers on the agent models .We present the performance comparisons in Table 2. The results show that MemAdapter consistently outperforms the original memory retrievers in downstream performance across memory paradigms and agent model scales. The performance gains are particularly significant on the latent memory system Memo-ryLLM, where MemAdapter shows an average of 7.63% advantage in R-1 across all agent models. These results show that converting MemAdapter : Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+implicit memory states into explicit evidence subgraphs can lead to substantial improvements in agent model performance and improve the interpretability of the memory system. The explicit memory system A-Mem also benefits from using MemAdapter, with stable performance gains across all agent model scales. This is because generative subgraph retrieval can further refine similarity-based retrieval results to provide more flexible and accurate memory information to the agent model. For StreamingLLM, the perfor-mance of MemAdapter is less significant compared to other mem-ory systems, possibly because StreamingLLM does not perform any memory refinement before producing memory states and mostly relies on the agent model in memory retrieval. The noisy infor-mation makes the projection more challenging for the alignment module. Interestingly, at 7B scale, MemAdapter slightly reduces F1 but markedly increases ROUGE-1, suggesting a shift toward more evidence-grounded and lexically coherent generation. Over-all, these results show that MemAdapter can effectively enhance the utilization of heterogeneous memory through generative subgraph retrieval from a unified memory space. Adapting MemAdapter to new memory paradigms with a fast alignment process is also much more efficient than optimizing the agent model for the original memory retrieval methods, which saves over 95% of training com-pute. 
+
+Table 3: Comparisons on memory length, unique ratio of memory , and memory utilization across different systems.                                        
+
+> Method Memory Efficiency Memory Utilization (%) ↑
+> Mem Length ↓Unique Ratio (%) ↑1.5B 3B 7B
+> A-Mem 4398.40 45.82 56.50 51.24 50.45 mem0 4804.70 45.31 51.73 55.93 53.68 MemoryLLM 5884.60 –48.94 54.16 59.29 StreamingLLM 5884.60 –44.68 48.20 49.83 CARE 5884.60 –40.39 35.70 42.03
+> MemAdapter (Ours) 2241.80 46.92 54.67 56.68 61.88
+
+## 3.4 Memory Efficiency and Utilization 
+
+We analyze memory efficiency and utilization on 500 randomly selected samples from the benchmarks. We use retrieved memory text for explicit memory and the full context for parametric and latent systems. For MemAdapter, we use the generated evidence subgraph. As shown in Table 3, Mem Length measures the average length of the memory in characters. The Unique Ratio reflects the proportion of unique tokens. Memory Utilization computes the ratio between the correctly-answered samples and the total gold samples. The results show that MemAdapter reduces Mem Length by more than 50% compared with all baseline methods. Parametric and latent memory systems require the agent model to process the full memory, with an average length exceeding 5.8K characters, which substantially increases the reasoning burden. Explicit memory sys-tems achieve a notable reduction in memory length but still retain an average length of over 4.3K characters. In contrast, MemAdapter produces a compact, task-conditioned evidence subgraph, reducing the average memory length to 2.2K characters. This result demon-strates its strong capability for effective information compression. MemAdapter also attains a comparable unique ratio to other ex-plicit memory systems. Considering its significantly lower mem length, this indicates its higher efficiency in filtering redundant information while preserving task-relevant content. MemAdapter achieves high memory utilization across all agent model scales, with utilization rates of 54.67%, 56.68%, and 61.88% for the 1.5B, 3B, and 7B agent models, respectively. Notably, its advantage becomes more pronounced as model capacity increases, because memory utilization depends jointly on the quality of the memory system and the reasoning capability of the agent model. Most parametric and latent memory systems that require process-ing the full context exhibit relatively low utilization rates, reflecting the difficulty of extracting relevant information from long and re-dundant memory. MemoryLLM achieves relatively high utilization at smaller model scales, but its performance degrades as the agent model becomes more powerful. Overall, these results indicate that storing larger amounts of information does not necessarily lead to more reliable or effective memory usage by the agent model. 
+
+Figure 3: Increasing context information with heterogeneous memory encoding. Context segments at different positions are fused by Eqn. 10. 
+
+## 3.5 Complemental Memory Fusion 
+
+We further investigate the behavior of MemAdapter as the available context length increases under a heterogeneous memory setting. The experiment is conducted on 1,000 randomly sampled queries. For each query, we reorganize the memory by encoding context segments at different positions using heterogeneous paradigms, including Mem0, StreamingLLM, and MemoryLLM. We then pro-gressively increase the utilized context length from 10% to 100% of the original context and analyze the resulting changes in F1 performance, as illustrated in Fig. 3. The results show that the average F1 performance improves smoothly and monotonically as the memory ratio increases for all three agent models. This trend indicates that the proposed system can effectively integrate heterogeneous information from additional memory without introducing performance instability. Notably, the gains are distributed across the full range of memory ratios, rather Conference acronym ’XX, June 03–05, 2018, Woodstock, NY xx et al. 
+
+Figure 4: A t-SNE visualization of heterogeneous memory representations from the unified memory space, before and after cross-paradigm alignment. Memory states for parametric memory are obtained via the Qwen2.5-3B-Instruct agent model. 
+
+than being concentrated in a specific interval. MemAdapter consis-tently translates incremental memory into performance improve-ments, suggesting that the aligned unified memory space enables reliable composition of heterogeneous evidence. This effect be-comes more pronounced at larger model scales. While the 1.5B agent models exhibit steady but moderate gains, the 3B and 7B agent model benefits substantially from increased memory, achiev-ing over 20 points improvement when the memory ratio increases from 10% to 100%. These results suggest that larger agent models can better exploit the high-quality, structured memory produced by MemAdapter, probably due to their more advanced in-context learning capabilities. 
+
+## 3.6 Visualization and Analysis 
+
+3.6.1 Visualization of Unified Memory Space. We visualize the effect of cross-paradigm alignment using t-SNE [ 17 ] to project heterogeneous memory representations from the unified memory space into the 2D space. The visualization is based on 1000 mem-ory samples, encoded using multiple memory paradigms. For 35 samples, we connect their cross-paradigm representations with line segments to illustrate alignment behaviors, as shown in Fig. 4. Before cross-paradigm alignment (left), representations of the same sample are widely dispersed and form paradigm-specific clusters. In particular, explicit and implicit memory representations occupy distinct regions of the embedding space, leading to large cross-paradigm distances even for identical samples. After alignment (right), representations of the same sample are consistently drawn closer, forming compact instance-level clusters despite originat-ing from different paradigms. At the same time, representations of different samples remain distinguishable in the embedding space, indicating that the alignment preserves useful memory informa-tion rather than collapsing the representation space. Overall, these Heterogeneous Memory Inputs Uni fi ed Memory after MemAdapter             
+
+> Memory Content (from di fferent encoders) Nodes:
+> N1: Bridge near Kemer
+> N2: Xanthos
+> N3: Roman -era bridge
+> N4: Stone
+> Edges:
+> N1 →N2: located_near
+> N1 →N3: historical_period
+> N1 →N4: construction_material
+> Model Output:
+> The bridge near Kemer was
+> constructed from stone.
+> A-Mem (early context segment):
+> Turkey is a transcontinental country in Eurasia, located
+> mainly in Anatolia.
+> Lycia was a historical region in southern Anatolia with
+> a long cultural history.
+> Question : “material used bridge near Kemer”
+> Gold Answer:
+> “stone”
+> MemoryLLM (middle context segment):
+> An arch is a curved structure that spans an opening and
+> supports weight.
+> Bridges are commonly constructed using materials such
+> as concrete, steel, or stone.
+> StreamingLLM (late context segment ):
+> The bridge near Kemer is a Roman -era bridge located
+> close to Xanthos.
+> It is an example of early Roman engineering.
+> Evidence Subgraph
+
+Figure 5: A case study of heterogeneous memory fusion. 
+
+results demonstrate that the proposed alignment method effec-tively reduces paradigm-induced discrepancies while maintaining instance-level discriminability in the unified memory space. 
+
+3.6.2 Case Study. Fig. 5 illustrates an example of how MemAdapter integrates heterogeneous memory into a unified evidence subgraph. The input memories originate from non-overlapping context seg-ments and are produced by heterogeneous memory systems. In this example, none of the individual memory segments explicitly encodes the answer, and several segments contain background in-formation that is only indirectly related to the question. As shown, MemAdapter resolves the fragmentation by constructing an evi-dence subgraph that retains only entities and relations necessary for answering the question. By aligning heterogeneous memory representations at the structural level, the model isolates the con-struction material relation of the target bridge while discarding irrelevant contextual content. This case study demonstrates that effective memory utilization requires structured selection rather MemAdapter : Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+than surface-level aggregation, and highlights the role of hetero-geneous memory fusion in enabling the agent model to perform accurate task execution. More cases are provided in Appendix C. 
+
+## 4 Related Work 
+
+Memory mechanisms in LLM-based agents can be broadly catego-rized into explicit, parametric, and latent paradigms, each with distinct representations and access mechanisms. Explicit mem-ory systems store discrete records or structured graphs for re-trieval, such as Reflexion, A-Mem, Mem0 [ 4, 26 , 33 ]. Parametric memory embeds information into model parameters or trainable modules, such as LMLM and MemoryLLM [ 32 , 47 ]. Latent mem-ory maintains evolving internal states, including KV caches or compressed prompts [36, 46]. Research in agent memory retrieval spans retrieval-augmented generation [ 6, 19 , 28 ], generative re-trieval [ 14 , 29 , 41 ], and subgraph retrieval [ 18 , 37 , 43 ]. More details in Appendix A. 
+
+## 5 Conclusion 
+
+In this work, we presented MemAdapter, a unified memory re-trieval framework that enables fast alignment across heteroge-neous agent memory paradigms. By combining a generative sub-graph retriever with lightweight alignment modules, MemAdapter achieves cross-paradigm alignment within 13 minutes on a single GPU. Extensive experiments show that the generative subgraph retriever consistently outperforms strong memory paradigms, and the fast alignment module achieves performance superior to the original memory retrievers with less than 5% of training compute. MemAdapter also enables effective zero-shot fusion across mem-ory paradigms, demonstrating its practicality as a plug-and-play solution for memory-augmented agent models. 
+
+## References 
+
+[1] Petr Anokhin, Nikita Semenov, Artyom Y. Sorokin, Dmitry Evseev, Andrey Kravchenko, Mikhail Burtsev, and Evgeny Burnaev. 2025. AriGraph: Learn-ing Knowledge Graph World Models with Episodic Memory for LLM Agents. In Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence, IJCAI 2025, Montreal, Canada, August 16-22, 2025 . ijcai.org, 12–20. doi:10.24963/IJCAI.2025/2 [2] Nicola De Cao, Gautier Izacard, Sebastian Riedel, and Fabio Petroni. 2021. Au-toregressive Entity Retrieval. In 9th International Conference on Learning Rep-resentations, ICLR 2021, Virtual Event, Austria, May 3-7, 2021 . OpenReview.net. https://openreview.net/forum?id=5k8F6UU39V [3] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. 2020. A simple framework for contrastive learning of visual representations. In Interna-tional conference on machine learning . PmLR, 1597–1607. [4] Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, and Deshraj Yadav. 2025. Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory. CoRR abs/2504.19413 (2025). arXiv:2504.19413 doi:10.48550/ARXIV. 2504.19413 [5] Eunseong Choi, June Park, Hyeri Lee, and Jongwuk Lee. 2025. Conflict-Aware Soft Prompting for Retrieval-Augmented Generation. CoRR abs/2508.15253 (2025). arXiv:2508.15253 doi:10.48550/ARXIV.2508.15253 [6] Darren Edge, Ha Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva Mody, Steven Truitt, Dasha Metropolitansky, Robert Osazuwa Ness, and Jonathan Larson. 2024. From local to global: A graph rag approach to query-focused summarization. arXiv preprint arXiv:2404.16130 (2024). [7] Tianyu Gao, Xingcheng Yao, and Danqi Chen. 2021. Simcse: Simple contrastive learning of sentence embeddings. arXiv preprint arXiv:2104.08821 (2021). [8] Xanh Ho, Anh-Khoa Duong Nguyen, Saku Sugawara, and Akiko Aizawa. 2020. Constructing A Multi-hop QA Dataset for Comprehensive Evaluation of Reason-ing Steps. In Proceedings of the 28th International Conference on Computational Linguistics, COLING 2020, Barcelona, Spain (Online), December 8-13, 2020 , Do-nia Scott, Núria Bel, and Chengqing Zong (Eds.). International Committee on Computational Linguistics, 6609–6625. doi:10.18653/V1/2020.COLING-MAIN.580 [9] Edward J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al . 2022. Lora: Low-rank adaptation of large language models. ICLR 1, 2 (2022), 3. [10] Yuyang Hu, Shichun Liu, Yanwei Yue, Guibin Zhang, Boyang Liu, Fangyi Zhu, Jiahang Lin, Honglin Guo, Shihan Dou, Zhiheng Xi, et al . 2025. Memory in the Age of AI Agents. arXiv preprint arXiv:2512.13564 (2025). [11] Zixia Jia, Jiaqi Li, Yipeng Kang, Yuxuan Wang, Tong Wu, Quansen Wang, Xiaobo Wang, Shuyi Zhang, Junzhe Shen, Qing Li, et al . [n. d.]. The AI Hippocampus: How Far are We From Human Memory? Transactions on Machine Learning Research ([n. d.]). [12] Sangyeop Kim, Yohan Lee, Sanghwa Kim, Hyunjong Kim, and Sungzoon Cho. 2025. Pre-storage reasoning for episodic memory: Shifting inference burden to memory for personalized dialogue. arXiv preprint arXiv:2509.10852 (2025). [13] Tomás Kociský, Jonathan Schwarz, Phil Blunsom, Chris Dyer, Karl Moritz Her-mann, Gábor Melis, and Edward Grefenstette. 2018. The NarrativeQA Reading Comprehension Challenge. Trans. Assoc. Comput. Linguistics 6 (2018), 317–328. doi:10.1162/TACL_A_00023 [14] Xiaoxi Li, Jiajie Jin, Yujia Zhou, Yuyao Zhang, Peitian Zhang, Yutao Zhu, and Zhicheng Dou. 2025. From Matching to Generation: A Survey on Generative Information Retrieval. ACM Trans. Inf. Syst. 43, 3 (2025), 83:1–83:62. doi:10.1145/ 3722552 [15] Jessy Lin, Luke Zettlemoyer, Gargi Ghosh, Wen-Tau Yih, Aram Markosyan, Vincent-Pierre Berges, and Barlas Oğuz. 2025. Continual Learning via Sparse Memory Finetuning. arXiv preprint arXiv:2510.15103 (2025). [16] Zhenghao Lin, Yeyun Gong, Xiao Liu, Hang Zhang, Chen Lin, Anlei Dong, Jian Jiao, Jingwen Lu, Daxin Jiang, Rangan Majumder, and Nan Duan. 2023. PROD: Progressive Distillation for Dense Retrieval. In Proceedings of the ACM Web Conference 2023, WWW 2023, Austin, TX, USA, 30 April 2023 - 4 May 2023 , Ying Ding, Jie Tang, Juan F. Sequeda, Lora Aroyo, Carlos Castillo, and Geert-Jan Houben (Eds.). ACM, 3299–3308. doi:10.1145/3543507.3583421 [17] Laurens van der Maaten and Geoffrey Hinton. 2008. Visualizing data using t-SNE. 
+
+Journal of machine learning research 9, Nov (2008), 2579–2605. [18] Costas Mavromatis and George Karypis. 2025. GNN-RAG: Graph Neural Retrieval for Efficient Large Language Model Reasoning on Knowledge Graphs. In Findings of the Association for Computational Linguistics, ACL 2025, Vienna, Austria, July 27 - August 1, 2025 (Findings of ACL, Vol. ACL 2025) , Wanxiang Che, Joyce Nabende, Ekaterina Shutova, and Mohammad Taher Pilehvar (Eds.). Association for Com-putational Linguistics, 16682–16699. https://aclanthology.org/2025.findings-acl.856/ [19] Bo Ni, Zheyuan Liu, Leyao Wang, Yongjia Lei, Yuying Zhao, Xueqi Cheng, Qingkai Zeng, Luna Dong, Yinglong Xia, Krishnaram Kenthapadi, Ryan A. Rossi, Franck Dernoncourt, Md. Mehrab Tanjim, Nesreen K. Ahmed, Xiaorui Liu, Wenqi Fan, Erik Blasch, Yu Wang, Meng Jiang, and Tyler Derr. 2025. Towards Trustworthy Retrieval Augmented Generation for Large Language Models: A Survey. CoRR 
+
+abs/2502.06872 (2025). arXiv:2502.06872 doi:10.48550/ARXIV.2502.06872 [20] Boci Peng, Yun Zhu, Yongchao Liu, Xiaohe Bo, Haizhou Shi, Chuntao Hong, Yan Zhang, and Siliang Tang. 2024. Graph Retrieval-Augmented Generation: A Survey. 
+
+CoRR abs/2408.08921 (2024). arXiv:2408.08921 doi:10.48550/ARXIV.2408.08921 [21] Hadi Pouransari, David Grangier, C Thomas, Michael Kirchhof, and Oncel Tuzel. 2025. Pretraining with hierarchical memories: separating long-tail and common knowledge. arXiv preprint arXiv:2510.02375 (2025). [22] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever. 2021. Learning Transferable Visual Models From Natural Language Supervision. In Proceedings of the 38th International Conference on Machine Learning, ICML 2021, 18-24 July 2021, Virtual Event (Pro-ceedings of Machine Learning Research, Vol. 139) , Marina Meila and Tong Zhang (Eds.). PMLR, 8748–8763. http://proceedings.mlr.press/v139/radford21a.html [23] Vinay Venkatesh Ramasesh, Aitor Lewkowycz, and Ethan Dyer. 2021. Effect of scale on catastrophic forgetting in neural networks. In International conference on learning representations .[24] Preston Rasmussen, Pavlo Paliychuk, Travis Beauvais, Jack Ryan, and Daniel Chalef. 2025. Zep: a temporal knowledge graph architecture for agent memory. 
+
+arXiv preprint arXiv:2501.13956 (2025). [25] Parth Sarthi, Salman Abdullah, Aditi Tuli, Shubh Khanna, Anna Goldie, and Christopher D. Manning. 2024. RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval. In The Twelfth International Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024 . OpenReview.net. https://openreview.net/forum?id=GN921JHCRw [26] Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023. Reflexion: language agents with verbal reinforcement learn-ing. In Advances in Neural Information Processing Systems , A. Oh, T. Naumann, A. Globerson, K. Saenko, M. Hardt, and S. Levine (Eds.), Vol. 36. Curran Asso-ciates, Inc., 8634–8652. https://proceedings.neurips.cc/paper_files/paper/2023/ file/1b44b878bb782e6954cd888628510e90-Paper-Conference.pdf [27] Liangcai Su, Zhen Zhang, Guangyu Li, Zhuo Chen, Chenxi Wang, Maojia Song, Xinyu Wang, Kuan Li, Jialong Wu, Xuanzhong Chen, et al . 2025. Scaling agents via continual pre-training. arXiv preprint arXiv:2509.13310 (2025). Conference acronym ’XX, June 03–05, 2018, Woodstock, NY xx et al. 
+
+[28] Yixuan Tang and Yi Yang. 2024. MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for Multi-Hop Queries. CoRR abs/2401.15391 (2024). arXiv:2401.15391 doi:10.48550/ARXIV.2401.15391 [29] Yi Tay, Vinh Tran, Mostafa Dehghani, Jianmo Ni, Dara Bahri, Harsh Mehta, Zhen Qin, Kai Hui, Zhe Zhao, Jai Prakash Gupta, Tal Schuster, William W. Cohen, and Donald Metzler. 2022. Transformer Memory as a Differentiable Search Index. In Advances in Neural Information Processing Systems 35: Annual Conference on Neural Information Processing Systems 2022, NeurIPS 2022, New Orleans, LA, USA, November 28 - December 9, 2022 , Sanmi Koyejo, S. Mohamed, A. Agarwal, Danielle Belgrave, K. Cho, and A. Oh (Eds.). http://papers.nips.cc/paper_files/paper/2022/ hash/892840a6123b5ec99ebaab8be1530fba-Abstract-Conference.html [30] Harsh Trivedi, Niranjan Balasubramanian, Tushar Khot, and Ashish Sabharwal. 2022. MuSiQue: Multihop Questions via Single-hop Question Composition. Trans. Assoc. Comput. Linguistics 10 (2022), 539–554. doi:10.1162/TACL_A_00475 [31] Yu Wang and Xi Chen. 2025. MIRIX: Multi-Agent Memory System for LLM-Based Agents. CoRR abs/2507.07957 (2025). arXiv:2507.07957 doi:10.48550/ARXIV.2507. 07957 [32] Yu Wang, Yifan Gao, Xiusi Chen, Haoming Jiang, Shiyang Li, Jingfeng Yang, Qingyu Yin, Zheng Li, Xian Li, Bing Yin, Jingbo Shang, and Julian J. McAuley. 2024. MEMORYLLM: Towards Self-Updatable Large Language Models. In Forty-first International Conference on Machine Learning, ICML 2024, Vienna, Austria, July 21-27, 2024 . OpenReview.net. https://openreview.net/forum?id=p0lKWzdikQ [33] Haoran Wu, Can Xiao, Jiayi Nie, Xuan Guo, Binglei Lou, Jeffrey T. H. Wong, Zhiwen Mo, Cheng Zhang, Przemyslaw Forys, Wayne Luk, Hongxiang Fan, Jianyi Cheng, Timothy M. Jones, Rika Antonova, Robert Mullins, and Aaron Zhao. 2025. Combating the Memory Walls: Optimization Pathways for Long-Context Agentic LLM Inference. CoRR abs/2509.09505 (2025). arXiv:2509.09505 doi:10.48550/ARXIV.2509.09505 [34] Yaxiong Wu, Sheng Liang, Chen Zhang, Yichao Wang, Yongyue Zhang, Huifeng Guo, Ruiming Tang, and Yong Liu. 2025. From Human Memory to AI Memory: A Survey on Memory Mechanisms in the Era of LLMs. CoRR abs/2504.15965 (2025). arXiv:2504.15965 doi:10.48550/ARXIV.2504.15965 [35] Yaxiong Wu, Yongyue Zhang, Sheng Liang, and Yong Liu. 2025. SGMem: Sentence Graph Memory for Long-Term Conversational Agents. arXiv:2509.21212 [cs.CL] https://arxiv.org/abs/2509.21212 [36] Guangxuan Xiao, Yuandong Tian, Beidi Chen, Song Han, and Mike Lewis. 2024. Efficient Streaming Language Models with Attention Sinks. In The Twelfth Inter-national Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024 . OpenReview.net. https://openreview.net/forum?id=NG7sS51zVF [37] Yongkang Xiao, Sinian Zhang, Yi Dai, Huixue Zhou, Jue Hou, Jie Ding, and Rui Zhang. 2025. DrKGC: Dynamic Subgraph Retrieval-Augmented LLMs for Knowledge Graph Completion across General and Biomedical Domains. CoRR 
+
+abs/2506.00708 (2025). arXiv:2506.00708 doi:10.48550/ARXIV.2506.00708 [38] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al . 2025. Qwen3 technical report. arXiv preprint arXiv:2505.09388 (2025). [39] Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William W. Cohen, Ruslan Salakhutdinov, and Christopher D. Manning. 2018. HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing, Brussels, Belgium, October 31 - November 4, 2018 , Ellen Riloff, David Chiang, Julia Hockenmaier, and Jun’ichi Tsujii (Eds.). Association for Computational Linguistics, 2369–2380. doi:10.18653/V1/D18-1259 [40] Weiran Yao, Shelby Heinecke, Juan Carlos Niebles, Zhiwei Liu, Yihao Feng, Le Xue, Rithesh Murthy, Zeyuan Chen, Jianguo Zhang, Devansh Arpit, et al .2023. Retroformer: Retrospective large language agents with policy gradient optimization. arXiv preprint arXiv:2308.02151 (2023). [41] Hansi Zeng, Chen Luo, Bowen Jin, Sheikh Muhammad Sarwar, Tianxin Wei, and Hamed Zamani. 2024. Scalable and Effective Generative Information Retrieval. In Proceedings of the ACM on Web Conference 2024, WWW 2024, Singapore, May 13-17, 2024 , Tat-Seng Chua, Chong-Wah Ngo, Ravi Kumar, Hady W. Lauw, and Roy Ka-Wei Lee (Eds.). ACM, 1441–1452. doi:10.1145/3589334.3645477 [42] Guibin Zhang, Muxin Fu, and Shuicheng Yan. 2025. Memgen: Weaving generative latent memory for self-evolving agents. arXiv preprint arXiv:2509.24704 (2025). [43] Jing Zhang, Xiaokang Zhang, Jifan Yu, Jian Tang, Jie Tang, Cuiping Li, and Hong Chen. 2022. Subgraph Retrieval Enhanced Model for Multi-hop Knowledge Base Question Answering. In Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), ACL 2022, Dublin, Ireland, May 22-27, 2022 , Smaranda Muresan, Preslav Nakov, and Aline Villavicencio (Eds.). Association for Computational Linguistics, 5773–5784. doi:10.18653/V1/ 2022.ACL-LONG.396 [44] Xin Zhang, Kailai Yang, Hao Li, Chenyue Li, Qiyu Wei, and Sophia Ananiadou. 2026. Implicit Graph, Explicit Retrieval: Towards Efficient and Interpretable Long-horizon Memory for Large Language Models. arXiv preprint arXiv:2601.03417 
+
+(2026). [45] Zeyu Zhang, Quanyu Dai, Xiaohe Bo, Chen Ma, Rui Li, Xu Chen, Jieming Zhu, Zhenhua Dong, and Ji-Rong Wen. 2025. A survey on the memory mechanism of large language model-based agents. ACM Transactions on Information Systems 
+
+43, 6 (2025), 1–47. [46] Zhenyu Zhang, Ying Sheng, Tianyi Zhou, Tianlong Chen, Lianmin Zheng, Ruisi Cai, Zhao Song, Yuandong Tian, Christopher Ré, Clark Barrett, et al . 2023. H2o: Heavy-hitter oracle for efficient generative inference of large language models. 
+
+Advances in Neural Information Processing Systems 36 (2023), 34661–34710. [47] Linxi Zhao, Sofian Zalouk, Christian K Belardi, Justin Lovelace, Jin Peng Zhou, Kilian Q Weinberger, Yoav Artzi, and Jennifer J Sun. 2025. Pre-training Large Memory Language Models with Internal and External Knowledge. arXiv preprint arXiv:2505.15962 (2025). 
+
+## A Related Work A.1 Agent Memory Paradigms 
+
+Memory is a core design component in LLM-based agent systems, enabling stateful interaction and knowledge accumulation beyond a fixed context window [ 10 , 11 , 34 , 45 ]. Existing approaches can be grouped by how memories are represented and accessed. 
+
+A.1.1 Explicit Memory. Explicit memory stores past information as discrete records in external modules and retrieves them via simi-larity search or structured queries. Reflexion [ 26 ] maintains a buffer of self-reflections that are appended and reused to shape subsequent decisions. A-Mem [ 33 ] and Mem0 [ 4 ] support long-term storage with embedding-based retrieval, optionally organizing records with explicit links for scalable access. Graph-structured variants further model relations in memory, SGMem [ 35 ] encodes dialogue his-tory as sentence-level graphs, and Zep [ 24 ] introduces a temporal knowledge-graph design with time-aware indexing. AriGraph [ 1]combines episodic traces with an incrementally updated graph world model during environment interaction. 
+
+A.1.2 Parametric Memory. Parametric memory encodes informa-tion into model parameters or trainable internal modules, and is accessed implicitly through inference. Limited Memory Language Models (LmLm) [ 47 ] externalize entity-level facts to an external database during pre-training by interleaving lookup calls and mask-ing retrieved values from the training loss, encouraging targeted retrieval rather than memorization. MemoryLLM [ 32 ] introduces a fixed-size trainable memory pool inside transformer layers to support repeated memory writes. Retroformer [ 40 ] trains a retro-spection component to generate feedback that can improve an actor model’s behavior. More generally, parameter-efficient adaptation methods (e.g., LoRA [ 9]) and continual learning variants (e.g., sparse memory fine-tuning [ 15 ]) provide mechanisms to incorporate new information while mitigating catastrophic forgetting [23]. 
+
+A.1.3 Latent Memory. Latent memory maintains information in model states that evolve during execution, such as KV caches or learned soft prompts. StreamingLLM [ 36 ] enables efficient long-context decoding by combining attention sinks with a sliding-window KV cache. H2O [ 46 ] retains a subset of high-attention “heavy-hitter” tokens to compress the KV cache. CARE [ 5] com-presses retrieved context into soft-prompt tokens with conflict-aware training to improve robustness to noisy or contradictory evidence. MemGen [ 42 ] proposes generative latent memory for self-evolving agents, updating latent representations as new infor-mation arrives. These lines of work typically assume a memory representation and access mechanism tied to a specific paradigm, which makes combining heterogeneous memories nontrivial. MemAdapter : Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+## A.2 Agent Memory Retrieval 
+
+A.2.1 Retrieval-augmented Generation. Retrieval-augmented gen-eration (RAG) grounds LLM outputs in external evidence [ 19 ]. Stan-dard RAG retrieves independent passages via embedding similar-ity, which can be insufficient for queries requiring multi-hop evi-dence aggregation [ 28 ]. Graph-based RAG methods leverage rela-tional structure to retrieve and organize connected evidence [ 20 ]. GraphRAG [ 6], for example, summarizes entity graphs via com-munity structure to support global queries, while RAPTOR [ 25 ]builds a hierarchical tree of summaries to enable multi-resolution retrieval. However, these methods primarily operate over explicit text stores and do not directly address heterogeneous agent memory paradigms. 
+
+A.2.2 Generative Retrieval. Generative retrieval formulates retrieval as sequence generation rather than ranking. DSI [ 29 ] autoregres-sively generates document identifiers from a query, establishing a foundational approach to corpus indexing via model parameters. GENRE [ 2 ] retrieves entities by generating names with constrained decoding. Subsequent work improves scalability through identifier design and training strategies [14, 41]. 
+
+A.2.3 Subgraph Retrieval. Subgraph retrieval seeks to extract task-relevant substructures from knowledge graphs to support down-stream reasoning. SR [ 43 ] introduces a trainable subgraph retriever that is decoupled from the reasoning module, yielding a plug-and-play framework applicable to any subgraph-oriented QA model. GNN-RAG [ 18 ] employs GNNs as dense subgraph reasoners to extract candidate answer paths, which are then verbalized for LLM reasoning. Notably, GNN-RAG achieves performance competitive with GPT-4 on multi-hop KGQA benchmarks using only a 7B model. GRAG [ 20 ] proposes a divide-and-conquer strategy for efficient textual subgraph retrieval and integrates the retrieved structure through dual text-graph views. DrKGC [ 37 ] combines rule-guided bottom-up subgraph retrieval with a GCN adapter for knowledge graph completion. 
+
+A.2.4 Contrastive Learning. Contrastive learning has proven effec-tive for aligning heterogeneous representation spaces. CLIP [ 22 ]shows that contrastive pre-training on image-text pairs produces a shared embedding space that supports zero-shot cross-modal trans-fer, with its InfoNCE-style objective becoming a widely adopted alignment technique. SimCLR [ 3] and SimCSE [ 7 ] establish con-trastive learning frameworks for visual and textual representations, respectively. In the retrieval domain, progressive distillation [ 16 ]addresses the capacity gap between teacher and student retriev-ers through staged knowledge transfer with increasingly capable teachers. 
+
+## B Additional Implementation Details B.1 Two Step Teacher Generation 
+
+Stage I supervision is generated by a two step teacher procedure. In the first step, the teacher constructs a query independent full memory graph G★ from a document collection. The objective of this step is coverage rather than minimality. Redundant nodes and edges are allowed as long as they reflect information present in the documents. In the second step, given a query and the fixed    
+
+> Step 1. Full Graph Construction Prompt (Strict). TASK: Create a FULL memory graph covering all entities and rela-tions in the documents.
+> RULES: (1) Include all important entities and do not filter for any specific question. (2) Use node IDs N1, N2, N3, and so on. (3) List all nodes before any edges. (4) Follow the required output format.
+> OUTPUT FORMAT (REQUIRED): [FULL_GRAPH] <NODES> N1: description ... <EDGES> N1 -> N2: relation ...
+
+Figure 6: Strict prompt for query independent full graph construction.      
+
+> Step 2. Evidence Subgraph Extraction Prompt (Strict). TASK: From the full graph, extract nodes and edges that help answer the question.
+> CRITICAL RULES: (1) All nodes must exist in the full graph with the same ID and description. (2) All edges must exist in the full graph with the same source, target, and relation. (3) Include complete node information and complete edge information. (4) Follow the required output format.
+> OUTPUT FORMAT (REQUIRED): [EVIDENCE_SUBGRAPH] <NODES> N1: description ... <EDGES> N1 -> N2: relation ... [CONFIDENCE] 0.85
+> VERIFICATION CHECKLIST: The prompt includes a checklist to verify format compliance and the subset constraint.
+> WARNING: If any node or edge does not exist in the full graph, the output is rejected.
+
+Figure 7: Strict prompt for evidence subgraph extraction with subset verification and confidence reporting. 
+
+full graph, the teacher extracts an evidence subgraph 𝑟 ★ that is constrained to be a subgraph of G★. This subset constraint enforces structural consistency between the anchored memory state and the evidence supervision and enables deterministic verification. 
+
+## B.2 Prompt Templates for Teacher Generation 
+
+We use strict prompting templates to enforce a fixed schema for both full graph construction and evidence subgraph extraction. The templates are shown below. Conference acronym ’XX, June 03–05, 2018, Woodstock, NY xx et al. 
+
+## B.3 Stage-1 Data Sampling and Training Details 
+
+To train the anchor memory representation in Stage-1, we construct a teacher-supervised training set from HotpotQA [ 39 ] with graph-structured evidence annotations. Rather than using the full training split, we select a subset of 40,000 instances to balance training efficiency and representation quality. The subset is constructed using a controlled sampling strategy that considers multiple factors jointly. Specifically, each candidate instance is assigned a composite sampling score based on: (i) in-put length, (ii) reasoning complexity measured by the number of supporting facts, (iii) structural diversity of the associated evidence graph, and (iv) a randomized component to preserve coverage of the original data distribution. Sampling is performed with a fixed random seed to ensure reproducibility. This strategy avoids over-representing extremely long or trivial instances while maintaining sufficient diversity for learning a stable anchor representation space. All sampled instances retain their original teacher-provided graph annotations, which are used as supervision signals during training. Stage-1 training is conducted on the Qwen2.5-1.5B base model using LoRA-based fine-tuning. Only the parameters of MemAdapter and the anchor-side alignment module are updated, while the agent model remains frozen. 
+
+## B.4 Full Hyperparameter Settings 
+
+Table 5 and Table 6 list the hyperparameters used for Stage 1 (model distillation) and Stage 2 (fast alignment). Inference settings for evaluation across agent model scales (1.5B, 3B, 7B) are summarized in Table 4. All experiments use a fixed random seed (42) for reproducibility. Stage 1 and Stage 2 implementation details and data preparation scripts are available in the supplementary code. 
+
+## C Supplementary Case Study: Evidence Subgraph Construction 
+
+The two examples in Figure 8 highlight different sources of difficulty when reasoning over heterogeneous memory inputs. In the first case, the challenge arises from severe entity and relation confusion, where multiple retrieved memories introduce competing performer relations for similar or identical song titles. In the second case, the difficulty stems from heavy structural noise, where large amounts of geographic and administrative information obscure a simple local adjacency relation. In both scenarios, MemAdapter constructs a compact evidence subgraph that preserves only the entities and relations required for answering the query, while discarding memory content that is either redundant or structurally irrelevant. These examples il-lustrate that effective memory utilization is not achieved through aggregating more content, but through enforcing structural consis-tency and strict subset selection. As a result, MemAdapter enables reliable reasoning even when memory inputs are heterogeneous, incomplete, or weakly aligned with the query. MemAdapter : Fast Alignment across Agent Memory Paradigms via Generative Subgraph Retrieval Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Table 4: Inference (evaluation) settings. All memory systems are evaluated with the same reasoner model series (Qwen2.5-instruct 1.5B, 3B, 7B) on the merged test set (22,974 questions). Setting Value 
+
+Reasoner models Qwen2.5-1.5B-Instruct, 3B-Instruct, 7B-Instruct Inference batch size 8 (or 16–32 where memory allows) Max new tokens (answer) 128–256 Decoding Greedy or sampling (consistent across baselines) Test set 22,974 (WikiMultiHopQA 10k + NarrativeQA 10,557 + MuSiQue 2,417) Heterogeneous Memory Inputs 
+
+Memory Content (from di fferent encoders) 
+
+Question : “What languages did Ervin Baktay speak or write?” 
+
+A-Mem (early context segment): 
+
+> France is a country located in Western Europe with a complex administrative
+> structure that includes regions, departments, and communes. Many large
+> cities, rivers, and historical provinces are distributed across the country,
+> forming a dense geographic knowledge space.
+
+MemoryLLM (middle context segment):  
+
+> Tarn -et -Garonne is a department in southern France that contains several
+> communes and towns. The department includes both rural and urban areas,
+> and its administrative divisions are often described together with
+> neighboring regions and provinces.
+
+StreamingLLM (late context segment ):     
+
+> Cordes -Tolosannes is a commune located in the Tarn -et -Garonne department
+> in southern France. Within the same department, Castelsarrasin is another
+> commune that is geographically adjacent to Cordes -Tolosannes and directly
+> borders it.
+
+Uni fi ed Memory after MemAdapter 
+
+Model Output: 
+
+Cordes -Tolosannes shares a border 
+
+with Castelsarrasin .
+
+Gold Answer: 
+
+“castelsarrasin ”
+
+Nodes: 
+
+N1: Cordes -Tolosannes 
+
+N2: Tarn -et -Garonne 
+
+N3: Castelsarrasin 
+
+Edges: 
+
+N1 → N2: located in 
+
+N3 → N2: located in 
+
+N1 → N3: shares border with 
+
+Evidence Subgraph Heterogeneous Memory Inputs 
+
+Memory Content (from di fferent encoders) 
+
+Question : “Who performed the song “This Is the Way We 
+
+Roll”?” 
+
+A-Mem (early context segment): 
+
+> Too Legit to Quit is a studio album released by Hammer in 1991. The album
+> achieved commercial success and includes multiple tracks produced during
+> the peak of Hammer’s music career in the early 1990s.
+
+MemoryLLM (middle context segment):  
+
+> “This Is the Way We Roll” is described as a single released by Hammer from
+> the album Too Legit to Quit. The song was featured in the fi lm The Addams
+> Family and was performed by Hammer on Saturday Night Live, with an
+> accompanying music video.
+
+StreamingLLM (late context segment ):   
+
+> Retrieved passages introduce unrelated artists and songs with similar titles,
+> including references to the Red Hot Chili Peppers and The Rolling Stones.
+> These passages contain extensive but irrelevant performer relations that
+> introduce strong entity confusion.
+
+Uni fi ed Memory after MemAdapter 
+
+Model Output: 
+
+“This Is the Way We Roll” was 
+
+performed by MC Hammer. 
+
+Gold Answer: 
+
+“MC Hammer” 
+
+Nodes: 
+
+N1: This Is the Way We Roll 
+
+N2: MC Hammer 
+
+Edges: 
+
+N1 → N2: performed_by 
+
+Evidence Subgraph 
+
+Figure 8: Additional case studies illustrating memory unification via evidence subgraph construction. Each example presents heterogeneous memory inputs produced by different encoders from disjoint context segments, followed by the unified evidence subgraph selected by MemAdapter and the resulting model output. Table 5: Stage 1 (model distillation) hyperparameters. The student model is Qwen2.5-1.5B with LoRA; training uses KL distillation. Setting Value 
+
+Training data 40,000 (HotpotQA, see Appendix B.3) Train/val split 90% / 10% (seed 42) Per-device batch size 4Gradient accumulation steps 4Effective batch size 4 × 𝑁 GPUs × 4 (e.g., 128 for 8 GPUs) Epochs 3Learning rate 1 × 10 −5
+
+Warmup (as in optimizer; typically 5% of steps) Optimizer AdamW Weight decay 0.01 Max input length 4096 tokens Max output length 512 tokens Precision BF16 
+
+LoRA 
+
+Rank 𝑟 16 Alpha 32 Dropout 0.1 Target modules q_proj , v_proj 
+
+Distillation (KL + CE) 
+
+KL weight 0.5 KL temperature 2.0 CE weight 1.0 Conference acronym ’XX, June 03–05, 2018, Woodstock, NY xx et al. 
+
+Table 6: Stage 2 (fast alignment) hyperparameters. Alignment is trained per paradigm (A-Mem, StreamingLLM, MemoryLLM) and per agent model scale (1.5B, 3B, 7B); anchor dimension is 1536. Setting Value 
+
+Alignment data 2,500 (1,200 WikiMultiHopQA + 1,300 NarrativeQA) Batch size 32 Epochs 10–20 (we use 20 in main runs) Learning rate 1 × 10 −4
+
+Weight decay 0.01 Warmup ratio 0.1 Optimizer AdamW Scheduler Cosine annealing 
+
+Loss 
+
+Contrastive (InfoNCE) temperature 0.07 MSE loss (optional) enabled, weight 0.1 Anchor module frozen 
+
+Model scale → hidden dim 
+
+1.5B 1536 3B 2048 7B 3584

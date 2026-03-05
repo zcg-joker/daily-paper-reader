@@ -1,0 +1,444 @@
+Title: HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling
+
+URL Source: https://arxiv.org/pdf/2602.13933v1
+
+Published Time: Tue, 17 Feb 2026 01:50:00 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+Xiaochen Zhao 1 Kaikai Wang 2 Xiaowen Zhang 2 Chen Yao 2 # Aili Wang 1 #
+
+# Abstract 
+
+Large language model (LLM) agents demonstrate strong performance in short-text contexts but of-ten underperform in extended dialogues due to inefficient memory management. Existing ap-proaches face a fundamental trade-off between efficiency and effectiveness: memory compres-sion risks losing critical details required for com-plex reasoning, while retaining raw text intro-duces unnecessary computational overhead for simple queries. The crux lies in the limitations of monolithic memory representations and static retrieval mechanisms, which fail to emulate the flexible and proactive memory scheduling capa-bilities observed in humans, thus struggling to adapt to diverse problem scenarios. Inspired by the principle of cognitive economy, we propose HyMem, a hybrid memory architecture that en-ables dynamic on-demand scheduling through multi-granular memory representations. HyMem adopts a dual-granular storage scheme paired with a dynamic two-tier retrieval system: a lightweight module constructs summary-level context for effi-cient response generation, while an LLM-based deep module is selectively activated only for com-plex queries, augmented by a reflection mecha-nism for iterative reasoning refinement. Experi-ments show that HyMem achieves strong perfor-mance on both the LOCOMO and LongMemEval benchmarks, outperforming full-context while re-ducing computational cost by 92.6%, establishing a state-of-the-art balance between efficiency and performance in long-term memory management. 
+
+# 1. Introduction 
+
+Large language models (LLMs) inherently operate in a state-less manner, which limits their reasoning capabilities in long-context conversation scenarios (Chen et al., 2024; Li 
+
+> 1
+
+ZJU-UIUC Institute, Zhejiang University 2Ant Group. Corre-spondence to: Chen Yao <chen.yaoc@antgroup.com >, Aili Wang 
+
+<ailiwang@intl.zju.edu.cn >.
+
+Preprint. February 17, 2026. 
+
+Figure 1. Conventional lightweight methods struggle with com-plex tasks, while sophisticated approaches incur high overhead for simple queries. In contrast, our HyMem dynamically allocates memory resources based on task demands, achieving dual opti-mization of performance and efficiency. 
+
+et al., 2024; Tseng et al., 2024). Recent research (Chhikara et al., 2025; Liu et al., 2024b; Packer et al., 2023; Roucher et al., 2025; Zhong et al., 2024) has primarily focused on designing memory systems to enable efficient storage and retrieval of information for LLM-based agents. These ap-proaches typically treat memory as external knowledge stored in vector databases (Edge et al., 2024; Lewis et al., 2020; Shi et al., 2024). To mimic organizational principles of human memory, works such as (Chhikara et al., 2025; Li et al., 2025a; Xu et al., 2025; Edge et al., 2024; Han et al., 2024) extract entities and construct relational struc-tures among memory objects. Concurrently, several studies (Wang & Chen, 2025; Wang et al., 2025; Hu et al., 2025) have proposed multi-category memory segmentation and batch retrieval schemes, thereby providing fundamental sup-port for personalized user memory needs. However, existing methods face two core challenges. First, a single granularity of memory storage struggles to achieve an optimal balance between efficiency and effectiveness. To reduce computa-tional overhead in long dialogues, studies like (Fang et al., 2025; Chhikara et al., 2025; Packer et al., 2023; Pan et al., 2024) attempt to compress or distill raw text into lightweight memory libraries. Yet, such compression often leads to loss of critical details, resulting in irreversible ”forgetting” phe-nomena when handling complex or detail-dependent queries (Yang et al., 2026; Tan et al., 2025). Conversely, storing raw text minimizes information loss but introduces unnecessary 1 
+
+> arXiv:2602.13933v1 [cs.AI] 15 Feb 2026 HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling
+> Figure 2. Our approach demonstrates superior efficiency, achieving the best balance between performance and computational cost (measured in tokens) on the LOCOMO benchmark.
+
+computational burden for simple queries. Second, static memory retrieval strategies fail to effectively emulate the dynamic, hierarchical recall patterns exhibited by humans in complex tasks. These limitations collectively constrain the flexibility and reliability of language agents in long-dialogue applications. In contrast, the human memory system demon-strates notable cognitive economy: for routine queries, the brain prioritizes low-cost summary retrieval to quickly grasp event outlines; deeper logical reasoning and causal analy-sis are activated only when tasks require detailed support. This hierarchical, adaptive memory scheduling mechanism efficiently integrates memories at different levels, offering valuable inspiration for constructing LLM memory systems that reconcile efficiency with expressive power. To address these challenges, we propose HyMem, a hybrid memory architecture integrated with a dynamic retrieval mechanism, designed to flexibly adapt to diverse QA scenarios. At the storage level, the architecture partitions raw dialogues into event units and constructs a dual-granularity storage struc-ture comprising summary-level (Level-1 memory) and raw-text-level (Level-2 memory). During inference, HyMem adopts a dynamic retrieval strategy guided by cognitive economy: it first employs lightweight matching to locate Level-1 memory for rapid context construction; then, based on query complexity, it decides whether to activate Level-2 memory for finer-grained information. Within the deep retrieval module, the system performs coarse-grained re-call to narrow candidate scope, followed by LLM-powered event-query relevance analysis for precise context local-ization. Additionally, a reflection module assesses answer completeness and triggers multi-round query refinement when necessary, enhancing the robustness and thoroughness of reasoning. Our main contributions are: • We propose HyMem, a hybrid memory architec-ture grounded in the principle of cognitive economy. Through dual-granularity memory storage and dy-namic on-demand scheduling, it achieves an effective balance between memory management efficiency and reasoning performance for large-scale language agents in long dialogues. • We introduce an LLM-guided self-retrieval mechanism that dynamically activates deep memory access, com-bined with an LLM self-reflection process, enabling precise information localization and efficient, reliable iterative reasoning in complex query scenarios. • We conduct extensive experiments on the LoCoMo and LongMemEval benchmarks. Results demonstrate that our approach yields significant advantages in answer flexibility and reliability across diverse scenarios. 
+
+# 2. Related Work 
+
+2.1. Memory for LLM Agents 
+
+To alleviate the inherent limitations of large language mod-els (LLMs) in multi-turn long-context dialogues, a consid-erable body of recent research has focused on enhancing agents’ memory and adaptive evolution during interactions. Techniques such as (Munkhdalai et al., 2024; Bulatov et al., 2022; Su et al., 2024; Chen et al., 2023; An et al., 2024; Liu et al., 2023; Xiong et al., 2024) inject additional signals during training or modify model architectures, aiming to improve retention and reasoning over distant information. However, these approaches generally require retraining the base model, incurring substantial computational and en-gineering expenses, and are incompatible with powerful closed-source models like GPT-4. In contrast, retrieval-augmented generation (RAG) methods based on external knowledge bases have become a main-stream, efficient, and flexible solution (Jin et al., 2025; Wu et al., 2025a; Guo et al., 2024; Lee et al., 2024; Asai et al., 2024). For example, (Packer et al., 2023) adopts a hier-archical memory structure and context paging, leveraging a controller to manage prioritized reading and writing to external vector databases, thereby achieving persistent long-term memory and dynamic injection. (Li et al., 2025b) transforms the interaction process into an agent-oriented ”memory operating system,” which automatically extracts and stores user-relevant information. Approaches such as (Li et al., 2025a; Xu et al., 2025; Jimenez Gutierrez et al., 2024; Edge et al., 2024; Xia et al., 2025; Anokhin et al., 2024; Wu et al., 2025b; Rasmussen et al.) draw inspiration from knowledge graphs to organize memories by extracting entities and constructing relationships among memory ob-jects. Meanwhile, (Xu et al., 2025) proposes a self-updating paradigm, encompassing memory writing, retrieval, updat-ing, and forgetting. Methods in (Wang & Chen, 2025; Wang et al., 2025; Hu et al., 2025) introduce multiple structured memory modules and autonomous routing, enabling more 2HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+fine-grained and personalized long-term memory. Nevertheless, during the inference phase, prevailing ap-proaches still predominantly rely on fixed memory retrieval workflows—such as those dependent on static vector rep-resentations and similarity search—for context construc-tion. These methods exhibit significant limitations when confronted with compositional complex reasoning tasks, presenting a critical bottleneck that restricts agent interac-tion capabilities in long-context scenarios. To address this issue, our hybrid memory framework, HyMem, adaptively responds to query difficulty, empowering the LLM to proac-tively retrieve information necessary for complex questions rather than relying solely on vector embeddings. Further-more, the framework incorporates a reflection mechanism to mitigate hallucination issues arising from unimodal retrieval in challenging scenarios. 
+
+2.2. Context Management. 
+
+Another important challenge is the rapid increase in token consumption as dialogue context expands. (Liu et al., 2026; Fang et al., 2025) introduces token filtering and memory pre-compression to reduce retrieval and generation costs while preserving key information. (Xu et al., 2025) fur-ther compresses long conversations into discrete ”atomic notes,” effectively reducing token redundancy. (Chhikara et al., 2025) extracts factual knowledge from dialogues and integrates it into user profiles, rather than storing entire conversation logs. (Wang et al., 2024) compresses histor-ical information into latent states to form a memory pool. However, such compression inevitably leads to permanent information loss. To address this, (Yan et al., 2025; Tan et al., 2025) utilize only raw text to construct context, aiming to avoid information loss induced by memory compression. Recent studies such as (Yu et al., 2025; Zhou et al., 2025; Ye et al., 2025) have effectively mitigated the “forgetting” problem in long-context reasoning by deferring memory updates to the inference phase, demonstrating notable per-formance. However, since a full memory update is enforced as a mandatory step in every inference, it inevitably intro-duces substantial redundant information when processing most simple queries, leading to significant computational overhead and resource waste. Consequently, developing multi-granular memory storage strategies coupled with an adaptive, dynamic scheduling mechanism has become a key challenge to enhancing the efficiency of LLM-based agents. To address this, our proposed hybrid memory framework, HyMem, establishes a two-tier storage architecture consist-ing of event-level summaries (Level-1 memory) and raw dialogue text (Level-2 memory). By dynamically selecting the appropriate memory granularity based on query com-plexity, HyMem not only preserves answer accuracy but also significantly improves inference efficiency. 
+
+# 3. Method 
+
+We propose HyMem, a memory architecture compris-ing four core components: a memory storage module, a lightweight memory module, a deep memory module, and a reflection module. The overall design aims to efficiently simulate the multi-level memory processing observed in humans, enabling agents to store and retrieve information flexibly and effectively in long-dialogue scenarios. 
+
+3.1. Memory Storage Module 
+
+Current approaches often treat the majority of content in long dialogues as redundant, arguing that such redundancy not only increases token consumption during inference but also obscures critical information. However, infor-mation deemed low-value may not be useless, and over-compression inevitably leads to the loss of useful con-tent—an issue we will analyze in detail in Section 4.4. While we acknowledge the value of distilled memory for ef-ficient storage and question answering—experiments on the LOCOMO benchmark show that in approximately 70% of cases, answers generated using distilled memory combined with a naive RAG strategy suffice—the remaining 30% re-veal critical bottlenecks. Among these failures, about 15% and 5% are attributable to retrieval errors and information loss due to compression, respectively. As shown in Fig-ure 3(a), to flexibly accommodate diverse scenario require-ments, HyMem’s memory storage module first partitions the raw dialogue into discrete event units based on discussed topics. To maintain coherence between events, we allow con-tent overlap across different units. For each abstracted event, core information is extracted. Specifically, the pipeline dis-tills the general progression of the event and key elements that can be directly associated with queries—such as context, time, location, and participants—into a coherent summary, while omitting dialogue details, causal relationships, and so-cial conventions as redundant content. This forms a Level-1 memory unit si. The corresponding raw dialogue text for each event is preserved as a Level-2 memory unit pi.During the storage phase, the system performs two main operations: First, each Level-1 memory unit is vectorized using an embedding model E , such that E(si) = ei, to support efficient retrieval in the lightweight module. Unlike (Tan et al., 2025), Level-1 memory units in HyMem serve not only as retrieval entries but also as raw material for con-text construction, enabling efficient recall and lightweight reasoning throughout the inference process. Second, explicit links are established between each Level-1 memory unit and its corresponding Level-2 memory unit. This design allows the deep memory module, upon detecting a potential logical association between a query and si, to backtrack to the de-tailed content in Level-2 memory, thereby reconstructing a more informative and reliable context. Both types of mem-3HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling  
+
+> Figure 3. (a) Workflow of the Memory Storage Module. This diagram illustrates the complete pipeline for constructing the dual-layer memory structure: generating core summaries (Level-1 memory) from pre-partitioned event units of raw dialogues (Level-2 memory), establishing many-to-one links to support memory backtracking during the recall stage, before final persistent storage in the database. (b) Inference Workflow within the Memory Recall Module. Queries are first routed to a lightweight module, with selective activation of a deep module when necessary, followed by iterative optimization and final review by the Reflection Module to produce the output.
+
+ory units are stored synchronously in the memory database, providing multi-granular support for retrieval and reasoning. 
+
+3.2. Light Memory Module 
+
+During the inference process, we maintain a memory pool 
+
+Mi, which is initially empty and used to store intermediate answers generated during the question-answering process. The initial user query is denoted as q0, and qi represents the intermediate query at the i -th reasoning step; in the first iteration, qiis initialized to q0.As illustrated in Figure3(b), we introduce a dynamic mem-ory scheduling mechanism that adaptively responds to input queries. In accordance with the cognitive economy prin-ciple—which mimics energy-efficient human recall—the incoming query qi is first sent to the lightweight memory module L for vectorization. As shown in Figure4(a), mod-ule L retrieves the top-k most relevant segments from the Level-1 memory units using cosine similarity, constructs a lightweight context, and attempts to generate an interme-diate answer. This process is characterized by low latency and minimal computational overhead, making it suitable for most simple query scenarios. Additionally, the lightweight memory module evaluates the contextual state to determine whether to invoke the deep memory module. If it detects con-textual incompleteness—defined as a ”forgetting” state due to either retrieval failure or information loss—the deep mem-ory module is dynamically activated, and qi is forwarded for more precise retrieval and Level-2 memory reconstruc-tion. If the context is deemed complete, the answer is sent directly to the reflection module for further evaluation, and the memory pool Mi is updated accordingly. 
+
+3.3. Deep Memory Module 
+
+As illustrated in Figure 4(b), the deep memory module consists of a retriever fγ and a generator Gγ . Unlike the lightweight module, which relies solely on semantic simi-larity for retrieval, this module adopts a two-stage retrieval strategy: first, it performs coarse-grained recall based on semantic similarity to select the top-N candidate events, narrowing the search scope; subsequently, it introduces an LLM-based self-retrieval mechanism to deeply identify key events sk in the Level-1 memory that exhibit semantic rel-evance, logical connection, or causal dependency with the query qi. The retriever then backtracks to the corresponding Level-2 memory unit pk via pre-established links, recon-structing a context with comprehensive information. This context, along with the original query q0, is fed into the generator Gγ to produce the final answer, and the memory pool Mi is updated accordingly. HyMem defers reasoning about inter-event relationships and query decomposition to the reflection stage. During a single retrieval process, each event is treated as an independent, atomic memory unit. Thanks to the decoupled architecture of the retriever and generator, the retriever can process dif-ferent batches of Level-1 memory units in parallel, without considering dependencies among units. Specifically, the 4HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling  
+
+> Figure 4. (a) Workflow of the Lightweight Module. (b) Context Reconstruction via the Deep Memory Module by Backtracking from Level-1 to Level-2 Memory. (c) Process of Review and Iterative Optimization by the Reflection Module.
+
+candidate set obtained from coarse recall can be partitioned by a batch size d :
+
+S =
+
+> m/d
+
+[
+
+> i=1
+
+Si, Si = {s(i−1) d+1 , s (i−1) d+2 , . . . , s id }
+
+(1) . Our approach effectively avoids the O(N ) time complex-ity inherent in traditional streaming memory processing schemes(Yu et al., 2025). The overall inference complexity of the system primarily depends on the number of iteration rounds in the reflection phase and the concurrency of LLM calls, thereby significantly improving processing efficiency while maintaining retrieval quality. 
+
+3.4. Reflection Module 
+
+Before the system outputs the final answer, the reflection module R conducts a comprehensive completeness check. Unlike the lightweight contextual completeness assessment performed by the memory module, the reflection module autonomously plans subsequent reasoning steps based on the response completeness. Specifically, this module rigor-ously evaluates whether the query has been decomposed into minimal answerable units and whether each unit has been correctly addressed. If further responses are possible, the reflection module decomposes the original problem into sub-problems and reformulates the query, generating qi+1 for the next round of retrieval. If the problem is fully resolved, the process terminates and the final answer is produced. This mechanism is particularly critical for complex queries, whose answers may depend on multiple memory segments. As illustrated in Figure 4(c), although memory units may be independent, the chained combination of queries can give rise to progressive causal or dependency relationships. Since each retrieval round is treated as an atomic opera-tion, a single retrieval may only yield a superficial answer, while underlying dependencies could lead to incomplete responses. The reflection and query rewriting process effec-tively mitigates this limitation, substantially enhancing the system’s ability to handle complex queries. 
+
+# 4. Experiment 
+
+Our experiments are divided into the following five main sections. First, we perform comprehensive comparisons between our proposed HyMem and several state-of-the-art baselines on the LOCOMO and LongMemEval benchmarks. Second, leveraging the Qwen3-Embedding-0.6B embedding model, we conduct an in-depth analysis of HyMem’s perfor-mance and computational cost in contrast to conventional static RAG approaches. Third, we present a detailed ablation study, examining the contributions of Level-1 and Level-2 memory granularity, the lightweight memory module, the deep memory module, and the reflection module. Fourth, we analyze the information loss incurred by memory pre-compression, and validate the effectiveness of our proposed event-level compression strategy. Finally, we systematically vary the retrieval hyperparameter k in the lightweight mem-ory module to investigate its impact on overall performance. 
+
+4.1. Main Result 
+
+On the LOCOMO dataset, we set the retrieval count k of the lightweight module to 10 and the coarse retrieval count N 5HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+Table 1. Comparison of LLM-as-a-Judge scores (%) between HyMem and each baseline on the LOCOMO dataset and LongMemEval-s. 
+
+Method LOCOMO LongMemEval-s 
+
+Avg Tokens Single Hop Multi Hop Open Domain Temporal Overall Overall 
+
+> gpt-4o-mini
+
+LangMem - 62.23 47.92 71.12 23.43 49.91 37.20 A-Mem 2.7k 40.22 19.01 55.10 50.12 49.01 62.60 Mem0 1.7k 67.13 51.15 72.93 55.51 66.88 53.61 Zep 1.4k 74.11 66.04 67.71 79.76 75.14 -LightMem 0.8k 76.61 67.02 45.83 76.32 72.99 68.64 Nemori 4.7k 82.10 65.30 44.80 71.00 74.4 64.20 Full-Context 21.4k 80.14 46.89 58.33 90.49 77.51 56.80 
+
+> gpt-4.1-mini
+
+LangMem - 74.47 61.06 67.71 86.92 78.05 -Zep 1.4k 79.43 69.16 73.96 83.33 79.09 71.12 Mem0 1.0k 62.41 57.32 44.79 66.47 62.47 66.40 Mirix - 85.11 83.70 65.62 88.39 85.38 -Nemori 4.4k 84.90 75.10 51.00 77.60 79.40 74.60 MemU 4.0k 74.91 72.34 43.61 54.17 66.67 38.40 Naive RAG(k=3) 2.5k 70.92 69.47 65.62 75.74 72.97 -Naive RAG(k=5) 4.1k 72.69 74.14 68.75 81.21 77.40 72.80 Full-Context 21.4k 88.53 77.70 71.88 92.70 87.52 -Our 1.5k 85.15 88.16 77.08 92.98 89.55 75.00 2.6 4.2 8.2 12.2 17.2    
+
+> Tokens(k)
+> 60
+> 65
+> 70
+> 75
+> 80
+> 85
+> 90
+> 95
+> Accuracy (%)
+> 1.6 21.5
+> 70.9 72.7
+> 79.1
+> 84.8 86.2
+> Full Context (88.53%)
+> Ours (85.15%)
+> Naive RAG
+
+(a) Single Hop tasks. 2.5 4.1 8.0 11.8 16.2    
+
+> Token(k)
+> 60
+> 65
+> 70
+> 75
+> 80
+> 85
+> 90
+> 95
+> Accuracy (%)
+> 1.5 20.9
+> 69.5
+> 74.1
+> 76.3
+> 81.3 80.1
+> Full Context (77.7%)
+> Ours (88.16%)
+> Naive RAG
+
+(b) Multi Hop tasks. 2.5 4.2 8.3 12.3 16.5   
+
+> Token(k)
+> 60
+> 65
+> 70
+> 75
+> 80
+> 85
+> 90
+> Accuracy (%)
+> 3.3 21.7
+> 65.6
+> 68.8
+> 75.0
+> 71.9
+> 76.0
+> Full Context (71.88%)
+> Ours (77.08%)
+> Naive RAG
+
+(c) Open Domain tasks. 2.5 4.1 8.0 11.8 16.2    
+
+> Token(k)
+> 60
+> 65
+> 70
+> 75
+> 80
+> 85
+> 90
+> 95
+> 100
+> Accuracy (%)
+> 1.3 21.6
+> 75.7
+> 81.2
+> 87.8
+> 90.7 91.9
+> Full Context (92.7%)
+> Ours (92.98%)
+> Naive RAG
+
+(d) Temporal tasks. 
+
+Figure 5. Comparison of performance and average token usage on the four LOCOMO task categories for Naive RAG with different retrieval k values, Full Context, and our method. 
+
+of the deep memory module to 30 for experimentation. As summarized in Table 1, our method demonstrates competi-tive performance on the single-hop task (ranking second), while consistently exceeding all baseline models across all other task categories as well as in overall average accu-racy. Notably, HyMem achieves particularly strong results on multi-hop and open-domain tasks, with accuracies of 88.16% and 77.08%, respectively. Even when compared to baseline methods with full context access, it yields sub-stantial improvements of 10.46% and 5.20% points, clearly validating the efficacy of the proposed deep memory mod-ule in handling complex reasoning challenges. Furthermore, on the LongMemEval-S benchmark, our approach attains a leading score of 75.00%, surpassing all baseline meth-ods. These results indicate that our method exhibits strong competitive advantages in scenarios involving ultra-long contexts. 
+
+4.2. Efficiency Analysis 
+
+We hypothesize that Naive static RAG methods are one of the key factors limiting the accuracy of memory recall. To validate this hypothesis, we compare the efficiency and ef-fectiveness of Naive RAG approaches with our proposed method under varying numbers of retrieved items k . The experiments employ Qwen3-Embedding-0.6B as the embed-ding model and are evaluated on four types of tasks from the LOCOMO dataset. For Naive RAG, we test accuracy and inference token consumption for k ∈ { 3, 5, 10 , 15 , 20 }.To maximize baseline performance, retrieval is performed directly on the original memory segments rather than com-pressed representations. Our method uses the same embed-ding model but fixes k = 10 in the retrieval module. As shown in Figure 5, the accuracy of Naive RAG initially in-creases with larger k , which is expected since a higher recall count improves the likelihood of retrieving relevant events. However, beyond a certain threshold, performance plateaus 6HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+Algorithm 1 HyMem Memory Retrieval and Reasoning  
+
+> 1:
+
+Input: Initial query q0, maximum number of iterations 
+
+T 
+
+> 2:
+
+Initialize: Memory pool M0 ← NULL, iteration counter i ← 0 
+
+> 3:
+
+Modules: Light Memory Module L = {Embedding E,Retriever fθ , Generator Gθ },Deep Memory Module D = { Retriever fθ , Retriever 
+
+fγ , Generator Gγ }, Reflection module R 
+
+> 4:
+
+while not done and i < T do  
+
+> 5:
+
+eqi ← E(qi) // Embed query  
+
+> 6:
+
+[s]k ← Retrieve top-k Level-1 memories using 
+
+fθ (eqi ) 
+
+> 7:
+
+answer i, status ← Gθ (q0, [s]k ∪ Mi) 
+
+> 8:
+
+if status == False then  
+
+> 9:
+
+[s]N ← Retrieve top-N Level-1 memories using 
+
+fθ (eqi ) 
+
+> 10:
+
+[s]m ← fγ (qi, [s]N ) // LLM retrieval  
+
+> 11:
+
+[p]n ← Map [s]m to Level-2 memories  
+
+> 12:
+
+answer i ← Gγ (q0, [p]n ∪ Mi) 
+
+> 13:
+
+end if  
+
+> 14:
+
+Update memory pool: Mi+1 ← answer i 
+
+> 15:
+
+qi+1 , done ← R(answer i, q 0) 
+
+> 16:
+
+if done then  
+
+> 17:
+
+Output: answer i 
+
+> 18:
+
+end if  
+
+> 19:
+
+i ← i + 1  
+
+> 20:
+
+qi ← qi+1  
+
+> 21:
+
+end while 
+
+or even declines. This observation aligns with findings from (Fang et al., 2025; Liu et al., 2024a; Pan et al., 2025), and our experiments confirm that excessively redundant context leads to diminishing returns. In contrast, HyMem achieves significantly lower inference token overhead while attaining higher accuracy than Naive RAG under equivalent cost set-tings—even outperforming the full-context baseline. These results indicate that our approach can adaptively adjust re-trieval granularity and recall precision according to task demands, thereby achieving a better trade-off between effi-ciency and performance. 
+
+4.3. Ablation Studies 
+
+We conduct a comprehensive ablation study on the LO-COMO dataset to evaluate the impact of memory granularity in HyMem’s storage module—core summaries as Level-1 memory versus raw text as Level-2 memory—along with the three inference-time modules: the lightweight mem-ory module, deep memory module, and reflection module. Table 2 summarizes the experimental results. Notably, re-moving both the deep memory module and Level-2 memory considerably reduces inference token usage (by 700–800                                          
+
+> Table 2. Impact of Memory Granularity (Core Summary Level-1, Original Text Level-2) and Retrieval Modules (Lightweight, Deep, Reflection) on Overall (%) and Avg Token Consumption.
+> Storage Retrieval Overall(%) Token(k)
+> Level-1 Level-2 LDR
+> ✓✓✓✓✓89.55 1540
+> ✓✓✓72.15 850
+> ✓✓✓✓91.75 3192
+> ✓✓✓✓87.34 1411
+> ✓✓67.98 794
+> ✓✓✓91.16 2947
+> ✓✓✓78.49 4125
+> ✓✓77.40 4046
+
+tokens), but at the cost of a 17.40% drop in accuracy, which we attribute to the coarsening of information granularity and suboptimal retrieval performance. In contrast, removing the lightweight memory module yields a slight accuracy improvement of 2.20%; however, this forces all queries to be processed exclusively by the deep memory module, increasing the average token consumption to 3192. Since approximately 70% of queries can be handled efficiently by the lightweight module in practice, omitting this component leads to substantial computational inefficiency. Furthermore, ablating the reflection module results in accuracy reductions of 2.21%, 4.17%, 0.23%, and 1.09% under different con-figurations, highlighting its crucial role in enhancing the agent’s ability to manage complex multi-turn dialogues—a process that also incurs a modest rise in token usage. Lastly, utilizing Level-2 memory in place of Level-1 memory im-proves accuracy by about 6.34%, albeit at the expense of increasing average token consumption by roughly fivefold. 
+
+4.4. Compression Loss Analysis 
+
+We hypothesize that the errors made by agents in long-context tasks mainly stem from the following factors: (1) Retrieval Errors: Retrieved passages are irrelevant to the query or incomplete in content; (2) Over-compression: In-formation loss caused by aggressive compression during memory storage, leading to insufficient evidence retrieved for reasoning; (3) Model Reasoning Errors: The model still outputs incorrect answers even when provided with the complete context. This is often due to excessive textual re-dundancy, which hinders the formation of effective context associations, or due to the inherent complexity of the query exceeding the model’s reasoning capabilities; (4) Dataset Errors: The dataset itself contains intrinsic flaws. Since the last two types of errors (Model and Dataset Errors) are inherent to the model and dataset, we isolate and evaluate the impact of compression granularity solely by removing the retrieval module and directly providing the compressed ’ground-truth’ passages as context to the model. Specifi-7HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling         
+
+> (a) Single Hop tasks. (b) Multi Hop tasks. (c) Open Domain tasks. (d) Temporal tasks.
+> Figure 6. Evaluating accuracy loss under different compression ratios using the LLMLingua-2 pre-compression method.
+
+cally, we employ the LLMLingua-2 model to pre-compress the original text and evaluate the performance across the four task types in the LOCOMO benchmark under varying compression ratios, ratio ∈ { 0.3, 0.5, 0.7, 0.9, 1.0}. The setting with a compression ratio of 1.0 (the full, uncom-pressed passage is provided) serves as an approximate upper bound of the model’s performance on LOCOMO. As shown in Figure 6, after eliminating noise introduced by retrieval, task accuracy declines as the compression ratio decreases, validating our initial hypothesis that fine-grained memory is critical for certain QA tasks. Further experiments demon-strate that our proposed event-level compression method, which reduces memory length to approximately 30% of the original text, significantly outperforms LLMLingua-2 in accuracy—even under the same or more aggressive compression ratios. This indicates that our compression strategy more effectively preserves information crucial for downstream reasoning while efficiently controlling textual redundancy. 
+
+4.5. Hyperparameter Analysis 
+
+As shown in Table 3, initially, as the recall number k in the lightweight memory module increases, model accuracy improves only modestly and does not exhibit significant fluctuations (the variance in accuracy from k = 1 to k = 30 
+
+is approximately 0.60). This behavior can be attributed to HyMem’s dynamic retrieval mechanism: when the retrieval results from the lightweight memory module fail to meet the query requirements, the deep memory module is effec-tively activated to perform supplementary retrieval, thereby ensuring overall response capability. However, higher val-ues of k improve the recall success rate of the lightweight module, significantly reducing reliance on the deep memory module and causing its average invocation rate to decline. Given that the primary token consumption during inference stems from the LLM-based autonomous retrieval in the deep memory module, the reduced invocation frequency leads to a decline in overall token usage when k < 10 . Notably, once k exceeds a certain threshold ( k > 10 ), the invocation rate of the deep memory module tends to saturate. Beyond this point, further increasing k yields diminishing returns                               
+
+> Table 3. Effect of recall hyperparameter kon Overall (%), Token Consumption, and Deep Memory Module Average Invocation Rate.
+> kOverall(%) Token Deep ratio
+> 187.40 1966 0.43 388.25 1747 0.32 588.63 1561 0.29 788.89 1558 0.27 10 89.55 1540 0.22 12 89.63 1594 0.22 15 89.57 1647 0.22 20 89.74 1729 0.21
+
+in terms of performance gain, while introducing additional token overhead due to the expanded retrieval content of the lightweight module. 
+
+# 5. Conclusion 
+
+We propose HyMem, a hybrid memory framework for large language model agents inspired by the principle of cognitive economy, designed to address the efficiency-performance trade-off in long dialogue scenarios. Unlike traditional static memory approaches, HyMem employs a dual-granularity memory storage and dynamic scheduling mechanism that strategically allocates retrieval and reasoning resources be-tween a lightweight memory module and an activatable deep memory module based on query complexity. Augmented by a reflection module for multi-turn iterative refinement, our framework significantly enhances the flexibility and robustness of memory management. Experimental results show that HyMem achieves state-of-the-art performance on both the LOCOMO and LongMemEval benchmarks. This work underscores the importance of adaptive, resource-aware memory systems in enabling long-term, robust, and efficient agent interactions, and lays a foundation for theo-retical and practical advances in scalable dialogue agents. 
+
+# 6. Acknowledgments 
+
+This work was supported by Ant Group Research Intern Program. 8HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+# References 
+
+An, C., Huang, F., Zhang, J., Gong, S., Qiu, X., Zhou, C., and Kong, L. Training-free long-context scaling of large language models. arXiv preprint arXiv:2402.17463 ,2024. Anokhin, P., Semenov, N., Sorokin, A., Evseev, D., Kravchenko, A., Burtsev, M., and Burnaev, E. Arigraph: Learning knowledge graph world models with episodic memory for llm agents. arXiv preprint arXiv:2407.04363 ,2024. Asai, A., Wu, Z., Wang, Y., Sil, A., and Hajishirzi, H. Self-rag: Learning to retrieve, generate, and critique through self-reflection. 2024. Bulatov, A., Kuratov, Y., and Burtsev, M. Recurrent memory transformer. Advances in Neural Information Processing Systems , 35:11079–11091, 2022. Chen, J., Liu, Z., Huang, X., Wu, C., Liu, Q., Jiang, G., Pu, Y., Lei, Y., Chen, X., Wang, X., et al. When large language models meet personalization: Perspectives of challenges and opportunities. World Wide Web , 27(4):42, 2024. Chen, S., Wong, S., Chen, L., and Tian, Y. Extending context window of large language models via positional interpolation. arXiv preprint arXiv:2306.15595 , 2023. Chhikara, P., Khant, D., Aryan, S., Singh, T., and Yadav, D. Mem0: Building production-ready ai agents with scalable long-term memory. arXiv preprint arXiv:2504.19413 ,2025. Edge, D., Trinh, H., Cheng, N., Bradley, J., Chao, A., Mody, A., Truitt, S., Metropolitansky, D., Ness, R. O., and Larson, J. From local to global: A graph rag ap-proach to query-focused summarization. arXiv preprint arXiv:2404.16130 , 2024. Fang, J., Deng, X., Xu, H., Jiang, Z., Tang, Y., Xu, Z., Deng, S., Yao, Y., Wang, M., Qiao, S., et al. Lightmem: Lightweight and efficient memory-augmented generation. 
+
+arXiv preprint arXiv:2510.18866 , 2025. Guo, Z., Xia, L., Yu, Y., Ao, T., and Huang, C. Lightrag: Simple and fast retrieval-augmented generation. arXiv preprint arXiv:2410.05779 , 2024. Han, H., Wang, Y., Shomer, H., Guo, K., Ding, J., Lei, Y., Halappanavar, M., Rossi, R. A., Mukherjee, S., Tang, X., et al. Retrieval-augmented generation with graphs (graphrag). arXiv preprint arXiv:2501.00309 , 2024. Hu, Y., Liu, S., Yue, Y., Zhang, G., Liu, B., Zhu, F., Lin, J., Guo, H., Dou, S., Xi, Z., et al. Memory in the age of ai agents. arXiv preprint arXiv:2512.13564 , 2025. Jimenez Gutierrez, B., Shu, Y., Gu, Y., Yasunaga, M., and Su, Y. Hipporag: Neurobiologically inspired long-term memory for large language models. Advances in Neural Information Processing Systems , 37:59532–59569, 2024. Jin, J., Zhu, Y., Dou, Z., Dong, G., Yang, X., Zhang, C., Zhao, T., Yang, Z., and Wen, J.-R. Flashrag: A mod-ular toolkit for efficient retrieval-augmented generation research. In Companion Proceedings of the ACM on Web Conference 2025 , pp. 737–740, 2025. Lee, M., An, S., and Kim, M.-S. Planrag: A plan-then-retrieval augmented generation for generative large language models as decision makers. arXiv preprint arXiv:2406.12430 , 2024. Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., K ¨uttler, H., Lewis, M., Yih, W.-t., Rockt ¨aschel, T., et al. Retrieval-augmented generation for knowledge-intensive nlp tasks. Advances in neural information pro-cessing systems , 33:9459–9474, 2020. Li, R., Zhang, Z., Bo, X., Tian, Z., Chen, X., Dai, Q., Dong, Z., and Tang, R. Cam: A constructivist view of agentic memory for llm-based reading comprehension. arXiv preprint arXiv:2510.05520 , 2025a. Li, Y., Wen, H., Wang, W., Li, X., Yuan, Y., Liu, G., Liu, J., Xu, W., Wang, X., Sun, Y., et al. Personal llm agents: Insights and survey about the capability, efficiency and security. arXiv preprint arXiv:2401.05459 , 2024. Li, Z., Xi, C., Li, C., Chen, D., Chen, B., Song, S., Niu, S., Wang, H., Yang, J., Tang, C., et al. Memos: A memory os for ai system. arXiv preprint arXiv:2507.03724 , 2025b. Liu, J., Su, Y., Xia, P., Han, S., Zheng, Z., Xie, C., Ding, M., and Yao, H. Simplemem: Efficient lifelong memory for llm agents. arXiv preprint arXiv:2601.02553 , 2026. Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua, M., Petroni, F., and Liang, P. Lost in the middle: How language models use long contexts. Transactions of the Association for Computational Linguistics , 12:157–173, 2024a. Liu, X., Yan, H., Zhang, S., An, C., Qiu, X., and Lin, D. Scaling laws of rope-based extrapolation. arXiv preprint arXiv:2310.05209 , 2023. Liu, Z., Yao, W., Zhang, J., Yang, L., Liu, Z., Tan, J., Choubey, P. K., Lan, T., Wu, J., Wang, H., et al. Agentlite: A lightweight library for building and ad-vancing task-oriented llm agent system. arXiv preprint arXiv:2402.15538 , 2024b. Maharana, A., Lee, D.-H., Tulyakov, S., Bansal, M., Bar-bieri, F., and Fang, Y. Evaluating very long-term 9HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+conversational memory of llm agents. arXiv preprint arXiv:2402.17753 , 2024. Munkhdalai, T., Faruqui, M., and Gopal, S. Leave no con-text behind: Efficient infinite context transformers with infini-attention. arXiv preprint arXiv:2404.07143 , 101, 2024. Nan, J., Ma, W., Wu, W., and Chen, Y. Nemori: Self-organizing agent memory inspired by cognitive science. 
+
+arXiv preprint arXiv:2508.03341 , 2025. Packer, C., Fang, V., Patil, S., Lin, K., Wooders, S., and Gonzalez, J. Memgpt: Towards llms as operating systems. 2023. Pan, Z., Wu, Q., Jiang, H., Xia, M., Luo, X., Zhang, J., Lin, Q., R ¨uhle, V., Yang, Y., Lin, C.-Y., et al. Llmlingua-2: Data distillation for efficient and faithful task-agnostic prompt compression. arXiv preprint arXiv:2403.12968 ,2024. Pan, Z., Wu, Q., Jiang, H., Luo, X., Cheng, H., Li, D., Yang, Y., Lin, C.-Y., Zhao, H. V., Qiu, L., et al. Secom: On memory construction and retrieval for personalized conversational agents. In The Thirteenth International Conference on Learning Representations , 2025. Rasmussen, P., Paliychuk, P., Beauvais, T., Ryan, J., and Chalef, D. Zep: A temporal knowledge graph archi-tecture for agent memory, 2025. URL https://arxiv. org/abs/2501.13956 .Roucher, A., del Moral, A. V., Wolf, T., von Werra, L., and Kaunism ¨aki, E. smolagents’: A smol library to build great agentic systems, 2025. URL https://github. com/hugging-face/smolagents. GitHub repository , 2025. Shi, Z., Mei, K., Jin, M., Su, Y., Zuo, C., Hua, W., Xu, W., Ren, Y., Liu, Z., Du, M., et al. From commands to prompts: Llm-based semantic file system for aios. arXiv preprint arXiv:2410.11843 , 2024. Su, J., Ahmed, M., Lu, Y., Pan, S., Bo, W., and Liu, Y. Roformer: Enhanced transformer with rotary position embedding. Neurocomputing , 568:127063, 2024. Tan, Z., Yan, J., Hsu, I.-H., Han, R., Wang, Z., Le, L., Song, Y., Chen, Y., Palangi, H., Lee, G., et al. In prospect and retrospect: Reflective memory management for long-term personalized dialogue agents. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 8416–8439, 2025. Tseng, Y.-M., Huang, Y.-C., Hsiao, T.-Y., Chen, W.-L., Huang, C.-W., Meng, Y., and Chen, Y.-N. Two tales of persona in llms: A survey of role-playing and personal-ization. arXiv preprint arXiv:2406.01171 , 2024. Wang, Y. and Chen, X. Mirix: Multi-agent memory system for llm-based agents. arXiv preprint arXiv:2507.07957 ,2025. Wang, Y., Gao, Y., Chen, X., Jiang, H., Li, S., Yang, J., Yin, Q., Li, Z., Li, X., Yin, B., et al. Memoryllm: Towards self-updatable large language models. arXiv preprint arXiv:2402.04624 , 2024. Wang, Y., Takanobu, R., Liang, Z., Mao, Y., Hu, Y., McAuley, J., and Wu, X. Mem-{\ alpha }: Learning memory construction via reinforcement learning. arXiv preprint arXiv:2509.25911 , 2025. Wu, D., Wang, H., Yu, W., Zhang, Y., Chang, K.-W., and Yu, D. Longmemeval: Benchmarking chat assis-tants on long-term interactive memory. arXiv preprint arXiv:2410.10813 , 2024. Wu, R., Lee, Y., Shu, F., Xu, D., Hwang, S.-w., Yao, Z., He, Y., and Yan, F. Composerag: A modular and composable rag for corpus-grounded multi-hop question answering. 
+
+arXiv preprint arXiv:2506.00232 , 2025a. Wu, Y., Zhang, Y., Liang, S., and Liu, Y. Sgmem: Sentence graph memory for long-term conversational agents. arXiv preprint arXiv:2509.21212 , 2025b. Xia, S., Xu, Z., Chai, J., Fan, W., Song, Y., Wang, X., Yin, G., Lin, W., Zhang, H., and Wang, J. From experience to strategy: Empowering llm agents with trainable graph memory. arXiv preprint arXiv:2511.07800 , 2025. Xiong, W., Liu, J., Molybog, I., Zhang, H., Bhargava, P., Hou, R., Martin, L., Rungta, R., Sankararaman, K. A., Oguz, B., et al. Effective long-context scaling of founda-tion models. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Com-putational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pp. 4643–4663, 2024. Xu, W., Liang, Z., Mei, K., Gao, H., Tan, J., and Zhang, Y. A-mem: Agentic memory for llm agents. arXiv preprint arXiv:2502.12110 , 2025. Yan, B., Li, C., Qian, H., Lu, S., and Liu, Z. Gen-eral agentic memory via deep research. arXiv preprint arXiv:2511.18423 , 2025. Yang, C., Sun, Z., Wei, W., and Hu, W. Beyond static sum-marization: Proactive memory extraction for llm agents. 
+
+arXiv preprint arXiv:2601.04463 , 2026. Ye, R., Zhang, Z., Li, K., Yin, H., Tao, Z., Zhao, Y., Su, L., Zhang, L., Qiao, Z., Wang, X., et al. Agentfold: Long-horizon web agents with proactive context management. 
+
+arXiv preprint arXiv:2510.24699 , 2025. 10 HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+Yu, H., Chen, T., Feng, J., Chen, J., Dai, W., Yu, Q., Zhang, Y.-Q., Ma, W.-Y., Liu, J., Wang, M., et al. Memagent: Re-shaping long-context llm with multi-conv rl-based mem-ory agent. arXiv preprint arXiv:2507.02259 , 2025. Zhong, W., Guo, L., Gao, Q., Ye, H., and Wang, Y. Memo-rybank: Enhancing large language models with long-term memory. In Proceedings of the AAAI Conference on Arti-ficial Intelligence , volume 38, pp. 19724–19731, 2024. Zhou, Z., Qu, A., Wu, Z., Kim, S., Prakash, A., Rus, D., Zhao, J., Low, B. K. H., and Liang, P. P. Mem1: Learning to synergize memory and reasoning for efficient long-horizon agents. arXiv preprint arXiv:2506.15841 , 2025. 11 HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+# A. Experiment detail 
+
+A.1. Experimental Settings 
+
+In Section 4.1, we report results using both gpt-4.1-mini and gpt-4o-mini. For all other experiments, gpt-4.1-mini is used as the base model. For lightweight memory modules, the de-fault retrieval number k is set to 10, and qwen3-embedding-0.6b is consistently adopted as the text embedding model throughout all evaluations. The detailed prompt templates are provided in Section B. 
+
+A.2. Dataset 
+
+A.2.1. LOCOMO The LoCoMo dataset(Maharana et al., 2024) comprises dia-logues with an average total length of 9,000 tokens, where each dialogue contains approximately 600 turns and 26,000 tokens. Each dialogue includes around 200 questions, which are categorized into the following types: (1) single-hop ques-tions that can be answered using information from a single turn; (2) multi-hop questions requiring information inte-gration across different turns; (3) temporal reasoning ques-tions designed to assess a model’s ability to reason about sequential events; and (4) open-domain knowledge ques-tions that require combining dialogue context with external knowledge. LoCoMo is particularly suited for evaluating a model’s capacity to handle long-range dependencies and maintain consistency throughout extended interactions. A.2.2. L ONG MEM EVAL 
+
+The LongMemEval dataset(Wu et al., 2024) focuses on assessing long-context memory capabilities. It includes high-difficulty tasks such as long-text comprehension, multi-stage reasoning, and information integration across seg-ments. The dataset emphasizes model performance in han-dling ultra-long contexts, complex causal chains, and long-term information retention. Through diverse task settings, LongMemEval enables a more comprehensive evaluation of memory systems with respect to long-range dependen-cies, detailed tracking, and information retrieval accuracy and robustness, thus providing more stringent standards for practical model application. 
+
+A.3. Baselines A-Mem (Xu et al., 2025): A memory system that constructs Zettelkasten-style knowledge graphs from user–agent inter-actions, dynamically associating notes through embedding similarity analysis and LLM-based reasoning. 
+
+LangMem : A long-term memory module within the LangChain framework, which extracts and stores key facts from conversations and supports subsequent retrieval via retrievers such as FAISS or Chroma. 
+
+Zep (Rasmussen et al.): A commercial memory API that builds temporal knowledge graphs (Graphiti) from user dia-logues and metadata, designed for efficient semantic query-ing. 
+
+Mem0 (Chhikara et al., 2025): An open-source memory system that incrementally compresses and stores memory facts using LLM-based summarization, with an optional graph memory extension. 
+
+LightMem (Fang et al., 2025): A lightweight memory sys-tem inspired by human memory models, which employs a three-stage mechanism—sensory memory filtering, topic-aware short-term memory organization, and long-term mem-ory updated during sleep time—to significantly improve memory processing efficiency while maintaining perfor-mance. 
+
+Nemori (Nan et al., 2025): A self-organizing memory archi-tecture inspired by event segmentation theory and the free-energy principle. It autonomously structures conversational streams into semantically coherent episodes via a Two-Step Alignment principle, and enables agents to proactively learn from prediction errors through a Predict–Calibrate principle, facilitating adaptive knowledge evolution. 
+
+MIRIX (Wang & Chen, 2025): A modular, multi-agent memory system that integrates six specialized compo-nents—Core, Episodic, Semantic, Procedural, Resource Memory, and Knowledge Vault—coordinated via a multi-agent framework for dynamic memory updates and retrieval. It is particularly adept at handling large-scale multimodal inputs to enable deep personalization. 
+
+Full Context : Provide the LLM with all the context corre-sponding to the question. 
+
+Naive RAG : Vectorize the content using the qwen3-0.6b-embedding model and store the entire context as memory for subsequent responses. 
+
+A.4. Evaluation 
+
+A.4.1. LLM S CORE 
+
+Our Level-1 evaluation metric is LLM-as-a-Judge. Specif-ically, we utilize gpt-4.1-mini as the automated judge to examine the questions, candidate answers, and reference an-swers, and to predict whether an answer successfully solves the corresponding problem. 12 HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+# B. Detailed System Prompts 
+
+In this section, we provide a detailed overview of the prompts employed throughout the HyMem memory system. This includes the summary module in the storage phase, the generator Gθ in the Light Memory Module, the retriever fγ and generator Gγ in the Deep Memory Module, the reflection module R , as well as the final model used for answer evaluation. 
+
+B.1. Summary Module 
+
+Your task is to extract all key information from the conversation and summarize each piece into a concise sentence. These sentences will serve as the memory content for subsequent agent responses. The final output format should be: 
+
+{ ”keywords”: [”Key information 1”, ”Key information 2”, ”Key information 3”, ...] }
+
+Important instructions: All key information in the original conversation must be retained, including details such as time, location, persons involved, and significant events, to prevent errors in future responses due to missing details. Key information should appropriately summarize the valuable content present in the original dialogue. To improve efficiency, all unnecessary dialogue elements (such as greetings, pleasantries, small talk, or casual remarks) must be excluded from the key information. Summaries should be concise and minimize character usage wherever possible. Whenever possible, integrate multiple related pieces of information into a single key sentence to increase information density. Avoid fragmenting key information excessively, as this could lead to unnecessary character usage. 
+
+B.2. Reflection R
+
+Your primary responsibility is to evaluate whether the current answer meets the standard based on the given question and the model’s response. If the answer is irrelevant to the question or contradicts the intent of the question, it should be judged as not meeting the standard. In such cases, set the finished field to 0, and rewrite the question by strengthening it based on what is missing in the answer, so that it can be used for further retrieval. The newly generated question should be output in the new question field. If the answer is generally complete and well-reasoned, judge it as meeting the requirements and set the finished field to 1. Here is an example output: { ”finished”: 0, ”new question”: ”...” }
+
+B.3. Generator Gθ
+
+You are a memory-based question answering assistant. You will receive a question along with a summary of related memory. Your main responsibilities are as follows: Based on the provided memory summary, determine whether the current question can be answered. If the memory summary does not match the question, is incomplete, vague or ambiguous, is irrelevant, or if you are unsure whether you can answer, you must treat it as unanswerable. Note: Use strict criteria to avoid hallucinations and incorrect responses. In these cases, set the ”finished” field to 2. More precise retrieval methods will be used later to provide more complete memory. If a standard or golden answer to the question is clearly present in the memory summary, generate the answer in the ”answer” field and set ”finished” to 0. The answer must be complete and specific. For example, for time-related questions, to avoid ambiguity, clearly specify the reference point of any relative time expressions. If the answer is ”last year”, the correct format should be: ”The current year is 2022, so the answer is last year.” The required output format is: {”finished”:0, ”answer”: ”...” }
+
+Note: Return output only in JSON format. Do not provide any other form of output. 
+
+13 HyMem: Hybrid Memory Architecture with Dynamic Retrieval Scheduling 
+
+B.4. Retriever fγ
+
+You are a text retriever. You are given a question and a set of memory content indices. Each index is a brief summary of the key information in the corresponding memory content. Your task is to, based on the given question, identify the ids of the memory indices that are most likely to provide context for answering the question. Example: Question: Where is Alice’s home? Indices: id:0, dialogue time:13 October, 2022, Alice’s two children id:1, dialogue time:13 October, 2023, Alice’s husband id:2, dialogue time:23 October, 2022, Jack’s job id:3, dialogue time:13 October, 2022, Charity organization id:4, dialogue time:31 October, 2022, Alice moved from her hometown id:5, dialogue time:31 October, 2022, Alice’s life in her hometown Result: 
+
+{ ”keywords list”: [4,5] }
+
+B.5. Generator Gγ
+
+You are a memory-based question-answering assistant. You will receive a question along with memories for answering it. Your main responsibilities are as follows: Please note that answers to questions are not always fixed. You should list all possible answers and strive to ensure the completeness of the information. For example, regarding time-related questions, to avoid ambiguity, explicitly specify the reference point for any relative time expressions. For instance, if the answer is ”last year,” the correct format should be: ”The current year is 2022, and the answer is last year.” At the same time, not all questions have relevant memories, such as open-ended questions. Even if the memory information is incomplete, you can boldly infer the most likely answer based on the existing memories, even if the answer may be incomplete or not entirely rigorous. Avoid refusing to answer. The required output format is: { ”answer”: ”...” }
+
+Note: Only return your output in JSON format, and do not provide any other form of output. 
+
+B.6. LLM as Judge 
+
+You are an answer scoring expert. You will receive the following information: (1) a question, (2) a standard (reference answer), (3) an answer generated by a memory-based LLM. Your task is to label the generated answer as CORRECT or WRONG. Important notes: Be as lenient as possible when scoring: the standard answer is typically a concise short sentence, while the generated answer may be longer and more detailed. As long as the generated answer aligns with the standard answer, it should be marked as CORRECT. Do not be overly nitpicky. For time-related questions, the standard answer is a specific date, month, or year. The generated answer may be longer or use relative time expressions (e.g., ”last Tuesday” or ”next month”). Please be lenient in scoring—if the generated answer refers to the same time period as the standard answer, mark it as CORRECT. Finally, provide CORRECT or WRONG. Do not include both CORRECT and WRONG in your response, as this will cause errors in the evaluation script. Simply return the label in JSON format with the key ”label”. Now it’s time for the formal question: Question: {question } Gold answer: {gold answer } Generated answer: {generated answer }
+
+14

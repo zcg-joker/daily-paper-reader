@@ -1,0 +1,364 @@
+Title: STaR: Scalable Task-Conditioned Retrieval for Long-Horizon Multimodal Robot Memory
+
+URL Source: https://arxiv.org/pdf/2602.09255v2
+
+Published Time: Fri, 13 Feb 2026 01:36:56 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# STaR : Scalable Task-Conditioned Retrieval for Long-Horizon Multimodal Robot Memory 
+
+Mingfeng Yuan 1, Hao Zhang 2, Mahan Mohammadi 1, Runhao Li 1, Jinjun Shan 2 and Steven L. Waslander 1
+
+Fig. 1: STaR System Overview . Our framework consists of three stages. (Left) Memory construction: the robot records RGB and posed depth data to build a multimodal memory composed of three complementary databases (DB) – video caption, 3D primitive, and visual keyframe – jointly forming OmniMem. (Middle) User query and reasoning: given text or multimodal queries, an agentic planner (MLLM) retrieves task-relevant memories through an Information Bottleneck, performs contextual reasoning, and outputs structured answers (location, time, or description). (Right) Evaluation: We evaluate STaR on both the NaVQA dataset (campus) and the WH-VQA dataset (warehouse), which cover spatial, temporal, and descriptive question types across short-, medium-, and long-term memory settings. The evaluation examines three key capabilities-long horizon cross-modal memory construction, task-conditioned memory retrieval, and contextual reasoning. We also validate the multi-modal query and navigation tasks in a warehouse simulated with Isaac Sim. 
+
+Abstract — Mobile robots are often deployed over long du-rations in diverse open, dynamic scenes, including indoor setting such as warehouses and manufacturing facilities, and outdoor settings such as agricultural and roadway operations. A core challenge is to build a scalable long-horizon memory that supports an agentic workflow for planning, retrieval, and reasoning over open-ended instructions at variable granularity, while producing precise, actionable answers for navigation. We present STaR , an agentic reasoning framework that (i) constructs a task-agnostic, multimodal long-term memory that generalizes to unseen queries while preserving fine-grained 
+
+environmental semantics (object attributes, spatial relations, and dynamic events), and (ii) introduces a Scalable Task-Conditioned Retrieval algorithm based on the Information Bot-tleneck principle to extract from long-term memory a compact, non-redundant, information-rich set of candidate memories for contextual reasoning. We evaluate STaR on NaVQA (mixed indoor/outdoor campus scenes) and WH-VQA, a customized warehouse benchmark with many visually similar objects built with Isaac Sim, emphasizing contextual reasoning. Across the two datasets, STaR consistently outperforms strong baselines, achieving higher success rates and markedly lower spatial error. We further deploy STaR on a real Husky wheeled robot in both indoor and outdoor environments, demonstrating robust long-horizon reasoning, scalability, and practical utility. Project Website: https://trailab.github.io/STaR-website/  
+
+> 1
+
+University of Toronto Institute for Aerospace Studies and the University of Toronto Robotics Institute, Toronto, Canada {mingfeng.yuan, steven.waslander }@robotics.utias.utoronto.ca  
+
+> 2
+
+Department of Earth and Space Science, Lassonde School of Engineer-ing, York University, Toronto, Canada. 
+
+I. INTRODUCTION Robots are increasingly deployed across indoor envi-ronments such as hospitals, manufacturing facilities, and warehouses, as well as outdoor settings, such as driving environments, agricultural lands and mining operations. With the recent and rapid progress of multimodal large language models (MLLMs), the abilities of robots to perceive their surroundings and to understand natural language have shifted dramatically into the possible. However, a central challenge in embodied intelligence that remains is enabling robots to build long-horizon, extensible spatio-temporal memory in open-world environments so that they can answer free-form human questions and execute multi-step tasks. Such tasks often hinge on variable object granularity, dynamic events, and large numbers of visually similar objects— signals that are hard to capture with conventional metric or semantic maps yet are crucial for real-world operation. The robot must distill a compact, non-redundant, information-rich representation of its environment from hours to days of historical sensor data, and then perform temporal, semantic, and spatial contextual reasoning to resolve fine distinctions, answer complex questions precisely, and reliably execute downstream behaviors such as navigation and manipulation. To confront open-world variability, a common approach is to construct open-vocabulary 3D scene graphs with large foundation models. Class-agnostic segmentation [1], [2] (e.g., Segment Anything, Tokenize Anything (TAP)) yields fine-grained segments where each segment is embedded 
+
+> arXiv:2602.09255v2 [cs.RO] 12 Feb 2026
+
+with feature representations from models such as CLIP, and objects are formed by grouping segments using acombination of weighted geometric overlap and semantic similarity. However, merging 3D primitives into object-level representations remains insufficient for open-ended tasks with variable granularity. For example, in a warehouse, a request such as “retrieve a box from shelf with a fragile label” may correspond to many visually similar boxes dis-tributed across staging areas, shelves, and unloading zones; moreover, dozens of such boxes may be stacked on a pallet. If retrieval uses “object” as the smallest unit, the top-k results can easily collapse into a single local region (e.g., one pallet), losing broader environmental context that is critical for disambiguation. While Clio [3] represents an important step toward task-driven scene-graph construction, it relies on a predefined task list and repeatedly re-aggregates all primitives for each specification, which may introduce additional computational overhead as primitive counts grow and task requirements evolve. Moreover, most existing scene-graph frameworks remain largely object-centric and static, leaving rich inter-object spatial relations, dynamic events, and variable information granularity insufficiently addressed. A parallel line of work frames long-term robotic memory as long-video question answering. However, most spatiotem-poral memory systems are limited to ∼1–2 minutes of history due to prohibitive Transformer inference and storage costs. Retrieval-augmented agents such as ReMEmbR [4] extend querying over text, space, and time to tens of seconds, but purely rely on video caption streams. While multi-frame VLMs yield richer descriptions of dynamics and layout, the resulting memories become highly redundant in long-term deployments, diluting task-relevant evidence and degrading performance on context-dependent reasoning tasks. 
+
+Contributions : Our first contribution is a framework for building long-horizon, multimodal spatio-temporal memory 
+
+to support robot operation in open-world environments. Because human instructions are open-ended, the memory must remain broadly useful while preserving sufficient detail to support future, unseen tasks. We build a unified mem-ory, OmniMem , comprising: (i) 3D primitives (geometry, class-level semantics); (ii) temporally aligned video captions that provide mid-level dynamic scene descriptions; and (iii) keyframe visual memory for fine-grained cues. This design supports joint temporal, semantic, and spatial reasoning. Our second contribution is STaR (Scalable Ta sk-conditioned Retrieval via Information Bottleneck (IB)) for task-driven 3D scene understanding and memory retrieval. Unlike na¨ ıve Retrieval-Augmented Generation (RAG), which concatenates large amounts of redundant and task-irrelevant memory into an LLM prompt, increasing the risk of hal-lucinations, STaR applies the IB [5] principle to aggregate primitives and select a non-redundant evidence set. This yields small yet informative memory subsets that preserve answer accuracy while substantially reducing retrieval and inference costs. Crucially, STaR does not require a pre-defined task list or re-aggregation of the entire scene; it supports rapidly changing tasks and operates only on selected keyframe intervals, yielding scalability with memory length. Our third contribution is an Agentic RAG Workflow that closes the loop from user queries to actions. An MLLM agent first reasons over the user’s multimodal input (text + images), autonomously plans a search strategy, and issues API calls to retrieve candidate memory snippets from OmniMem. The robot then uses STaR-distilled memory to conduct semantic, spatial, and temporal reasoning, enabling precise answers and reliable execution of navigation. We evaluate STaR on the navigation video question an-swering dataset NaVQA and on WH-VQA, a warehouse benchmark built in Isaac Sim that targets long-horizon, variable-granularity memory retrieval, and compare it against two baselines. We further validate its practicality through end-to-end real-robot deployment. II. R ELATED WORKS 
+
+Question Answering (QA) . Embodied Question Answer-ing extends video QA to interactive, egocentric settings with active evidence gathering [6]–[8]. T* [9] answers open-ended questions over hour-long videos via VLM-based keyframe selection but remains video-only, while ReMEmbR [4] maps navigation QA to robot-centric outputs yet suffers from redundant caption-only memory under revisits. Our method instead constructs a multimodal long-term memory with task-conditioned aggregation, enabling non-redundant retrieval and adaptive-granularity reasoning for open-ended queries. 
+
+Long-Term Spatio-Temporal Memory . Scene graphs have become a dominant robotic memory via open-vocabulary perception, spanning flat and hierarchical indoor representations [1], [10] and outdoor extensions [2]. While recent work such as Khronos [11] incorporates dynamics, most approaches remain object-centric and largely static, with relations defined mainly by proximity and limited modeling of contextual semantics. Our method addresses these limitations through multimodal context integration and temporal reasoning for fine-grained long-horizon queries. 
+
+Task-Driven Representations . Another promising direc-tion is task-shaped memory. Clio [3] applies IB to cluster 3D primitives based on a predefined task set, aligning map granularity to task needs; however, modifying the task list requires reclustering all primitives, limiting scalability. ASHiTA [12] employs hierarchical IB to decompose high-level instructions into sub-tasks and associate them with rel-evant 3D primitives. Our approach (i) requires no predefined task list, supporting open-ended queries, and (ii) performs task-conditioned aggregation on only a subset of primitives, substantially reducing computation while maintaining accu-racy, enabling scalability. III. P ROBLEM FORMULATION 
+
+Inspired by ReMEmbR and T*, we formulate our problem as a variant of hour-long video question answering for embodied robots. During operation, a robot accumulates a monotonically growing multimodal history M1: T of onboard sensor data (RGB, depth) with associated pose estimates. At arbitrary times, a user issues an open-ended query Q, whose answer may depend on objects, places, or events across varying spatial and temporal granularities. The goal is to predict an answer A by modeling p(A | Q, M ). In practice, passing the entire memory to a large multimodal model is both computationally prohibitive and prone to hallucinations from task-irrelevant context. Therefore, this work focuses on three core challenges:  
+
+> •
+
+Memory construction: How can a robot build a gen-eral, extensible memory that supports arbitrary queries?  
+
+> •
+
+Scalable task-conditioned retrieval: Given a growing memory M1: T , how can robots extract an optimal subset 
+
+R∗ ⊆ M1: T that is task-relevant, information-rich, and non-redundant, yet remains information-equivalent to the full memory w.r.t. the query, while keeping retrieval efficient as T increases.  
+
+> •
+
+Contextual reasoning: How can a robot perform contextual reasoning to accurately answer open-ended queries in complex, dynamic environments? In this work, we consider four query types: For spatial tasks , such as “Which shelf should the FRAGILE box go on?” The robot must (i) discriminate the fine-grained target (fragile label, not other boxes), (ii) infer shelf availability (free slots), and (iii) output a 3D target pose suitable for navigation. For temporal tasks , such as “When did you last see the forklift?”, the robot may have encountered it multiple times during exploration and must retrieve all relevant timestamps, returning the most recent one as a time-to-now answer (e.g., “8 mins ago”). For descriptive tasks , common warehouse questions include: “Does the shelf storing blue barrels still have empty slots?”, “How many additional pallets can that shelf hold?”, or “What was the forklift last carrying?” These tasks demand that the robot retrieve information that is both detailed and precise. For 
+
+multimodal queries , human tasks are often underspecified, e.g., pointing to an item in the staging area and saying, “Put this on the correct shelf.” The robot must fuse the ambiguous linguistic cue with the current observation to ground “this” correctly and complete the task. 
+
+Benchmark. To stress long-horizon memory and open-world reasoning, we present a warehouse video question answering challenge (WH-VQA) in Isaac Sim and evaluate with our proposed STaR pipeline that retrieves, reasons, and outputs actions from the above representation. IV. M ETHODOLOGY 
+
+In practice, the optimal task-aware memory subset R∗ is not accessible, so we estimate a subset R that preserves the information carried by R∗. We realize this via a task-aware sampler D : M → R with D(M ) ⊆ M1: T , and write 
+
+p (A | M1: T , Q ) = p (A | R∗, Q ) ≈ p(A | R, Q ), (1) s.t. R ∼ D(M ). Our objective is to estimate R∗ so that answers inferred from R agree with those from the full history M . Accordingly, we minimize the size of R while enforcing answer equivalence: 
+
+R∗ = argmin 
+
+> R
+
+|R|, (2) s.t. argmax 
+
+> A
+
+p(A | R, Q ) = argmax 
+
+> A′
+
+p (A′ | M, Q ). This for-mulation preserves answer fidelity while enabling compact, task-conditioned retrieval from long-term memory. Next, we describe how STaR constructs the memory M by aggregating multi-modal observations, and how, at inference time, it samples from M a compact evidence set R ∼ D (M ).
+
+A. Building OmniMem 
+
+We decompose our multimodal OmniMem as M1: T = C1: T , P1: T , K1: T
+
+, where C1: T are temporal semantic video captions, X1: T are 3D primitives, and K1: T are keyframe visual memories, see Fig. 1 (left). Crucially, the queryable memory must be constructed without knowing the user’s future query Q; hence it must remain task-agnostic yet ex-pressive enough to support arbitrary downstream questions. 
+
+Video Caption Memory (C1: T ). Following the query-agnostic principle, the robot continuously describes the scene it observes in language. Specifically, we use NVILA [13] to caption every M -second clip, producing a sentence-level description that encodes objects, attributes, events, and spatial relations. Each caption ct ∈ C 1: T is encoded with a text encoder into an embedding. We index all embeddings in a Milvus vector database V, together with metadata (timestamp, pose, and video caption. The database enables retrieval by text, time, and position. 
+
+Geometric Primitive Memory ( X1: T ). To capture persis-tent structure, We follow the OpenGraph pipeline [2] for online 3D scene reconstruction from synchronized RGB, Depth (Lidar/RGB-D), and pose streams. We adopt an open-vocabulary perception stack combining RAM [14], Grounding-DINO [15], and TAP [16] models, yielding per-frame masks and captions. LiDAR scans are filtered by 4DMOS [17] to remove dynamic objects. Given camera intrinsics K and extrinsics T . We back-project point clouds into the 2D mask space to recover object point sets. DB-SCAN is applied to further denoise the projected subset. With robot pose, we then initially form objects by group-ing segments using a weighted combination of geometric overlap and semantic similarity. Each primitive thus stores: (i) geometry (point cloud), (ii) a caption, (iii) a semantic feature vector, and (iv) a list of detection timestamps that allows the system to later link and synchronize the video captions C1: T with the keyframe memory K1: T .
+
+Visual Keyframe Memory (K1: T ). Fine-grained queries often require details that captions or primitives may miss (e.g., “is there an empty parking slot?”). To retain such visual evidence without excessive storage, we log annotated keyframes at a controlled rate (e.g., 1 Hz), guided by novelty checks in the incremental mapping pipeline. Each keyframe 
+
+k ∈ K 1: T stores the raw image with overlaid object contours, each labeled by its global primitive index, together with a timestamp. This yields an image-retrievable trail with explicit links to primitives, offering fine visual detail when needed while keeping storage growth manageable. Fig. 3: Task-conditioned retrieval and contextual reasoning . Given an open-ended query, we embed its cues and query the DB to retrieve above-threshold video captions with timestamps and detected objects (Caption–Induced Primitive). These captions induce a working set of primitives X ′    
+
+> Q, on which we run IB to merge neighboring primitives into compact, task-relevant clusters. We then group captions by cluster and select one representative caption per cluster to form a non-redundant evidence set. From these memories, the robot optionally loads keyframe images to resolve fine-grained details, performs contextual reasoning, and outputs actionable answers—e.g., locations of white “Digital Twin” boxes in the staging area and shelf indices with remaining pallet slots—supporting navigation and Q&A.
+
+B. Scalable Task-Conditioned Retrieval 
+
+Given a query Q and the long-horizon memory M1: T ,we form a compact, non-redundant evidence set R in three stages, as shown in Fig. 3: (i) video caption-induced primitive subset extraction, (ii) task-driven clustering via IB on the induced 3D primitive subset, and (iii) cluster-wise caption grouping and representative selection. 
+
+Video-Caption–Induced 3D Primitive Subset. Given a query Q, we first retrieve a high-recall pool of captions 
+
+CQ ⊂ C1: T by querying the vector database V with Q-related keywords and retaining all captions whose normalized 
+
+similarity exceeds a preset threshold τ . Each retained caption is associated with a list of global indices of 3D primitives detected in that video clip; the union of these lists forms a working set X ′ 
+
+> Q
+
+⊂ X 1: T , where X1: T denotes the full collection of primitives over time. Primitives in X ′ 
+
+> Q
+
+carry both semantic information and geometric attributes, which together provide a strong inductive bias for clustering. To explicitly encode this bias, we adopt the IB [3], which forms task-relevant clusters by iteratively merging neighboring 
+
+primitives, thereby allowing the cluster granularity to be adaptively controlled according to the task. 
+
+Task-Driven Clustering via IB. To obtain a compact, task-relevant evidence set, we run IB on the primitive subset X ′
+
+> Q
+
+(rather than the full X1: T ) to find a more compact information 
+
+˜X ′, representing the task-relevant concepts that compresses 
+
+X ′ 
+
+> Q
+
+while remaining maximally informative about the task Y .The task-relevant clusters ˜X ′ are defined through the prob-ability distribution p(˜ x′ | x′), which specifies the likelihood that a task-agnostic primitive x′ belongs to a cluster ˜x′. In practice, this strategy preserves the rich spatial and semantic information about scene objects conveyed by the video cap-tions while greatly reducing the computational complexity of the memory retrieval process. We initialize the task-relevant clusters ˜X ′ to the task-agnostic primitives X ′
+
+> Q
+
+. Starting from singleton clusters, we iteratively merge adjacent clusters 
+
+˜x′
+
+> i
+
+, ˜x′ 
+
+> j
+
+that minimize the task-driven dissimilarity. 
+
+dij =  p (˜ x′
+
+> i
+
+) + p  ˜x′
+
+> j
+
+ DJS 
+
+ p (y | ˜x′
+
+> i
+
+) , p  y | ˜x′
+
+> j
+
+ , (3) where DJS is the Jensen-Shannon divergence and p(˜ x′) is the cluster prior, defined as p(˜ x′) = 1 
+
+> N
+
+, where N denotes the number of primitives in X ′
+
+> Q
+
+. Merging proceeds greedily while monitoring the fractional loss of task information 
+
+δ(k). To regulate compression, we compute the fractional information-loss after merge kth cluster, 
+
+δ(k) = 
+
+I
+
+ ˜X ′
+
+> (k)
+
+; Y
+
+
+
+− I
+
+ ˜X ′
+
+> (k−1)
+
+; Y
+
+
+
+I(X ′
+
+> Q
+
+; Y ) , (4) and stop when δ(k) > ¯δ.
+
+I(X ′
+
+> Q
+
+; Y ) = X
+
+> x′
+
+p(x′) X
+
+> y
+
+p(y | x′) log p(y | x′)
+
+p(y) . (5) IB requires the conditional p(y | x′) that quantifies the task-relevance of each primitive x′ ∈ X ′
+
+> Q
+
+. The cosine similarity function φ(·, ·) measures how well a primitive ( fx′ ) aligns with a task cue ( ft), serving as a semantic relevance score. 
+
+θj (x′) = 
+
+(
+
+α, j = 0 (null task) 
+
+φ (fx′ , f t) , j ∈ { 1, . . . , m } (6) α is a floor that assigns clearly irrelevant primitives to the null task; We set 
+
+p (y | x′
+
+> i
+
+) = 
+
+(
+
+[1 , 0, . . . , 0] ⊤ , if φ (fx′ , f t) < α η Pkl=1 γk (θ (x′
+
+> i
+
+)) , otherwise (7) We apply the operator γk(·), which retains the top-k task scores while zeroing out the rest, ensuring that only the most relevant primitives contribute to clustering. η is normalization constant. This construction highlights the most relevant task cues while suppressing noise, yielding stable p(y | x′) for IB merges and producing clusters ˜X ′ compact to Q.
+
+Cluster-Wise Grouping and Selection. To extract infor-mative memories from a redundant pool of video captions, we leverage the task-driven clusters ˜X ′ = {˜x′
+
+> 1
+
+, . . . , ˜x′ 
+
+> N
+
+}
+
+obtained previously. Our intuition is that two captions are redundant if they refer to the same cluster. Each video caption c(Ti) corresponds to the detailed scene description within the ith M-second segment and is associated with a set of primitive indices I(c(Ti)) . To construct an informative and compact memory for contextual reasoning, we group captions by clusters ˜X ′. Specifically, each caption c(Ti) ∈CQ is assigned to the caption group G(˜ x′
+
+> k
+
+) corresponding to cluster ˜x′ 
+
+> k
+
+(k ∈ { 1, . . . , N }) if their index sets overlap: 
+
+G(˜ x′
+
+> k
+
+) ← c(Ti) iff I(c(Ti)) ∩ ˜x′
+
+> k
+
+̸ = ∅. (8) Across all clusters ˜x′ 
+
+> j
+
+∈ ˜X ′, we first select a representative caption ˆck for each cluster and then rank all representatives globally by their semantic relevance ϕ(ˆ ck, Q ) to the query 
+
+Q, where ϕ(·, ·) measures caption-query similarity: 
+
+ˆck = arg max  
+
+> c∈G (˜ x′
+> k)
+
+ϕ(c, Q ), k ∈ { 1, 2, . . . , N }. (9) Finally, we rank all representative captions based on their scores and retain the top-K to form the textual memories: 
+
+Rtext = {ˆck | rank( ϕ(ˆ ck, Q )) ≤ K} . (10) This process ensures that the final retrieval set R is both 
+
+diverse (one representative per cluster) and task-relevant 
+
+(ranked by semantic importance). When the query requires finer-grained evidence beyond captions, the LLM acts as a selector that samples a set of keyframe timestamps T ∗ = {t∗
+
+> 1
+
+, t ∗
+
+> 2
+
+, . . . , t ∗
+
+> m
+
+} from the video based on the temporal information embedded in the textual memories Rtext . The corresponding keyframe images are retrieved as Rimg (T ∗) ∈ K 1: T , and the final multimodal memory R is formed by fusing the text and image modalities: 
+
+R = Rtext ⊕ Rimg (T ∗) , where T ∗ = fLLM (Rtext ) (11) A concise illustration of this pipeline is shown in Fig. 3. V. E XPERIMENTAL SETUP 
+
+We evaluate the proposed STaR algorithm on the NaVQA [4] and WH-VQA datasets and compare its per-formance with two state-of-the-art baselines: the ReMEmbR framework, which relies on video-caption-based memory, and an OpenGraph-based open-vocabulary perception system that generates object-level captions. 
+
+1) NaVQA dataset : NaVQA is built on the CODa robot navigation dataset [18] and targets long-horizon video QA for navigation. The data provide time-synchronized RGB, LiDAR, and localization signals collected under varied illu-mination and times of day across seven long sequences in indoor and outdoor campus environments. Data sequences are partitioned by duration into short ( < 2 min, medium (2–7 min), and long (7–35.9 min) memories. Each split includes three task types, spatial, temporal, and textual with the textual set comprising binary (yes/no) and descriptive questions, totaling 210 queries. Notably, 22 queries fall outside the memory window and are excluded to ensure fairness. 
+
+2) WH-VQA dataset : We additionally create WH-VQA, a customized warehouse benchmark built in Isaac Sim, and expand it with 100 evaluation tasks. The dataset captures a 22-minute navigation trajectory and is more challenging than NaVQA due to the presence of many visually similar objects that require task-level disambiguation. Its task composition mirrors NaVQA—spatial (40%), binary yes/no (20%), and descriptive (20%)—while adding multimodal queries (20%) to emulate human-robot interaction with underspecified lan-guage requiring grounding against the current visual scene. 
+
+3) Evaluation Metrics : We design task-specific metrics for each question type. For spatial questions , which require 
+
+(x, y, z ) outputs, we compute the L2 error between predicted and ground-truth positions and deem answers correct if the error is below 15 m on NaVQA (following ReMEmbR) and 5 m on WH-VQA, reflecting the finer spatial structure of warehouse shelves and pallets. For temporal questions ,which return answers such as “15 minutes ago,” we use L1 temporal error and mark predictions within 2 minutes as correct. For textual questions , yes/no accuracy is used, while descriptive answers are automatically judged by an LLM using both the model output and ground-truth annotation. Recall@K ( Rk) is defined as the fraction of queries for which, after multiple tool-call rounds, the retrieved memory set of size k contains at least one entry whose timestamp falls within a tolerance window (e.g., ±5, s) of the ground-truth timestamp. Finally, we report overall correctness by averaging success rates across all question categories. VI. R ESULTS 
+
+1) NaVQA results : Fig. 5 (a) shows overall correctness across short-, medium-, and long-horizon memories. As memory grows, STaR consistently outperforms all baselines, particularly in long-horizon settings, while the multi-frame VLM baseline degrades sharply. Runtime scalability is eval-uated on 25 NaVQA tasks with memory lengths ranging from 36s to 35.9 minutes, yielding a stable average query time of 30.1 s. As shown in Fig. 5 (b) and the agentic RAG workflow in Fig. 1, the agentic planner performs up to three reasoning rounds (5.9 s, 6.8 s, and 2.7 s on average), with later rounds invoked only when earlier retrieval results are insufficient. Answer generation dominates runtime (14.2 s), while Milvus-based memory retrieval remains efficient (text query API ∼0.5 s due to information distillation, other query APIs ≤0.1 s). Both the agentic planner and the answer Fig. 4: Qualitative example. Left: 3D reconstruction for a 16-min memory horizon with the robot’s current pose (red) and three candidate answers. Task-relevant 3D primitives selected by our IB-based clustering are highlighted; task-irrelevant 3D primitives are masked (not shown). Right: temporal retrieval. STaR selects diverse, non-redundant captions and correctly grounds the “yellow pole with POLICE HELP sign,” choosing Candidate 2 as the nearest police pole. In contrast, ReMEmbR (bottom) repeatedly retrieves redundant captions at timestep 13:11 and fails to identify the correct nearest target. 
+
+Fig. 5: Scalability of STaR on the NaVQA dataset with increasing memory length (from 36 seconds to 35.9 minutes): (a) Overall success rate; (b) Runtime breakdown of STaR.                                                                                                 
+
+> Task Method Short Medium Long SR ↑Er. ↓Rk↑SR ↑Er. ↓Rk↑SR ↑Er. ↓Rk↑
+> Spat.
+> OpenGraph 0.68 21.1 0.74 0.63 20.5 0.73 0.26 87.4 0.72 ReMEmbR 0.84 9.6 0.84 0.63 20.4 0.79 0.49 53.9 0.80
+> STaR 0.89 4.2 0.89 0.84 10.8 0.84 0.77 16.9 0.84 Temp.
+> OpenGraph 0.89 4.5 0.50 0.67 5.3 0.87 0.59 7.1 0.77 ReMEmbR 1.00 0.2 1.00 0.67 1.7 0.67 0.88 3.4 0.88 STaR 1.00 0.4 1.00 0.83 0.9 0.87 0.88 2.7 0.88 Text
+> OpenGraph 0.33 –0.61 0.43 –0.67 0.36 –0.69 ReMEmbR 0.62 –0.76 0.65 –0.77 0.50 –0.76
+> STaR 0.82 –0.89 0.84 –0.84 0.80 –0.80
+
+TABLE I: Comparison on the NaVQA dataset (campus, mixed in-door–outdoor). SR: success rate; Er.: error (L2 distance for Spatial (Spat.) tasks and L1 distance for Temporal (Temp.) tasks); Rk : recall@k – the top-K retrieved memory entries include the ground-truth timestamp. For the Text category, Er. is not applicable and marked “–”. 
+
+generation module use ChatGPT-4.1-mini , and our STaR framework operates in a zero-shot setting. Next, we break down query performance by task in Table I. 
+
+Spatial tasks . We achieve the highest success rates across all horizons with approximately two to four times lower spatial error than the baselines. In contrast, ReMEmbR and OpenGraph show rapidly increasing errors that exceed 50 m on long sequences. These gains stem from two main factors: (1) our STaR retrieves compact, task-relevant evidence sets that suppress redundant memories, and (2) our answers are grounded in the 3D bounding-box centers of target objects rather than the robot’s pose at the time of observation, as in ReMEmbR, yielding more accurate and directly actionable navigation goals. Temporal tasks . All methods perform well, as NaVQA temporal questions involve coarse seman-tics and simple reasoning. Nonetheless, STaR consistently achieves the highest success rate and smallest temporal errors over longer horizons. Textual tasks . For descriptive and binary questions, our model achieves the strongest perfor-mance, with clear gains over baselines. Unlike ReMEmbR (video captions only) or OpenGraph (object-level captions only), our system reasons over variable-granularity semantics by jointly leveraging captions, 3D primitives, and keyframe imagery. This enables, for example, correctly determining nearby parking availability by retrieving candidate parking-area memories and re-examining keyframes at relevant times-tamps, leading to improved performance on long-horizon textual queries requiring fine-grained visual understanding. Across all tasks, baselines show high recall but low success rates due to insufficient task detail in text-only representa-tions, leading to incorrect target selection. 
+
+Qualitative example. Fig. 4 illustrates a representative comparison for the query “Where is the nearest police call pole?”. The left panel shows the full reconstructed scene for a 16-minute memory. In the top-left inset, our STaR first reasons over the query and uses “yellow police pole” and “yellow pole” as task cues to retrieves all video-caption memories exceeding a relevance threshold. We then extract the 3D primitives to form a task-specific subset of the scene graph. We then apply IB-based clustering to this subset, masking task-irrelevant primitives in black and highlighting only the most relevant clusters (purple, green, and light-yellow clusters). By grouping captions via these clusters, our system separates redundant from informative memories. For each cluster, we select the caption with the highest keyword relevance as the representative cue, yielding all memories containing “yellow pole” (right). The green vertical dashed lines mark timestamps where a yellow police pole appears; only the memory around 13:11 explicitly mentions a “yellow pole with a police help sign,” whereas later timestamps (13:15, 13:17, and 13:20) refer to visually similar but seman-tically incorrect references, such as a “yellow fire hydrant” or a generic “yellow pole,” reflecting perceptual ambiguity. Fig. 6: Qualitative example. Left: IB-based clustering highlights task-relevant 3D primitives; cues “Digital Twin box” / “white box” guide retrieval, with irrelevant regions masked. Right: our cluster-wise grouping + keyframe selection retrieves diverse, non-redundant memories and correctly grounds Memory 4 (shelf area). ReMEmbR over-samples top-6 cosine hits near 13:43 (Memory 5).                                 
+
+> Task Method SR ↑Er. (m) ↓Rk↑
+> Spatial
+> OpenGraph 0.27 15.5 0.30 ReMEmbR 0.39 12.6 0.66
+> STaR 0.67 6.5 0.73 Text
+> OpenGraph 0.24 –0.31 ReMEmbR 0.34 –0.45
+> STaR 0.63 –0.61 Mult-modal
+> OpenGraph 0.19 –0.30 ReMEmbR 0.31 –0.45
+> STaR 0.64 –0.67
+
+TABLE II: Comparison on our WH-VQA dataset. We compare STaR with two baselines: (1) object captions generated by OpenGraph, and (2) ReMEmbR. We evaluate performance across three task categories. 
+
+ReMEmbR, operating purely on textual similarity within a top-6 retrieval window, repeatedly retrieves redundant captions around 13:11 due to high cosine similarity and consequently returns that location as the nearest pole, which is incorrect. In contrast, our approach considers captions and visual evidence across multiple clusters and timestamps: it infers that the “yellow pole” at 13:20, although spatially closer, is not a police call pole, and thus correctly identifies Candidate 2 as the nearest target relative to the robot’s current position (red marker). 
+
+2) WH-VQA dataset : WH-VQA is deliberately more challenging than NaVQA: questions demand stronger con-textual reasoning and adaptation to variable semantic gran-ularity and overall SR drops for all methods. Even in this setting, our approach performs best (Table II), roughly dou-bling the success rate over the object-caption baseline, clearly outperforming ReMEmbR, and reducing spatial error by about 50–60%. We also achieve the highest Recall across the Binary, Text, and Multi-modal categories, indicating more accurate and comprehensive memory retrieval. 
+
+Qualitative example. A representative example from WH-VQA (Fig. 6) involves a multimodal query: “Which shelf should this one be placed on?” paired with the robot’s current observation of the target box. The robot uses cross-modal reasoning to resolve the expression “this one” as a white box labeled “Digital Twin”, and selects “Digital Twin box” and “white box” as textual task cues for memory retrieval. ReMEmbR, restricted to cosine-similarity caption retrieval within a top-6 input window, over-samples redundant memo-ries around 13:43 associated with the white box in the staging area (cluster #5), diluting information relevant to the shelves. In contrast, our STaR effectively retrieves both shelf-area and staging-area memories, clusters them, and correctly identifies cluster #4 as the shelf designated for placing the target object. Although ReMEmbR successfully retrieves relevant mem-ories, it ultimately misidentifies the staging area (cluster #5) as the final location. When the question difficulty increases—for instance, “How many empty slots remain on that shelf?”—text-only memories are insufficient, since it is infeasible to encode such fine-grained spatial detail in captions alone. STaR responds correctly that one pallet space remains by retrieving the keyframe memory from cluster #4 and visually inspecting the shelf layout to complete the task. 
+
+3) Implementation Details and On-Device Deployment :
+
+STaR is deployed in both simulation and real-world settings using a Clearpath Husky robot. Simulation experiments are conducted in Isaac Sim with an RGB-D camera and an Ouster OS1-128 3D LiDAR, while the real robot operates in indoor and outdoor environments using a Logitech RGB camera and the same LiDAR, with poses estimated via Cartographer SLAM. All sensor streams are synchronized and sampled at 10 Hz. As STaR assumes a pre-explored environment and is not intended for immediate deployment in fully unexplored settings, memory construction is per-formed via teleoperation with deliberate revisits. During the subsequent query stage, STaR supports both text-only and multimodal queries and is evaluated on 30 tasks of increasing difficulty to assess robustness and end-to-end feasibility un-der realistic conditions. When a target location is successfully identified, navigation goals are executed using the ROS 2 Fig. 7: STaR deployed on a Husky robot for indoor and outdoor experi-ments, supporting both text-based and multimodal queries. 
+
+Nav2 stack on a pre-built map. Representative task examples are shown in Fig. 7. Dataset evaluation and simulation experiments run on a server with an RTX 4090, while real-robot memory construction runs on an Alienware X17 R2 laptop with an RTX 3080. We employ a quantized NVILA-Lite-2B model to aggregate video captions (one every 3 s), consuming approximately 7.2 GB of GPU memory. The open-vocabulary perception stack requires an additional 6.2 GB, enabling online multimodal memory construction at 1 Hz on device. Our method supports both RGB+LiDAR and RGB-D perception modes. With the longest memory duration (35.9 minutes), multimodal memory footprint is 15.7 MB for video captions, 158.1 MB for 3D primitives, and 4.3 GB for keyframe visual memory, where the latter is dominated by image size ( ∼1.8 MB/image in NaVQA vs. ∼0.9 MB in simulation and real-robot runs, halving storage); keyframe visual memory is stored on local disk and retrieved on demand by the agentic planner via selected timestamps. VII. CONCLUSION This work presents a systematic study of the key chal-lenges faced by robots deployed for extended missions in open environments, including long-horizon memory con-struction, efficient retrieval, contextual reasoning, and flex-ible human–robot interaction. To address these challenges, we proposed STaR, a scalable framework that constructs a task-agnostic multimodal memory capable of handling open-ended user queries. STaR leverages adaptive retrieval under the IB principle to isolate task-relevant, information-rich, non-redundant memories for contextual reasoning, enabling accurate spatial, temporal, and descriptive outputs. Experi-ments on two long-horizon VQA benchmarks demonstrate that STaR significantly outperforms existing approaches. In future work, we plan to extend STaR toward high-level task execution, enabling robots to operate within an agentic workflow that decomposes human instructions into sub-tasks and grounds them precisely in long-term memory. REFERENCES [1] Q. Gu, A. Kuwajerwala, S. Morin, K. M. Jatavallabhula, B. Sen, A. Agarwal, C. Rivera, W. Paul, K. Ellis, R. Chellappa et al. ,“ConceptGraphs: Open-vocabulary 3d scene graphs for perception and planning,” in IEEE International Conference on Robotics and Automation (ICRA) . IEEE, 2024, pp. 5021–5028. [2] Y. Deng, J. Wang, J. Zhao, X. Tian, G. Chen, Y. Yang, and Y. Yue, “OpenGraph: Open-vocabulary hierarchical 3d graph representation in large-scale outdoor environments,” IEEE Robotics and Automation Letters , 2024. [3] D. Maggio, Y. Chang, N. Hughes, M. Trang, D. Griffith, C. Dougherty, E. Cristofalo, L. Schmid, and L. Carlone, “Clio: Real-time task-driven open-set 3d scene graphs,” IEEE Robotics and Automation Letters ,vol. 9, no. 10, pp. 8921–8928, 2024. [4] A. Anwar, J. Welsh, J. Biswas, S. Pouya, and Y. Chang, “ReMEmbR: Building and reasoning over long-horizon spatio-temporal memory for robot navigation,” in 2025 IEEE International Conference on Robotics and Automation (ICRA) . IEEE, 2025, pp. 2838–2845. [5] N. Tishby, F. C. Pereira, and W. Bialek, “The information bottleneck method,” arXiv preprint physics/0004057 , 2000. [6] A. Majumdar, A. Ajay, X. Zhang, P. Putta, S. Yenamandra, M. Henaff, S. Silwal, P. Mcvay, O. Maksymets, S. Arnaud et al. , “OpenEQA: Embodied question answering in the era of foundation models,” in 
+
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2024, pp. 16 488–16 498. [7] E. Wijmans, S. Datta, O. Maksymets, A. Das, G. Gkioxari, S. Lee, I. Essa, D. Parikh, and D. Batra, “Embodied question answering in photorealistic environments with point cloud perception,” in Proceed-ings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2019, pp. 6659–6668. [8] K. Chandrasegaran, A. Gupta, L. M. Hadzic, T. Kota, J. He, C. Eyza-guirre, Z. Durante, M. Li, J. Wu, and L. Fei-Fei, “Hourvideo: 1-hour video-language understanding,” Advances in Neural Information Processing Systems , vol. 37, pp. 53 168–53 197, 2024. [9] J. Ye, Z. Wang, H. Sun, K. Chandrasegaran, Z. Durante, C. Eyzaguirre, Y. Bisk, J. C. Niebles, E. Adeli, L. Fei-Fei et al. , “Re-thinking temporal search for long-form video understanding,” in Proceedings of the Computer Vision and Pattern Recognition Conference , 2025, pp. 8579– 8591. [10] A. Werby, C. Huang, M. B¨ uchner, A. Valada, and W. Burgard, “Hierarchical open-vocabulary 3d scene graphs for language-grounded robot navigation,” in First Workshop on Vision-Language Models for Navigation and Manipulation at ICRA 2024 , 2024. [11] L. Schmid, M. Abate, Y. Chang, and L. Carlone, “Khronos: Aunified approach for spatio-temporal metric-semantic slam in dynamic environments,” arXiv preprint arXiv:2402.13817 , 2024. [12] Y. Chang, L. Fermoselle, D. Ta, B. Bucher, L. Carlone, and J. Wang, “ASHiTA: Automatic scene-grounded hierarchical task analysis,” in 
+
+Proceedings of the Computer Vision and Pattern Recognition Confer-ence , 2025, pp. 29 458–29 468. [13] Z. Liu, L. Zhu, B. Shi, Z. Zhang, Y. Lou, S. Yang, H. Xi, S. Cao, Y. Gu, D. Li et al. , “NVILA: Efficient frontier visual language models,” in Proceedings of the Computer Vision and Pattern Recognition Conference , 2025, pp. 4122–4134. [14] Y. Zhang, X. Huang, J. Ma, Z. Li, Z. Luo, Y. Xie, Y. Qin, T. Luo, Y. Li, S. Liu et al. , “Recognize Anything: A strong image tagging model,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2024, pp. 1724–1732. [15] S. Liu, Z. Zeng, T. Ren, F. Li, H. Zhang, J. Yang, Q. Jiang, C. Li, J. Yang, H. Su et al. , “Grounding DINO: Marrying DINO with grounded pre-training for open-set object detection,” in European Conference on Computer Vision . Springer, 2024, pp. 38–55. [16] T. Pan, L. Tang, X. Wang, and S. Shan, “Tokenize Anything via Prompting,” in European Conference on Computer Vision . Springer, 2024, pp. 330–348. [17] B. Mersch, X. Chen, I. Vizzo, L. Nunes, J. Behley, and C. Stachniss, “Receding Moving Object Segmentation in 3D LiDAR Data Using Sparse 4D Convolutions,” IEEE Robotics and Automation Letters (RA-L) , vol. 7, no. 3, pp. 7503–7510, 2022. [18] A. Zhang, C. Eranki, C. Zhang, J.-H. Park, R. Hong, P. Kalyani, L. Kalyanaraman, A. Gamare, A. Bagad, M. Esteva et al. , “Toward robust robot 3-d perception in urban environments: The ut campus object dataset,” IEEE Transactions on Robotics , vol. 40, pp. 3322– 3340, 2024.

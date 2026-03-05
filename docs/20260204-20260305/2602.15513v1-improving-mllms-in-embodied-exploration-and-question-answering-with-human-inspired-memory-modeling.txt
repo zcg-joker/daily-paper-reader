@@ -1,0 +1,183 @@
+Title: Improving MLLMs in Embodied Exploration and Question Answering with Human-Inspired Memory Modeling
+
+URL Source: https://arxiv.org/pdf/2602.15513v1
+
+Published Time: Wed, 18 Feb 2026 01:47:29 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Improving MLLMs in Embodied Exploration and Question Answering with Human-Inspired Memory Modeling 
+
+Ji Li, Jing Xia, Mingyi Li, Shiyan Hu 
+
+Abstract — Deploying Multimodal Large Language Models as the brain of embodied agents remains challenging, particularly under long-horizon observa-tions and limited context budgets. Existing memory-assisted methods often rely on textual summaries, which discard rich visual and spatial details and remain brittle in non-stationary environments. In this work, we propose a non-parametric memory framework that explicitly disentangles episodic and semantic memory for embodied exploration and ques-tion answering. Our retrieval-first, reasoning-assisted paradigm recalls episodic experiences via semantic similarity and verifies them through visual reasoning, enabling robust reuse of past observations without rigid geometric alignment. In parallel, we introduce a program-style rule extraction mechanism that con-verts experiences into structured, reusable seman-tic memory, facilitating cross-environment general-ization. Extensive experiments demonstrate state-of-the-art performance on embodied question answer-ing and exploration benchmarks, yielding a 7.3% gain in LLM-Match and an 11.4% gain in LLM-Match ×SPL on A-EQA, as well as +7.7% success rate and +6.8% SPL on GOAT-Bench. Analyses reveal that our episodic memory primarily improves explo-ration efficiency, while semantic memory strengthens complex reasoning of embodied agents. 
+
+I. Introduction 
+
+In recent years, Multimodal Large Language Models (MLLMs) have advanced rapidly, demonstrating strong reasoning and perception capabilities across a wide range of domains. Despite this progress, deploying MLLMs as the core decision-making module of embodied agents in real-world environments remains highly challenging. A key difficulty lies in enabling agents to efficiently process long-horizon observations while retaining task-relevant information under limited context budgets. To address this issue, recent works introduce various forms working memory, allowing agents to retrieve a small subset of relevant past observations instead of conditioning on the entire sensory history. By coupling task-relevant infor-mation retrieval with frontier-based exploration strate-gies, these methods achieve efficient and effective perfor-mance in embodied exploration and embodied question answering tasks.                     
+
+> 1Ji Li, Jing Xia, Shiyan Hu are with the University of Hong Kong, Hong Kong. Mingyi Li is with Beijing Institute of Technology, Beijing, China.
+
+jerichojili@connect.hku.hk, jingxia@connect.hku.hk, mingyili@bit.edu.cn, shiyanhu@hku.hk 
+
+> Preprint.
+
+However, most existing approaches remain confined to information within the current episode, limiting their ability to leverage accumulated experience over time. In contrast, real-world embodied agents are expected to continuously integrate observations across episodes and exploit long-term knowledge acquired from past inter-actions. While [1] incorporates cross-episode memory, its task definition remain restrictive, typically assessing an MLLM-based information-collection system within a fixed and fully explored space derived from previ-ous timeline. Moreover, approaches such as [2] and [3] fundamentally summarize cross-episode information into hierarchical textual descriptions, which are then used to guide future exploration. This design inevitably discards a substantial amount of spatial information and rich visual cues in raw RGB observations, constraining the agent’s ability to remember. To eflects real-world embodied scenario, we formulate the question in assumption that environments are non-stationary, and then reveals two fundamental challenges. First, maintaining long-term maps —whether represented as persistent nodes [4] or voxel grids [5]-becomes inher-ently difficult in the presence of environmental changes, sensor noise, and long-horizon drift. Second, informa-tion retrieved from past episodes does not necessarily reflect the current state of the environment. Based on these observations, we argue that an effective embodied agent should neither rely on rigid long-term geometric fusion nor blindly trust past episodic information. In-stead, it should recall prior experiences in a soft and associative manner, while continuously grounding them in active exploration and perception —closely mirroring how humans reason about and interact with dynamic environments. Motivated by this insight, we draw inspiration from human memory systems and propose a non-parametric memory framework that explicitly disentangles episodic and semantic memory for embodied exploration and question answering. First, our approach adopts retrieval-first and reasoning-assisted paradigm, where episodic memories are recalled based on semantic similarity and selectively verified through a system-2 visual reasoning. Second, rather than storing memory as free-form textual summaries which are often verbose, environment-specific, and difficult to reuse, we propose program-style enhanced rule extraction to form semantic memory. By generating pseudocode-style workflows and incorporating decision deviation detection, our approach extracts structured, 
+
+> arXiv:2602.15513v1 [cs.RO] 17 Feb 2026
+
+Fig. 1: Overview of the proposed pipeline. The agent integrates cognitive meta memory, episodic memory, and semantic memory to guide efficient exploration and accurate reasoning across sequential navigation subtasks. high-level, and reusable decision rules from embodied experiences. These rules formed semantic memory gen-eralize more effectively across environments, providing stronger and more reliable reasoning support during decision making. We achieve new state-of-the-art results on embodied question answering and exploration, with 65.6% LLM-Match and 48.7% LLM-Match ×SPL on A-EQA [6], and a 72.8% success rate with 56.1% SPL on GOAT-Bench [7]. Extensive experiments show that our proposed episodic memory improves exploration efficiency, while semantic memory enhances performance on complex, long-horizon reasoning tasks. 
+
+II. Related Works 
+
+A. MLLM-based Embodied Agents 
+
+Recent proprietary foundation models, such as GPT-5 and Gemini 3, have significantly advanced multi-image understanding by leveraging extended context lengths and large-scale pretraining [8], and enable more compre-hensive perception over long visual sequences, forming a strong backbone for embodied agents [9], [10], [11], [12], [13], [14]. Beyond vision-language foundation models, imagination driven designs augment observations via generative priors [15], [16], while confidence calibration approaches explicitly model when MLLM should stop by quantifying epistemic uncertainty [17], [18], [19]. Despite these advances, foundation model still incur substantial computational costs, and naively processing uniformly sampled frames is often suboptimal for ques-tions that require selectively identifying high-value obser-vations for exploration and answering. To address these challenges, [20], [21], [4], [22] introduces CLIP and SAM-based open-vocabulary scene graphs to structure seman-tics for MLLM-driven exploration. While [23] further incorporates raw images to enrich memory, its key-frame selection remains constrained by detectors and lacks explicit geometric modeling, leading to inefficient long-horizon exploration. In contrast to existing geometric-semantic graph methods often depend on heavy multi-frame fusion, our approach marks a shift toward decou-pling semantic and geometric spaces, enabling retrieval-time interaction that supports zero-shot generalization and adaptive cross-episode recalling. 
+
+B. Experience and Memory for Embodied Agents 
+
+Research on memory mechanisms for embodied agents seeks to enable the storage, retention, and retrieval of past experiences, facilitating the transition from purely reactive systems to agents capable of maintaining con-text and autonomous adaptation. [24] and [2] adopt description text, temporal and spatial cues to man-age continuously growing histories, allowing robots to recall previously visited regions and reduce redundant exploration. However, memory built primarily on video or image captioning discard a substantial amount of fine-grained visual information embedded in raw obser-vations. [1] further explores long-term memory under dynamic environments by preserving raw image obser-vations. Nevertheless, its task formulation remains re-strictive, typically evaluating an information searching system within a fixed explored space, hinders its appli-cability to realistic exploration scenarios. More recently, [3] focuses on extracting reusable experience from train-ing trajectories. While effective at capturing high-level patterns, the learned experiences remain tightly coupled to previously environment, limiting their generalization ability. Motivated by these observations, we draw in-spiration from human memory systems and propose to disentangle episodic and semantic memory, recalling episode to improve exploration efficiency, while following high-level decision rules in decision making. 
+
+III. Methods 
+
+A. Semantic and Physical Space for Embodied Agents 
+
+Navigation in embodied environments requires rea-soning jointly over a semantic space and a physical space. Inspired by cognitive science findings suggesting structured interactions between these two spaces [25], we propose to decouple semantic memory from physical geometry, while enabling their interaction through test time retrieval. 
+
+Semantic and Physical Space. At each observation step, we extract a set of region-level semantic embed-dings and a place-level image embedding using SAM [26] and CLIP [27] to form hierarchical embedding-based scene graph, following HOV-SG [21]. Global and regional embeddings are stored in a semantic memory indexed by observation time, camera pose and raw image. To interface with downstream tasks, we leverage a LLM to decompose an instruction into three semantic compo-nents: a target object , a set of relative objects , and a set of 
+
+relative areas . Each component is embedded and used to retrieve the most relevant memory via similarity search over region embeddings. Retrieved memory are selected in a priority order, with target object evidence taking precedence, followed by relative objects and relative areas .While the physical space is represented by a lightweight 2D occupancy map constructed from depth observations and camera poses. 
+
+Retrieval-Time Inter-Space Interaction. Unlike prior approaches such as HOV-SG, which tightly couple semantic representations with multi-view geometric fu-sion, our semantic memory is updated independently of persistent geometry. Specifically, we only link semantic space to the physical space at test time by projecting the camera poses of retrieved observations onto the oc-cupancy grid. The interaction allowing semantic concepts to be flexibly grounded without continuous online fusion, and preserves task-relevant semantic cues while keeping the physical representation compact and efficient. 
+
+B. Human-Inspired Memory for Embodied Exploration 
+
+Embodied agents are expected to learn and adapt from their past experiences. Based on this, we propose a non-parametric method to model human-inspired memory for embodied exploration and question answering. 
+
+Episodic Memory: Visual Reasoning for Episodic Recall. Episodic memory records episode-level experiences in a detailed and temporally grounded manner. Each episodic memory instance consists of both a semantic space and a physical space, which encode the observed scene from complementary perspectives, as described in Section III-A. As a fine-grained memory type, episodic memory preserves information at the granularity of navigation steps. When encountering a new episode, we first retrieve the Top-K most similar past observations based on visual similarity to the current observation. To verify episodic correspondence, we further assess whether the retrieved observations originate from nearby locations using an MLLM. After that, embeddings of the current target are used to query the verified episode, and the episode that accumulates the highest number of Top-K matches is selected as prior experience. Mapping-based approaches [28] explicitly align and merge memories by estimating relative transformations, which are highly sensitive to optimization failures and are prone to cascading errors during long-horizon changing and sensor noises. While we humans recall past experi-ences through associative and semantic similarity rather than rigid metric fusion of memories. Hence, in contrast to mapping methods, we propose a gentle episodic recall strategy supported by visual reasoning capability. Specifically, given the retrieved Top-K episodic obser-vations, MLLM first determines whether further explo-ration is required for the current task. 
+
+Iexplore =
+
+{
+
+1, if exploration is required ,
+
+0, otherwise . (1) Let OCC r + = ( T r , Fr ) composes the cognitive map, where T r represent the retrieved camera poses, and 
+
+Fr denotes the set of frontier points. For each frontier 
+
+f ∈ F , let ρ(f ) indicate whether it can lead to unex-plored regions, and d(f, T r ) denote its spatial distance to semantically relevant landmarks. The current and pre-vious exploration maps are jointly provided to a MLLM, outputing pruned frontiers in a visual reasoning manner: 
+
+F⋆ =
+
+
+
+{f ∈ F | ρ(f ) = 1 }, if Iexplore = 1 ,
+
+{f ∈ F | d(f, T r ) > d min }, if Iexplore = 0 .
+
+(2) Here, another retrieval-time interaction between physical and semantic space is expressed through frontiers prun-ing operation. Through this reasoning-centric approach, episodic memory informs exploration decisions without requiring explicit geometric fusion, resulting in a stable exploration strategy. 
+
+Semantic Memory: Program-Style Enhanced Rule Extraction. Semantic memory captures long-term, consolidated knowledge distilled from an agent’s Method Object Rec. Object Loc. Attribute Rec. Spatial Object State Functional World Know. Overall                                                                                                                                                                                                                                          
+
+> Socratic LLM-based Exploration w/ Frame Captions
+> GPT-4* 25.3 –28.4 –27.3 –37.7 –47.2 –54.2 –29.5 –35.5 GPT-4o 22.0 –25.0 –27.3 –40.8 –50.9 –61.8 –38.4 –35.9
+> Socratic LLM-based Exploration w/ Scene-Graph Captions
+> CG Scene-Graph* 25.3 –16.5 –29.2 –37.0 –52.2 –46.8 –37.8 –34.4 SVM Scene-Graph* 29.0 –17.2 –31.5 –31.5 –54.2 –39.8 –38.9 –34.2 LLaVA-1.5* 25.0 –24.0 –34.1 –34.4 –56.9 –53.5 –40.6 –38.1 Multi-Frame* 34.0 –34.3 –51.5 –39.5 –51.9 –45.6 –36.6 –41.8
+> Open-Sourced MLLM-based Exploration
+> 3D-Mem (Qwen2.5-VL) 25.0 13.9 23.8 7.7 52.6 29.3 33.3 3.9 57.5 26.1 43.8 13.5 37.5 8.4 39.1 14.6 ReEXplore (Qwen2.5-VL) 50.6 31.3 29.4 17.8 49.1 31.0 43.1 15.1 66.7 17.2 47.9 27.4 43.1 20.9 46.2 23.0 Ours (Qwen2.5-VL) 39.0 29.5 28.4 17.3 51.3 32.4 37.6 14.4 58.3 24.4 48.5 24.8 47.2 22.3 43.1 23.7 Commercial MLLM Exploration
+> Explore-EQA* (GPT-4o) 44.0 19.6 37.1 29.6 55.3 36.0 42.1 6.6 46.3 9.2 63.2 35.7 45.5 22.0 46.9 23.4 CG + Frontier* (GPT-4o) 45.0 42.0 32.1 25.0 50.8 35.2 32.9 18.7 68.5 38.4 58.8 42.2 45.5 33.5 47.2 33.3 3D-Mem (GPT-4o) 35.0 18.8 50.0 37.3 64.3 56.3 50.0 24.7 80.0 49.3 50.0 22.1 30.0 21.4 54.4 33.3 ReEXplore (GPT-4o) 37.5 21.9 65.6 45.8 67.9 46.1 60.0 25.3 100.0 53.5 65.0 42.4 35.0 23.6 58.3 37.3 Ours (GPT-4o) 62.0 52.7 63.7 48.6 68.5 52.5 52.2 36.8 91.2 54.1 66.4 45.5 54.5 44.3 65.6 48.7
+> Human Agent* 89.7 –72.8 –85.4 –84.8 –97.8 –78.9 –88.5 –85.1
+
+TABLE I: Performance comparison on A-EQA across different question categories. For each category, we report the LLM-Match score (M) and the LLM-Match ×SPL score. “CG” denotes ConceptGraphs. Results marked with * are taken from 3D-Mem [23]. past experiences, including reusable knowledge and pre-ferred response patterns. Unlike episodic memories, which rely on fine-grained details and are inherently tied to specific environments, our semantic memory aims to extract reusable rules from dilemmas encountered during reasoning execution, with the core objective of captur-ing solutions that are transferable across environments. However, pioneer experiments reveal that, directly sum-marizing embodied agents reasoning logs Sn are often overly entangled with environments-specific details that fail to reuse and compactly encode essential knowledge. To address these limitations, we follow [29] and in-troduce a structured abstraction strategy based on pseudocode-style workflows. Specifically, we prompt an LLM to analyze the execution trace of a task by pri-oritizing high-level structural information. The model first identifies variables and functions that govern the workflows, and then organizes them into a pseudocode P
+
+that explicitly captures control flow and decision logic. Unlike prior work [29], [30], where workflows are typ-ically short, embodied agent often involves long-horizon execution with extended decision sequences. In this sit-uation, humble LLM assistant tends to over-annotate functions with learned rules that are weakly correlated with task success, obscuring the truly critical decision points. To prevent this, we introduce decision devia-tion detection mechanism on robots’ trajectories, follow-ing [31]. Specifically, given the robot state Mt at time step t and the corresponding ground-truth trajectory x,we compute: 
+
+ht = d(Mt, x ), (3) where d(·, ·) measures the Euclidean distance between the agent’s current position and the ground-truth trajec-tory. Interactively setting a predefined threshold S, we identify a decision deviation at timestep t if 
+
+ht > S ∧ ht−1 ≤ S. (4) We randomly stop the detection at threshold Sstop when the number K of decision deviation is in the range of 3-5 to form set T = {tk}Kk=1 . These deviation timesteps signal potential errors or departures from the expected behavior, allowing us to ‘debug’ the ‘program’. During the rule extraction, we provide the MLLM with the ground truth answer GT , Sn, P, tk together with their corresponding visual observations Itk :
+
+R = MLLM (GT, Sn, P, {(tk, I tk )}Kk=1 
+
+) ,
+
+R ← { fi : {ϕi, 1 7 → vi, 1, . . . , ϕ i,n i 7 → vi,n i }} . (5) Finally, we can abstracts experiential knowledge into structured, high-level rules using canonical forms such as 
+
+if–then , situation–suggestion and problem–solution key-value pairs, where each pair belongs to one specific 
+
+variables or functions .At the test-time, the task-similarity retrieved semantic memory is loaded into the system prompt. Details can be found in the appendix. 
+
+Meta Memory: Inspired by the success of cognitive process modeling [32], we implement meta memory via cognitive states automatic switching. Specifically, we pre-define a set of discrete cognitive states that govern high-level reasoning behavior, including: exploration, target verification, double checking, ready to answer. See Table in the appendix for concrete prompt examples associated with each cognitive state. Fig. 2: Qualitative case study on A-EQA. Compared with the baseline 3D-Mem, our method demonstrates accurate cross-episode recall and more efficient exploration. 
+
+> (a)
+> (b)
+> (c)
+
+Fig. 3: Qualitative examples of how program-style enhanced rules for semantic memory impact the reasoning trajectory for answering questions. We highlight failed reasoning trajectory in red and successful ones in green. 
+
+IV. Experiments 
+
+A. Active Embodied Question Answering 
+
+To evaluate the effectiveness of our memory design, we conduct experiments on the Open-EQA benchmark [6], [33], [34]. Here, we compare our approach against other MLLM-based baselines on the Open-EQA benchmark, assessing both exploration efficiency and performance on answering complex open-ended questions. In addition, our semantic memory is distilled from 184 episodes in the training split, with a category distribution aligned with that of the test set. 
+
+Metrics. We report LLM-Match and LLM-Match ×SPL as evaluation metrics to measure answer quality and exploration efficiency. Specifically, SPL is computed as the ratio between the shortest path length and the actual trajectory length, normalized to [0 , 1] ,where a higher value indicates a more efficient navi-gation trajectory. LLM-Match evaluates the semantic correctness of the agent ’s answers using GPT-4o as an automated judge. LLM-Match ×SPL further weights the semantic correctness score by navigation efficiency, jointly reflecting both answer quality and exploration effectiveness. If the agent fails to produce a response, answer is outputted by GPT-4o without visual input, and the SPL term is set to zero. 
+
+Analysis. As shown in Table I, our method con-sistently outperforms all baseline approaches when us-ing the GPT-4o backbone. Specifically, the overall LLM-Match improves from 58.3% to 65.6%, while LLM-Match×SPL increases substantially from 37.3% to 48.7%, indicating both higher answer accuracy and improved exploration efficiency. Notably, significant gains are observed across most task categories: Object recognition improves from 45.0% to 62.0%, functional reasoning from 65.0% to 66.4%, and world knowledge from 35.0% to 54.5%. On the one hand, our method achieves higher LLM-Match×SPL across all categories, demonstrating that episodic memory recall guided by visual reasoning effectively directs exploration toward more goal-relevant regions, resulting in more purposeful and efficient navigation. On the other hand, the pronounced improvements in world knowledge and functional recall highlight our semantic memory sup-porting the reasoning-intensive and cognitively complex tasks. Additionally, strong improvements in object recog-nition and object localization can be attributed to our framework ’s reduced reliance on specialized perception models [35], enabling better and more flexible object identification through semantic space rather than purely textual cues. When switching to the Qwen-2.5-VL-7B-Instruct backbone, our method maintains consistent performance gains. It achieves the second-best LLM-Match and the best LLM-Match×SPL, indicating a favorable balance between answer accuracy and exploration efficiency across different MLLM backbones. In contrast to ReEx-plore [3], which employs a stronger MLLM backbone but exhibits noticeable performance degradation in object recognition and world knowledge, our framework contin-ues to scale positively with increasing MLLM capability. This suggests that our design more effectively leverages enhanced MLLM reasoning capacity, rather than being bottlenecked by other components in system.                                      
+
+> Method Success Rate (%) ↑SPL (%) ↑
+> Traditional Methods
+> Modular GOAT [7]* 24.9 17.2 Modular CLIP on Wheels [7]* 16.1 10.4 SenseAct-NN Skill Chain [7]* 29.5 11.3 SenseAct-NN Monolithic [7]* 12.3 6.8
+> MLLM-based Exploration
+> 3D-Mem [23] †(Qwen2.5-VL-7B-Instruct) 49.4 20.7 ReEXplore [3] †(Qwen2.5-VL-7B-Instruct) 53.2 32.6
+> Ours †(Qwen2.5-VL-7B-Instruct) 53.9 31.7 Explore-EQA [18] †(GPT-4o) 55.0 37.9 CG w/ Frontier Snapshots [23] †(GPT-4o) 61.5 45.3 3D-Mem w/o Memory [23] †(GPT-4o) 58.6 38.5 3D-Mem [23] †(GPT-4o) 65.1 49.3 ReEXplore [3] †(GPT-4o) 59.8 42.5 Ours †(GPT-4o) 72.8 56.1
+
+TABLE II: Results on GOAT-Bench under the Val Un-seen split. “CG” denotes ConceptGraphs [20]. Methods marked with * are reported from GOAT-Bench, while those marked with † use MLLM-based exploration. 
+
+B. Life-Long Visual Language Navigation 
+
+GOAT-Bench [7] is a lifelong visual navigation bench-mark designed around a multi-target Go-to-AnyThing (GOAT) task. In this setting, an agent is required to navigate sequentially to multiple target objects within previously unseen environments. Targets are specified in diverse modalities, including object category names (e.g., refrigerator ), natural language descriptions (e.g., 
+
+toy next to the dresser ), or goal images. Following prior baseline methods [3], [23], we evaluate our approach on a 1/10 -scale subset of the val-unseen split, which contains one episode per scene across 36 scenes, resulting in a total of 278 navigation subtasks. In addition, our semantic memory is constructed from the 36 training scenes. 
+
+Metrics. We adopt Success Rate and Success weighted by Path Length (SPL) as evaluation metrics. An episode is deemed successful when the agent termi-nates within 1 m of the navigation target. SPL further measures efficiency by weighting successful episodes ac-cording to the length of the navigation path. 
+
+Analysis. As shown in Table II, our method outper-forms most baseline methods, demonstrating its ability to effectively leverage knowledge accumulated from both episode memory and semantic memory, as evidenced by consistently higher Success Rate and SPL scores. In particular, when compared with 3D-Mem under the GPT-4o backbone, our method achieves a notable im-provement in life-long navigation, with the Success Rate increasing from 65.1% to 72.8%, and SPL improving from 49.3% to 56.1%, indicating more accurate and efficient goal-directed exploration. Under the Qwen backbone, our method slightly underperforms ReEXplore in SPL metric. We attribute this primarily to the relatively weaker visual reasoning capability of Qwen backbone when operating on semantic-labeled exploration maps, which limits the effectiveness of frontier pruning opera-tion during exploration. Method Episodic Memory Semantic Memory LLM-Match LLM-Match ×SPL                 
+
+> Ours (Qwen2.5-VL-7B-Instruct) ✓✓43.1 23.7
+> ✓41.6 23.2
+> ✓39.1 17.5
+> Ours (GPT-4o) ✓✓65.6 48.7
+> ✓62.3 47.2
+> ✓60.9 42.1
+
+TABLE III: Ablation studies on our method by selectively disabling episodic or semantic memory. Results are reported with two backbone MLLMs. 
+
+C. Ablation Study 
+
+Table III presents ablation results on the A-EQA benchmark. When episodic memory is removed, we observe a clear degradation in exploration efficiency. Specifically, LLM-Match drops from 41.3% to 39.1% under the Qwen backbone, and from 65.6% to 60.9% under the GPT-4o backbone. This performance decrease indicates that our episodic memory provides effective guidance for exploration by enabling the agent to reuse relevant prior experiences. In contrast, removing se-mantic memory results in a more decline in answer accuracy than corresponding reduction in SPL. This highlights the critical role of semantic memory in pre-serving transferable and high-level rules and supporting embodied reasoning during question answering. Overall, these ablation results demonstrate that the two memory modules offer complementary benefits: episodic memory primarily improves exploration efficiency, while semantic memory contributes more substantially to accurate and reasoning-intensive question answering. 
+
+V. Conclusion 
+
+We presented a non-parametric memory framework for MLLM-based embodied agents that explicitly disen-tangles episodic and semantic memory to address long-horizon exploration and reasoning. By adopting a vi-sual reasoning paradigm, our approach enables agents to recall and verify prior episodic experiences without relying on rigid geometric fusion, thereby supporting robust cross-episode reuse of observations and improving exploration efficiency. In addition, resuable and structed extracted rules from experiences tackle complex decision making in embodied tasks. Comprehensive evaluation on A-EQA and GOAT-Bench demonstrates the effectiveness of our memory modeling in improving both exploration efficiency and answering accuracy. We identify our lim-itations points to promising future directions: 1) Dif-ferences in scale, map and visual may introduce new challenges for episodic memory in outdoor environments. 2) Parametrically integrating semantic memory into a embodied foundation model for joint optimization of memory recalling. 
+
+References 
+
+[1] M. F. Ginting, D.-K. Kim, X. Meng, A. Reinke, B. J. Kr-ishna, N. Kayhani, O. Peltzer, D. D. Fan, A. Shaban, S.-K. Kim, et al. , “Enter the mind palace: Reasoning and planning for long-term active embodied question answering,” arXiv preprint arXiv:2507.12846 , 2025. [2] M. Zhai, Z. Gao, Y. Wu, and Y. Jia, “Memory-centric embod-ied question answer,” arXiv preprint arXiv:2505.13948 , 2025. [3] G. Zhang, M. Ding, J. Wu, R. Liao, and V. Tresp, “Reex-plore: Improving mllms for embodied exploration with con-textualized retrospective experience replay,” arXiv preprint arXiv:2511.19033 , 2025. [4] Z. Yan, S. Li, Z. Wang, L. Wu, H. Wang, J. Zhu, L. Chen, and J. Liu, “Dynamic open-vocabulary 3d scene graphs for long-term language-guided mobile manipulation,” IEEE Robotics and Automation Letters , 2025. [5] Z. Wang, S. Lee, and G. H. Lee, “Dynam3d: Dynamic layered 3d tokens empower vlm for vision-and-language navigation,” 
+
+arXiv preprint arXiv:2505.11383 , 2025. [6] A. Majumdar, A. Ajay, X. Zhang, P. Putta, S. Yenamandra, M. Henaff, S. Silwal, P. Mcvay, O. Maksymets, S. Arnaud, 
+
+et al. , “Openeqa: Embodied question answering in the era of foundation models,” in Proceedings of the IEEE/CVF con-ference on computer vision and pattern recognition , 2024, pp. 16 488–16 498. [7] M. Khanna, R. Ramrakhya, G. Chhablani, S. Yenamandra, T. Gervet, M. Chang, Z. Kira, D. S. Chaplot, D. Batra, and R. Mottaghi, “Goat-bench: A benchmark for multi-modal lifelong navigation,” in Proceedings of the IEEE/CVF Confer-ence on Computer Vision and Pattern Recognition , 2024, pp. 16 373–16 383. [8] A. K. Lampinen, M. Engelcke, Y. Li, A. Chaudhry, and J. L. McClelland, “Latent learning: episodic memory complements parametric learning by enabling flexible reuse of experiences,” 
+
+arXiv preprint arXiv:2509.16189 , 2025. [9] A. Das, S. Datta, G. Gkioxari, S. Lee, D. Parikh, and D. Batra, “Embodied question answering,” in Proceedings of the IEEE conference on computer vision and pattern recognition , 2018, pp. 1–10. [10] Z. Zhou, Y. Hu, L. Zhang, Z. Li, and S. Chen, “Beliefmapnav: 3d voxel-based belief map for zero-shot object navigation,” 
+
+arXiv preprint arXiv:2506.06487 , 2025. [11] Z. Yang, S. Zheng, T. Xie, T. Xu, B. Yu, F. Wang, J. Tang, S. Liu, and M. Li, “Efficientnav: Towards on-device object-goal navigation with navigation map caching and retrieval,” arXiv preprint arXiv:2510.18546 , 2025. [12] Z. Zhu, X. Wang, Y. Li, Z. Zhang, X. Ma, Y. Chen, B. Jia, W. Liang, Q. Yu, Z. Deng, et al. , “Move to understand a 3d scene: Bridging visual grounding and exploration for efficient and versatile embodied navigation,” in Proceedings of the IEEE/CVF International Conference on Computer Vision ,2025, pp. 8120–8132. [13] S. Saxena, B. Buchanan, C. Paxton, P. Liu, B. Chen, N. Vaske-vicius, L. Palmieri, J. Francis, and O. Kroemer, “Grapheqa: Using 3d semantic scene graphs for real-time embodied ques-tion answering,” arXiv preprint arXiv:2412.14480 , 2024. [14] S. Zhang, D. Huang, J. Deng, S. Tang, W. Ouyang, T. He, and Y. Zhang, “Agent3d-zero: An agent for zero-shot 3d understanding,” in European Conference on Computer Vision .Springer, 2024, pp. 186–202. [15] Y. Yang, J. Liu, Z. Zhang, S. Zhou, R. Tan, J. Yang, Y. Du, and C. Gan, “Mindjourney: Test-time scaling with world mod-els for spatial reasoning,” arXiv preprint arXiv:2507.12508 ,2025. [16] Y. Xu, Y. Pan, and Z. Liu, “Dream to recall: Imagination-guided experience retrieval for memory-persistent vision-and-language navigation,” arXiv preprint arXiv:2510.08553 , 2025. [17] N. Frahm, P. Patel, Y. Zhang, S. Yu, M. Bansal, and R. Sengupta, “Prune-then-plan: Step-level calibration for sta-ble frontier exploration in embodied question answering,” 
+
+arXiv preprint arXiv:2511.19768 , 2025. [18] A. Z. Ren, J. Clark, A. Dixit, M. Itkina, A. Majumdar, and D. Sadigh, “Explore until confident: Efficient explo-ration for embodied question answering,” arXiv preprint arXiv:2403.15941 , 2024. [19] K. Jiang, Y. Liu, W. Chen, J. Luo, Z. Chen, L. Pan, G. Li, and L. Lin, “Beyond the destination: A novel benchmark for exploration-aware embodied question answering,” arXiv preprint arXiv:2503.11117 , 2025. [20] Q. Gu, A. Kuwajerwala, S. Morin, K. M. Jatavallabhula, B. Sen, A. Agarwal, C. Rivera, W. Paul, K. Ellis, R. Chellappa, 
+
+et al. , “Conceptgraphs: Open-vocabulary 3d scene graphs for perception and planning,” in 2024 IEEE International Con-ference on Robotics and Automation (ICRA) . IEEE, 2024, pp. 5021–5028. [21] A. Werby, C. Huang, M. Büchner, A. Valada, and W. Burgard, “Hierarchical open-vocabulary 3d scene graphs for language-grounded robot navigation,” in First Workshop on Vision-Language Models for Navigation and Manipulation at ICRA 2024 , 2024. [22] X. Zhou, T. Xiao, L. Liu, Y. Wang, M. Chen, X. Meng, X. Wang, W. Feng, W. Sui, and Z. Su, “Fsr-vln: Fast and slow reasoning for vision-language navigation with hierarchical multi-modal scene graph,” arXiv preprint arXiv:2509.13733 ,2025. [23] Y. Yang, H. Yang, J. Zhou, P. Chen, H. Zhang, Y. Du, and C. Gan, “3d-mem: 3d scene memory for embodied exploration and reasoning,” in Proceedings of the Computer Vision and Pattern Recognition Conference , 2025, pp. 17 294–17 303. [24] A. Anwar, J. Welsh, J. Biswas, S. Pouya, and Y. Chang, “Remembr: Building and reasoning over long-horizon spatio-temporal memory for robot navigation,” in 2025 IEEE In-ternational Conference on Robotics and Automation (ICRA) .IEEE, 2025, pp. 2838–2845. [25] T. Van de Maele, B. Dhoedt, T. Verbelen, and G. Pezzulo, “A hierarchical active inference model of spatial alternation tasks and the hippocampal-prefrontal circuit,” Nature Communica-tions , vol. 15, no. 1, p. 9892, 2024. [26] A. Kirillov, E. Mintun, N. Ravi, H. Mao, C. Rolland, L. Gustafson, T. Xiao, S. Whitehead, A. C. Berg, W.-Y. Lo, 
+
+et al. , “Segment anything,” in Proceedings of the IEEE/CVF international conference on computer vision , 2023, pp. 4015– 4026. [27] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, et al. ,“Learning transferable visual models from natural language supervision,” in International conference on machine learning .PmLR, 2021, pp. 8748–8763. [28] J. Lazarow, K. Kang, and A. Dehghan, “Rooms from motion: Un-posed indoor 3d object detection as localization and map-ping,” arXiv preprint arXiv:2505.23756 , 2025. [29] M. Ho, C. Si, Z. Feng, F. Yu, Y. Yang, Z. Liu, Z. Hu, and L. Qin, “Arcmemo: Abstract reasoning composition with lifelong llm memory,” arXiv preprint arXiv:2509.04439 , 2025. [30] J. Liu, Y. Sun, W. Cheng, H. Lei, Y. Chen, L. Wen, X. Yang, D. Fu, P. Cai, N. Deng, et al. , “Memverse: Multimodal memory for lifelong learning agents,” arXiv preprint arXiv:2512.03627 ,2025. [31] Z. Yu, Y. Long, Z. Yang, C. Zeng, H. Fan, J. Zhang, and H. Dong, “Correctnav: Self-correction flywheel empow-ers vision-language-action navigation model,” arXiv preprint arXiv:2508.10416 , 2025. [32] Y. Cao, J. Zhang, Z. Yu, S. Liu, Z. Qin, Q. Zou, B. Du, and K. Xu, “Cognav: Cognitive process modeling for object goal navigation with llms,” in Proceedings of the IEEE/CVF In-ternational Conference on Computer Vision , 2025, pp. 9550– 9560. [33] X. Puig, E. Undersander, A. Szot, M. D. Cote, T.-Y. Yang, R. Partsey, R. Desai, A. W. Clegg, M. Hlavac, S. Y. Min, et al. ,“Habitat 3.0: A co-habitat for humans, avatars and robots,” 
+
+arXiv preprint arXiv:2310.13724 , 2023. [34] S. K. Ramakrishnan, A. Gokaslan, E. Wijmans, O. Maksymets, A. Clegg, J. Turner, E. Undersander, W. Galuba, A. Westbury, A. X. Chang, et al. ,“Habitat-matterport 3d dataset (hm3d): 1000 large-scale 3d environments for embodied ai,” arXiv preprint arXiv:2109.08238 , 2021. [35] Z. Ge, S. Liu, F. Wang, Z. Li, and J. Sun, “Yolox: Exceeding yolo series in 2021,” arXiv preprint arXiv:2107.08430 , 2021.

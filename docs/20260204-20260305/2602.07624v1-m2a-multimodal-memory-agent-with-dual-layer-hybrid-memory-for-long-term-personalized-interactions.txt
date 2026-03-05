@@ -1,0 +1,557 @@
+Title: M2A: Multimodal Memory Agent with Dual-Layer Hybrid Memory for Long-Term Personalized Interactions
+
+URL Source: https://arxiv.org/pdf/2602.07624v1
+
+Published Time: Tue, 10 Feb 2026 01:53:56 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# M2A: Multimodal Memory Agent with Dual-Layer Hybrid Memory for Long-Term Personalized Interactions 
+
+Junyu Feng 1 * Binxiao Xu 1 2 * Jiayi Chen 3 Mengyu Dai 4 Cenyang Wu 2 Haodong Li 5 Bohan Zeng 2
+
+Yunliu Xie 2 † Hao Liang 2 Ming Lu 6 Wentao Zhang 2 †
+
+## Abstract 
+
+This work addresses the challenge of personalized question answering in long-term human-machine interactions: when conversational history spans weeks or months and exceeds the context window, existing personalization mechanisms struggle to continuously absorb and leverage users’ incre-mental concepts, aliases, and preferences. Cur-rent personalized multimodal models are predom-inantly static—concepts are fixed at initialization and cannot evolve during interactions. We pro-pose M2A, an agentic dual-layer hybrid memory system that maintains personalized multimodal in-formation through online updates. The system em-ploys two collaborative agents: ChatAgent man-ages user interactions and autonomously decides when to query or update memory, while Memo-ryManager breaks down memory requests from ChatAgent into detailed operations on the dual-layer memory bank, which couples a RawMes-sageStore (immutable conversation log) with a SemanticMemoryStore (high-level observations), providing memories at different granularities. In addition, we develop a reusable data synthesis pipeline that injects concept-grounded sessions from Yo’LLaVA and MC-LLaVA into LoCoMo long conversations while preserving temporal co-herence. Experiments show that M 2A signifi-cantly outperforms baselines, demonstrating that transforming personalization from one-shot con-figuration to a co-evolving memory mechanism provides a viable path for high-quality individ-ualized responses in long-term multimodal in-teractions. The code is available at https: //github.com/Little-Fridge/M2A .
+
+> *
+
+Equal contribution † Project leader † Corresponding author 
+
+> 1
+
+Xi’an Jiaotong University, Xi’an, China 2Peking University, Bei-jing, China 3The Chinese University of Hong Kong, Hong Kong, China 4Nankai University, tianjin, China 5South China University of Technology, Guangzhou, China 6Intel, Beijing, China. Corre-spondence to: Wentao Zhang <wentao.zhang@pku.edu.cn >.
+
+Preprint. February 10, 2026. 
+
+## 1. Introduction 
+
+Large vision-language models (VLMs) have achieved strong performance on multimodal instruction following, visual question answering, and open-ended dialogue (Li et al., 2024a; Chen et al., 2024; Wang et al., 2024; Li et al., 2024b). However, these models are primarily trained for generic, “anonymous” users and lack mechanisms to explicitly cap-ture individual concepts, naming conventions, or stylistic preferences. Consequently, their responses are often broadly acceptable but insufficiently personalized (Hao et al., 2025). Existing personalization methods fall into two categories. The first internalizes user-provided concept images into model representations, enabling recognition of personal-ized visual entities within LLaVA-like architectures (e.g., Yo’LLaVA, MC-LLaVA) (Nguyen et al., 2024; An et al., 2024). The second adopts retrieval-augmented paradigms (e.g., RAP), storing user-related information externally and dynamically retrieving it at inference time for better scal-ability (Hao et al., 2025). Despite their differences, most approaches assume personalization is static. In practice, personalization is incremental: users continually refine con-cepts with new attributes, aliases, and preferences, which static systems cannot effectively absorb. Meanwhile, long-term conversations quickly exceed con-text windows, requiring external memory and selective re-trieval (Maharana et al., 2024; Packer et al., 2023; Zhong et al., 2024; Luo et al., 2024). However, existing mem-ory systems largely focus on text, offering limited support for multimodal concepts, fine-grained updates, or editable memory structures specifically designed for human-machine interactions. Addressing these limitations requires a unified framework for editable multimodal personalization. We formalize long-term personalized interaction as a Partially Observable Markov Decision Process (POMDP) (Kaelbling et al., 1998), where the user’s latent state u evolves over time and is approximated by an explicit belief state Mt. Based on this formulation, we propose M 2A, an agentic framework with dual-layer hybrid memory. The system comprises two cooperating agents: (i) ChatAgent , which manages dialogue through a 1
+
+> arXiv:2602.07624v1 [cs.AI] 7 Feb 2026
+
+M2A: Multimodal Memory Agent for Personalized Interactions Yo'LLaVA RAP-LLaVA Ours      
+
+> My dog's name is <bo> .She dislikes loud noises and likes blue toys.
+> <bo> sounds adorable! Thanks for telling me about her.
+> <bo> 's birthday party is in two days; give me a shopping list.
+> Balloons, squeaky toy set ,party hats, dog cake mix.
+
+Day 1 Day 5      
+
+> The tokens are frozen
+> Later memories not updated
+> My dog's name is <bo> .She dislikes loud noises and likes blue toys .
+> Thanks, <bo> is a corgi and prefers blue toys.
+> <bo> 's birthday party is in two days; give me a shopping list.
+> Balloons, generic toy set ,party hats, cake topper.
+
+Day 1 Day 5             
+
+> Concept Image
+> Learn K Concept Tokens from Concept Images Training Pipeline Concept Card
+> z
+> This is <bo> ,a cute Corgi User Database Later memories not updated No write-back to the card
+> Retriever
+> Retriever Semantic Store Raw Message Store
+> My dog's name is <bo> .She dislikes loud noises and likes blue toys .
+> Got it ! I’ve saved that she prefers blue toys and dislikes loud noises.
+> <bo> 's birthday party is in two days; give me a shopping list.
+> Here’s a quiet-themed list for <bo> : a blue bone toy ,a corgi-size harness
+
+Day 1 Day 5   
+
+> retrieve and summarize
+> <add> text card to memory bank
+> <bo> prefers blue toys and dislikes loud noises.
+> Retrieved text card Memory Bank Evidence Linking
+> Concept Tokens
+
+Figure 1. M2A enables incremental personalization with an editable multimodal memory. Unlike Yo’LLaVA and RAP-LLaVA, which keep initial concept tokens or text only profiles without write-back, M 2A updates a unified memory bank during interaction and queries it at generation time, yielding recommendations aligned with evolving preferences across long, multi session dialogs. 
+
+ReAct-style workflow (Query → Generate → Update) and decides when to access or modify memory; and (ii) Memo-ryManager , which holds exclusive read-write access and performs iterative, reasoning-driven retrieval and updates. Memory is organized into a lower Raw Message Store 
+
+that preserves complete conversational logs and an upper 
+
+Semantic Memory Store that maintains high-level semantic observations. Each semantic entry links to raw-message evidence via evidence ids , enabling evidence-linked progressive narrowing from coarse semantic retrieval to fine-grained context. A tri-path retrieval strategy combining dense text vectors, BM25 (Robertson & Zaragoza, 2009) sparse retrieval, and cross-modal image embeddings with Reciprocal Rank Fusion (Cormack et al., 2009) further improves robustness. Our contributions are summarized as follows: 1. Agentic online personalized memory. We introduce M2A, an agentic multimodal memory framework that supports incremental concept updates during interaction. 2. Dual-layer hybrid memory with evidence linking. We propose a two-tier memory architecture with progressive narrowing for efficient and precise retrieval. 3. Scalable multimodal data synthesis. We design a pipeline that injects multimodal sub-sessions into long conversations for training and evaluation. 
+
+## 2. Related Work 
+
+Personalized multimodal models. Recent vision-language models combine strong visual encoders with large language backbones (Li et al., 2024a; Chen et al., 2024; Wang et al., 2024; Li et al., 2024b), but largely overlook user-specific concepts. Existing personalization methods follow two paradigms. 
+
+Concept internalization compresses user-provided con-cept images into embeddings injected into LLaVA-style models, enabling recognition of personalized visual enti-ties at inference. Yo’LLaVA (Nguyen et al., 2024) targets single concepts, while MC-LLaVA (An et al., 2024) and MyVLM (Alaluf et al., 2024) extend to multi-concept or few-shot settings. Yo’Chameleon (Nguyen et al., 2025) and UniCTokens (An et al., 2025) utilize this paradigm in the area of both personalized understanding and generation. Online-PVLM (Bai et al., 2025) introduces hyperbolic rep-resentations to enable online concept learning at test time without training, allowing incremental addition of new con-cepts during interaction. However, these approaches cannot flexibly update or refine existing concepts based on con-versational feedback—once a concept is initialized (either through training or test-time encoding), its representation remains fixed. This limits their ability of online adaptation, refinement, or evolution of user’s personalized knowledge. 
+
+Retrieval-augmented personalization instead stores user profiles, aliases, and concept descriptions externally and retrieves them during inference. RAP (Hao et al., 2025) exemplifies this paradigm for multimodal language models, while Personalization Toolkit (Seifi et al., 2025) leverages pre-trained vision foundation models with visual prompting and retrieval to achieve training-free personalization. Such methods scale better by keeping the base model fixed, but typically assume a static concept set and lack mechanisms for online refinement of existing knowledge. 2M2A: Multimodal Memory Agent for Personalized Interactions Chat Agent   
+
+> User
+> Stage1 Query Stage
+> (Iterative ReAct Loop)
+> Stage2 Generate Stage
+> (One -shot)
+> Stage3 Update Stage
+> (Iterative ReAct Loop)
+> Tool Call
+> Generate Response Append to History
+> Analyze Tool Call
+> Decide
+> Memory Manager
+
+User -Facing Agent Middleware Agent  
+
+> Query Operation
+> (Iterative Reasoning -Driven)
+> Update Operation
+> (Immediate DB Ops)
+> Search Semantic
+> Fetch
+> Raw Message
+> Examine Evidence Synthesize
+> Interaction
+> Refine
+> Return
+> Context
+> Search Existing Decide
+> add
+> delete
+> Execute DB Ops Verify
+> Return
+> Status
+> Loop
+> Dual -Layer Hybrid Memory
+> Layer 2: Semantic Store
+> (Semantic Memory, Tri -Modal)
+> Layer 1: Raw Message Store
+> (Episodic Memory, Log)
+> Vector
+> Database
+> Memory ID
+> Text
+> Vectors
+> (Dense/Sparse/Multi)
+> Evidence IDs
+> Msg ID
+> Timestamp
+> Role
+> Text
+> Image
+> Linear, immutable sequential Message Log
+> Evidence Linking (Provenance)
+> Timestamp
+
+Figure 2. Overview of the M 2A framework. M 2A employs a multi-agent architecture consisting of a ChatAgent for user interaction and a MemoryManager for autonomous memory operations. The system leverages a Dual-Layer Hybrid Memory bank, linking high-level semantic observations in the Semantic Store to immutable conversational logs in the Raw Message Store via evidence IDs. 
+
+Our work builds on the retrieval-augmented paradigm while introducing agentic memory updates , allowing the system to autonomously decide when and how to modify person-alized knowledge during interaction. Unlike concept in-ternalization methods (including online learning variants) that encode concepts into fixed representations, or passive retrieval systems that merely store and retrieve static infor-mation, M2A maintains editable, persistent memory that accumulates, refines, and even corrects user-specific knowl-edge across multi-session conversations through explicit update operations. 
+
+Long-context memory and agentic memory manage-ment. As conversations exceed context windows, external memory becomes essential. LoCoMo shows that long di-alogues require selectively reintroducing early utterances to maintain temporal consistency (Maharana et al., 2024). Early systems adopt passive retrieval , storing conversa-tion history externally and retrieving relevant segments at inference time (e.g., LongMem, MemLong, UniMem, HMT) (Wang et al., 2023; Liu et al., 2024). While effective, these methods rely on fixed retrieval strategies. 
+
+Agentic memory introduces dynamic control over memory operations. MemGPT frames memory access as agent ac-tions (Packer et al., 2023), while MemoryBank, Mem0, and A-MEM extend this idea with long-term persistence and editable memories (Zhong et al., 2024; Xu et al., 2025). De-spite their flexibility, existing systems are mostly text-based, rely on single-pass retrieval, and operate at a single memory granularity. We address these limitations with a dual-layer hybrid memory that supports multimodal concepts and iter-ative reasoning-driven retrieval from semantic summaries to raw conversational evidence. Additional related work on multimodal generation and edit-ing is discussed in Appendix A. 
+
+## 3. Problem Formulation 
+
+We formalize long-term personalized interaction as a Par-tially Observable Markov Decision Process (POMDP), de-fined as the tuple (U, A, T , Ω, O).
+
+Latent user state. Let U denote the latent state space of user profiles. At each interaction round t, the user is in a hidden state ut ∈ U that contains their private concepts (e.g., specific pet name “Bobo”), visual preferences (e.g., “likes blue toys”), and interaction styles evolving over time. The system cannot directly observe ut and can only infer it through user queries and feedback. 
+
+Transitions and observations. 
+
+• State transition T : As the dialogue progresses, the user’s latent state evolves according to transition probability 
+
+P (ut+1 |ut, a t). For example, when a user introduces new conceptual entities (“my dog is named Bobo”) or corrects previous preferences (“she actually prefers quiet toys”) during interaction, the latent state ut undergoes incremental updates. • Observation Ω: At round t, the system receives a mul-3M2A: Multimodal Memory Agent for Personalized Interactions 
+
+timodal observation xt ∈ Ω (the user’s input query, po-tentially containing text and images). This observation is an instantiation of intent conditioned on the current latent state, following probability distribution xt ∼ O (x|ut).
+
+Belief state as memory bank. Due to the unobservability of ut, the agent must maintain a belief state Mt based on the historical observation sequence Ht = {x1, a 1, . . . , x t, a t}.In our framework, Mt is instantiated as a multimodal mem-ory bank , whose goal is to approximate the posterior distri-bution of latent state ut:
+
+Mt ≈ P (ut|Ht) (1) At each interaction round, the evolution mechanism of the memory bank is: 1. Action execution : The system takes action at ∈ A 
+
+(generates response) based on current observation xt and belief state Mt−1: at ∼ π(a|xt, M t−1).2. Belief update : The system updates memory through MemoryManager based on new observation xt, sys-tem action at, and historical memory Mt−1: Mt =
+
+fupdate (Mt−1, x t, a t).In M 2A, the belief state Mt is instantiated through dual-layer hybrid memory : the lower RawMessageStore saves complete observation history {x1, . . . , x t}, while the up-per SemanticAssociationStore stores high-level inferences about latent state ut (semantic observations). The collabora-tion mechanism between ChatAgent and MemoryManager implements the fupdate function: ChatAgent decides when 
+
+to trigger updates, MemoryManager decides how to update (which memories to add, delete, or modify). The retrieval process corresponds to extracting information most rele-vant to the current query xt from Mt−1 to support action generation at in a timely manner. 
+
+## 4. M 2A: Multimodal Memory Agent 
+
+4.1. Framework Overview 
+
+Figure 2 illustrates M 2A’s overall architecture. M 2A adopts a distributed collaboration architecture centered on Memo-ryManager, decoupling user interaction from memory man-agement. The system consists of three main components: 1. ChatAgent (User Interaction Agent). Serving as the system’s front-end interface, ChatAgent conducts natural language conversations with users. The key feature is 
+
+autonomous decision-making capability : in each con-versational turn, ChatAgent autonomously determines whether to query or update long-term memory through a three-stage ReAct (Yao et al., 2023) workflow, rather than passively executing fixed procedures. 2. MemoryManager (Memory Management Agent). As the system’s back-end core, MemoryManager is the only entity with read-write access to the memory bank. It exe-cutes iterative reasoning-driven retrieval and update operations : after receiving instructions from ChatA-gent, it progressively narrows the retrieval scope through multi-round reasoning (from semantic memory to raw messages), or analyzes existing memories to decide how to update (create, delete, modify). 3. Dual-Layer Hybrid Memory. The system maintains two storage tiers: the lower RawMessageStore (raw message log) and the upper SemanticMemoryStore (se-mantic memory repository). The two layers are linked via evidence ids , enabling progressive narrowing from coarse to fine granularity. 
+
+4.2. Dual-Layer Hybrid Memory 
+
+To address noise interference from long contexts and diffi-culties in cross-modal retrieval, we design a layered storage structure balancing retrospective accuracy with inference efficiency overall. 
+
+Layer 1: Raw Message Store. This is the memory’s foundation, serving as an append-only database that stores raw conversational messages in chronological order. 
+
+Layer 2: Semantic Memory Store. The upper layer stores high-level knowledge extracted and refined by Mem-oryManager. To address the challenge of images not being recalled by pure text queries, we introduce a visual caption-ing mechanism to incorporate visual content into searchable text. Each semantic entry e can be represented as: 
+
+e = {ctext , c caption , c image , ptr } (2) where ctext represents the textual semantic description (e.g., “User’s dog Bobo is a Corgi who likes blue toys”); 
+
+ccaption contains automatically generated captions for as-sociated images using a vision-language model; cimage is a image associated with this semantic entry; and ptr =
+
+{[s1, e 1], [s2, e 2], . . . } contains evidence ids linking to supporting raw message ranges in Layer 1. To speed up retrivial, we generate the following index vectors for each semantic entry: vdense text ∈ Rd is the dense text embedding computed from the concatenation of ctext and ccaption using a sentence encoder (Reimers & Gurevych, 2019) Edense T ;
+
+vsparse text denotes the BM25 sparse representation for key-word matching; vimg ∈ Rd′
+
+represents the visual embed-ding generated from associated images using a cross-modal encoder (Zhai et al., 2023) EI .
+
+Tri-path hybrid retrieval. Given user query q (possi-bly text or text+image), retrieval score S(q, e ) is computed 4M2A: Multimodal Memory Agent for Personalized Interactions Final Dialog    
+
+> Concept Groups
+> LoCoMo
+> User Concepts
+> ChatGPT
+> Conversation
+> QA Pairs
+> Session 1
+> Session 2
+> Session 3
+> Session 4
+> Session 1
+> Session 2
+> Session 1
+> Session 3
+> Session 4
+> Session 6
+> Session 2
+> Session 5
+
+Figure 3. Overview of the proposed dataset construction pipeline. We first organize source images into semantic Concept Groups. Then, a unified One-Call Generation strategy produces concept-grounded dialogues and QA pairs. Finally, these generated sub-narratives are seamlessly interpolated into the original LoCoMo sessions to create the final hybrid dialog. 
+
+through three parallel paths: 
+
+Sdense (q, e ) = sim (Edense T (qtext ), v dense text ) (3) 
+
+Ssparse (q, e ) = BM25 (qtext , v sparse text ) (4) 
+
+Svisual (q, e ) = sim (EI (qimg ), v img ) (5) 
+
+Path 1 (Dense text semantic) : Computes cosine similarity between the query’s dense text embedding and each entry’s 
+
+vdense text , capturing semantic relationships. 
+
+Path 2 (Sparse keyword) : Applies BM25 scoring between query text and vsparse text , capturing exact keyword matches crucial for names, dates, and specific terms. 
+
+Path 3 (Cross-modal) : When qimg is provided, com-putes similarity between the query image embedding and 
+
+vimg ; otherwise uses cross-modal text-to-image similarity between qtext and vimg , enabling text queries to retrieve image-centric memories. Finally, results from the three paths are fused via Reciprocal Rank Fusion (RRF) :
+
+SRRF (q, e ) = X
+
+> path ∈{ dense,sparse,visual }
+
+1
+
+k + rank path (e)
+
+(6) where k = 60 is a hyperparameter and rank path (e) is the rank of entry e in that path’s results. 
+
+Cross-modal alignment : Since we generate ccaption during storage, even when users search for images using only text (qimg is empty), qtext can recall corresponding image mem-ories through high similarity with ccaption . This enables queries like “my Corgi photo” to return stored dog photos even if the semantic entry doesn’t explicitly contain “Corgi” text description. 
+
+4.3. Agentic Collaboration 
+
+The system implements memory operations through the collaboration of two specialized agents, each with distinct responsibilities and capabilities. 
+
+ChatAgent workflow. ChatAgent processes each user message through three sequential stages inspired by ReAct: 
+
+Query Stage : Upon receiving a user message, ChatAgent first determines whether querying long-term memory is nec-essary. This decision considers whether the query references past events, people, or concepts not present in recent conver-sation context. If needed, ChatAgent queries memory, pro-viding both the query and a snippet of recent conversation context. The agent may iterate this process, refining queries based on retrieved results, until sufficient information is gathered or a maximum iteration limit N is reached. This iterative querying enables progressive information gathering and disambiguation in practice. 
+
+Generate Stage : With all the retrieved memory context and the current conversation history, ChatAgent generates a response to the user. The memory context is then natu-rally incorporated into the generation process through the language model’s context window. 
+
+Update Stage : After generating the response, ChatAgent analyzes the conversation content to determine whether new information should be persisted. If updates are warranted, ChatAgent invokes MemoryManager to update memory. 
+
+MemoryManager operations. MemoryManager handles two types of requests from ChatAgent: 
+
+Query operation : Upon receiving a query request with accompanying conversation context, MemoryManager per-forms iterative reasoning-driven retrieval. It begins by searching the semantic memory bank using the tri-path hy-brid retrieval mechanism. For promising candidates, it ex-amines their evidence ids and may retrieve specific raw conversational segments for detailed context. This progres-sive narrowing from semantic to episodic memory enables MemoryManager to provide increasingly refined context. The agent may iterate this process (up to N rounds), alternat-ing between semantic search and raw message examination, until confident in having gathered sufficient relevant infor-mation for downstream answering. 
+
+Update operation : When receiving an update request, 5M2A: Multimodal Memory Agent for Personalized Interactions 
+
+MemoryManager determines whether the current interac-tion introduces new, outdated, or conflicting information that should be reflected in long-term memory. Building on the same retrieval and reasoning mechanisms used in the query operation, it first inspects existing semantic memo-ries related to the new content. Based on this comparison, MemoryManager may add new semantic entries, remove obsolete ones, or replace existing memories to maintain con-sistency. Throughout this process, the agent can re-query the memory store as needed to verify the effects of its ac-tions and to avoid redundancy or contradiction. In essence, the update operation extends the query operation with write access to the semantic memory store, enabling dynamic and self-consistent memory maintenance. 
+
+Motivation for agent collaboration. The two-agent ar-chitecture provides several advantages over a single-agent design: First, it isolates memory management complexity from user interaction, preventing ChatAgent’s conversation context from being overwhelmed by raw memory retrieval results. Second, MemoryManager can maintain its own rea-soning context across operations without interfering with ChatAgent’s dialogue context. Third, when memory op-erations require conversation context, ChatAgent provides only a concise recent snippet rather than full history, while MemoryManager can access older context through the mem-ory bank itself when needed. This separation of concerns enables both agents to specialize in their respective tasks while collaborating effectively. 
+
+4.4. Multimodal Chat Dataset Construction 
+
+Building upon the LoCoMo framework (Maharana et al., 2024), we construct a concept-grounded multimodal chat corpus to address the limitation where images primarily serve as background context. As illustrated in Figure 3, our approach transforms visual inputs into essential narrative drivers through a four-stage pipeline: 1. Concept Grouping: Instead of isolated images, we sam-ple semantically distinct Concept Groups (e.g., specific objects or entities) to simulate realistic discussions. 2. Unified Multimodal Generation: We employ a “One-Call” generation strategy using large language models. This method simultaneously generates multi-session dia-logues and corresponding reasoning QA pairs, ensuring strict consistency between the visual evidence, the narra-tive flow, and the ground-truth answers. 3. Temporal Interpolation: To maintain the temporal in-tegrity of the original long-context conversations, gener-ated sessions are inserted into specific time intervals of the host dialogue using strict timestamp interpolation. 4. Hybrid QA Injection: The final evaluation set com-bines the newly generated reasoning questions (covering multi-hop, temporal, and open-domain types) with VQA samples explicitly injected into the dialogue stream. For comprehensive implementation details, including prompt constraints, QA category distributions, and hyperpa-rameter settings, please refer to Appendix C. 
+
+## 5. Experiment 
+
+5.1. Experimental Setup Datasets. We evaluate on our enhanced LoCoMo dataset constructed via the pipeline described in Section 4.4. The dataset consists of 10 long conversations averaging 621 turns and approximately 10k tokens each, with 214 images injected throughout the dialogues. The original LoCoMo questions are categorized into Single-Hop, Multi-Hop, Tem-poral, and Open Domain. Following prior work (Yan et al., 2025), we exclude the Adversarial category due to missing ground-truth answers. We further augment the benchmark with a new category, 
+
+Visual-Centric questions, which are designed to fully lever-age the injected visual information. These questions specifi-cally test the model’s ability to recall and reason over visual content introduced during concept sessions. The Visual-Centric questions can be further divided into five subtypes: four of them are directly aligned with the original LoCoMo categories (Single-Hop, Multi-Hop, Temporal, and Open Domain) but require visual grounding, while the remaining subtype is adapted from the original QA pairs of YolLaVA. 
+
+Baselines. We compare against three representative sys-tems: LoCoMo (Maharana et al., 2024): a RAG system with single-layer semantic vector storage and single-pass retrieval before generation. Below we will refer this system as RAG. Mem0 (Chhikara et al., 2025): A general mem-ory layer supporting cross-session knowledge persistence but with text-only support. A-MEM (Xu et al., 2025): An agentic memory system supporting editing operations but handling only text modality. 
+
+Evaluation metrics. Prior work typically uses F1 or BLEU-1 scores for evaluation. However, we argue these metrics are inadequate for open-ended generation tasks where answers may be semantically equivalent but lexically different (e.g., “last week” vs. specific dates). Instead, we employ LLM-as-a-judge evaluation using two independent judges: Qwen3-VL-32B (Yang et al., 2025) (denoted as Q) and GPT-4o (Hurst et al., 2024) (denoted as G). Each judge assigns a binary correctness score by comparing generated answers to ground-truth references considering semantic equivalence. We report Q, G, and their average (Avg) as our 6M2A: Multimodal Memory Agent for Personalized Interactions 
+
+Model Method Multi Hop Temporal Open Domain Single Hop Visual Total 
+
+Q G Avg Q G Avg Q G Avg Q G Avg Q G Avg Q G Avg GPT 4o-mini LoCoMo 27.10 24.82 25.96 17.45 16.82 17.14 36.14 29.17 32.66 43.93 41.97 42.95 31.10 30.27 30.68 34.19 32.35 33.27 Mem0 25.89 26.60 26.25 15.62 17.13 16.38 27.08 31.25 29.17 45.07 43.87 44.47 36.39 36.94 36.67 34.66 34.80 34.73 A-MEM 28.36 25.18 26.77 24.61 22.12 23.37 30.21 34.38 32.30 45.18 44.23 44.71 36.39 36.70 36.54 36.79 35.73 36.26 M2A (ours) 27.30 28.01 27.66 31.15 32.40 31.78 40.63 36.46 38.55 56.24 56.71 56.48 44.03 42.51 43.27 44.61 44.67 44.64 
+
+Qwen3VL 8b LoCoMo 24.82 23.76 24.29 28.97 29.28 29.13 31.25 30.21 30.73 43.88 48.04 45.96 37.31 35.17 36.24 36.64 37.98 37.31 Mem0 34.75 35.82 35.29 33.64 34.58 34.11 34.38 33.33 33.86 54.34 51.96 53.15 41.59 39.14 40.37 44.56 43.33 43.95 A-MEM 40.07 40.78 40.43 31.78 30.84 31.31 32.29 30.21 31.25 44.63 45.07 44.85 39.14 38.53 38.84 40.14 40.07 40.10 M2A (ours) 43.26 43.62 43.44 39.25 42.67 40.96 51.04 48.96 50.00 66.71 63.14 64.93 54.13 51.68 52.90 55.44 53.94 54.69 
+
+GLM-4.6V Flash LoCoMo 25.18 24.47 24.83 24.61 22.12 23.37 32.29 27.08 29.69 45.18 43.76 44.47 35.17 32.11 33.64 36.21 34.23 35.22 Mem0 43.97 45.04 44.51 34.27 33.02 33.65 39.58 35.42 37.50 57.91 57.67 57.79 40.37 39.45 39.91 47.73 47.19 47.46 A-MEM 41.84 39.36 40.60 29.90 31.15 30.53 35.42 36.46 35.94 49.94 45.90 47.92 44.65 41.90 43.28 43.60 41.19 42.39 M2A (ours) 48.58 47.51 48.05 39.87 42.05 40.96 57.30 52.08 54.69 66.11 66.47 66.29 55.66 52.91 54.29 56.67 56.29 56.48 
+
+Table 1. Experimental results on LoCoMo dataset. The best results are highlighted in bold , and the second-best results are underlined .Models are evaluated on LLM-as-a-Judge with evaluation model Qwen3-VL-32B(Q), GPT-4o(G) and their average(Avg). 
+
+primary metrics. 
+
+Implementation details. All local models are served us-ing vLLM (Kwon et al., 2023) for efficient inference. For GPT-4o/GPT-4o-mini API calls, we use the official struc-tured output API. Text embeddings for all methods use all-MiniLM-L6-v2 (Reimers & Gurevych, 2019) (consistent with A-MEM). Image embeddings and cross-modal retrieval employ SigLIP-Base-Patch16-384 (Zhai et al., 2023). For the tri-path retrieval, we retrieve top-10 candidates from each path and fuse using RRF with k = 60 . Semantic memories are managed with Milvus (Wang et al., 2021). 
+
+5.2. Main Results 
+
+Table 1 reports experimental results across different ques-tion categories and base models. Overall, M 2A consistently outperforms all baselines across the majority of settings, demonstrating robust advantages in long-context and multi-modal memory reasoning. On GPT-4o-mini, M 2A achieves an average accuracy of 44.64%, substantially surpassing RAG (33.27%), Mem0 (34.73%), and A-MEM (36.26%). The gains are most pro-nounced on Single-Hop questions, where M 2A improves from 44.71% (best baseline) to 56.48%, highlighting the effectiveness of evidence-linked progressive narrowing for retrieving fine-grained and contextually relevant informa-tion. On the newly introduced Visual-Centric questions, M2A reaches 43.27% accuracy, significantly outperforming RAG (30.69%), which validates the benefits of maintaining multimodal memory representations with image captions and cross-modal hybrid retrieval. Similar trends are observed on open-source models. On Qwen3-VL-8B, M 2A achieves 54.69% average accuracy, compared to 43.95% for the strongest baseline. On GLM-4.6V-Flash, the performance gap narrows slightly (56.48% vs. 47.46%), yet M 2A consistently maintains a clear advan-tage across questions of all categories. Figure 4 further presents a fine-grained breakdown of results on Visual-Centric questions for GPT-4o-mini and Qwen3-VL-8B. Across all subcategories, M 2A demonstrates su-perior performance, underscoring its strong capability in multimodal information recall and reasoning. Notably, despite being an agentic memory system, A-MEM underperforms Pure RAG on several categories. We attribute this behavior to A-MEM’s text-only design and single-layer memory structure, which are insufficient for modeling mul-timodal concepts and supporting fine-grained temporal re-trieval in our visually enriched benchmark. VQA    
+
+> Multi-hop
+> Temporal Open Domain
+> Single-hop
+> 10 20 30 40 50 60 70 80
+> GPT-4o-mini
+> VQA
+> Multi-hop
+> Temporal Open Domain
+> Single-hop
+> 10 20 30 40 50 60 70 80
+> Qwen3-VL-8B
+> RAG Mem0 A-Mem M2A
+
+Figure 4. Detailed results on Visual-Centric questions. 
+
+Variant Qwen3-VL GPT-4o Avg. M2A (Full) 55.44 53.94 54.69 w/o Dual-layer (semantic only) 41.56 41.19 41.38 w/o Iterative (single retrieval) 38.08 39.26 38.67 w/o Tri-path (text dense only) 51.15 50.03 50.59 
+
+Table 2. Comparison of M 2A and its variation on Qwen3-VL-8B. 
+
+7M2A: Multimodal Memory Agent for Personalized Interactions 
+
+5.3. Ablation Study 
+
+To understand the contribution of each component, we con-duct systematic ablations on the Qwen3VL-8B model. Ta-ble 2 presents results averaged across all question categories. 
+
+Effect of dual-layer memory. Removing the RawMes-sageStore and relying solely on SemanticMemoryStore (“w/o Dual-layer”) degrades performance by 13.31 percent-age points. This validates our hypothesis that semantic summaries alone may lack crucial details or suffer from information loss during abstraction. The evidence-linked design enables MemoryManager to verify and augment se-mantic memories with precise raw context when needed. 
+
+Effect of iterative retrieval. Constraining MemoryMan-ager to single-pass retrieval without iterative reasoning (“w/o Iterative”) reduces accuracy by 16.02 points. This demonstrates the value of progressive narrowing—the abil-ity to examine initial semantic results, identify promising candidates through their linked raw messages, and itera-tively refine the search. Single-pass retrieval often either misses relevant context or retrieves too broadly. 
+
+Effect of tri-path retrieval. Using only dense text embed-dings without sparse BM25 or cross-modal image retrieval (“w/o Tri-path”) drops performance by 4.10 points. This results proves that the tri-path retrieval approach provides robustness: dense embeddings capture semantic similarity, BM25 handles exact entity matches, and cross-modal re-trieval enables text-to-image queries. Removing any path weakens overall recall quality. 0 5 10 15 20  
+
+> Context Turns
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> Avg.
+> Qwen3-VL-8B
+> GPT-4o-mini
+> GLM-4.6V-Flash
+> Figure 5. Detailed results on Visual-Centric questions.
+
+Effect of context window length. We study the impact of the amount of recent conversational context provided to MemoryManager when ChatAgent triggers memory queries or updates. Specifically, we vary the number of recent turns passed along with each request to the MemoryManager. As shown in Figure 5, providing no contextual history severely degrades performance across all models, indicating that MemoryManager cannot reliably update or retrieve effective memories based solely on the current turn and ChatAgent’s high-level update suggestions. Notably, supplying only a small amount of recent context (e.g., 5 turns) already leads to substantial performance gains, enabling MemoryManager to better infer user intent and anchor updates to the appropriate conversational state. In-creasing the context window further yields only marginal improvements. Overall, these results suggest that a short recent context window is sufficient for effective memory operations, while longer contexts provide limited additional benefits and primarily incur extra computational overhead. 
+
+## 6. Conclusion 
+
+We presented M 2A, an agentic multimodal memory sys-tem addressing the challenge of incremental personalization in long-term human-machine interactions. Through dual-layer hybrid memory with evidence linking, M 2A enables progressive narrowing from semantic summaries to fine-grained conversational context. The collaboration between ChatAgent and MemoryManager implements autonomous, reasoning-driven memory operations that adapt dynamically to conversation context. Tri-path cross-modal hybrid re-trieval combining dense text embeddings, BM25 sparse re-trieval, and cross-modal image embeddings provides robust recall across semantic, lexical, and visual cues. Experi-mental results demonstrate substantial improvements over existing methods, particularly on temporally complex and visual-centric questions. This work shows that transform-ing personalization from static configuration to co-evolving memory provides a viable path toward more adaptive and individualized AI systems. 
+
+## Impact Statement 
+
+This paper presents work advancing long-term personalized interaction in AI systems. There are many potential societal consequences of our work, none of which we feel must be specifically highlighted here. 
+
+## References 
+
+Alaluf, Y., Richardson, E., Tulyakov, S., Aberman, K., and Cohen-Or, D. Myvlm: Personalizing vlms for user-specific queries. In European Conference on Computer Vision , pp. 73–91. Springer, 2024. An, R., Yang, S., Lu, M., Zhang, R., Zeng, K., Luo, Y., Cao, J., Liang, H., Chen, Y., She, Q., et al. Mc-llava: Multi-concept personalized vision-language model. arXiv preprint arXiv:2411.11706 , 2024. 8M2A: Multimodal Memory Agent for Personalized Interactions 
+
+An, R., Yang, S., Zhang, R., Shen, Z., Lu, M., Dai, G., Liang, H., Guo, Z., Yan, S., Luo, Y., et al. Unictokens: Boosting personalized understanding and generation via unified concept tokens. arXiv preprint arXiv:2505.14671 ,2025. Bai, H., Wang, R., Du, Z., Zhao, Y., Zhang, F., Chen, H., Zhu, X., Zheng, B., and Zhao, X. Online-pvlm: Advanc-ing personalized vlms with online concept learning. arXiv preprint arXiv:2511.20056 , 2025. Chen, Z., Wang, W., Cao, Y., Liu, Y., Gao, Z., Cui, E., Zhu, J., Ye, S., Tian, H., Liu, Z., et al. Expanding per-formance boundaries of open-source multimodal models with model, data, and test-time scaling. arXiv preprint arXiv:2412.05271 , 2024. Chhikara, P., Khant, D., Aryan, S., Singh, T., and Yadav, D. Mem0: Building production-ready ai agents with scalable long-term memory. arXiv preprint arXiv:2504.19413 ,2025. Cormack, G. V., Clarke, C. L., and Buettcher, S. Reciprocal rank fusion outperforms condorcet and individual rank learning methods. In Proceedings of the 32nd interna-tional ACM SIGIR conference on Research and develop-ment in information retrieval , pp. 758–759, 2009. Hao, H., Han, J., Li, C., Li, Y.-F., and Yue, X. Rap: Retrieval-augmented personalization for multimodal large language models. In Proceedings of the Computer Vision and Pattern Recognition Conference , pp. 14538– 14548, 2025. Hurst, A., Lerer, A., Goucher, A. P., Perelman, A., Ramesh, A., Clark, A., Ostrow, A., Welihinda, A., Hayes, A., Radford, A., et al. Gpt-4o system card. arXiv preprint arXiv:2410.21276 , 2024. Kaelbling, L. P., Littman, M. L., and Cassandra, A. R. Plan-ning and acting in partially observable stochastic domains. 
+
+Artificial intelligence , 101(1-2):99–134, 1998. Kwon, W., Li, Z., Zhuang, S., Sheng, Y., Zheng, L., Yu, C. H., Gonzalez, J., Zhang, H., and Stoica, I. Efficient memory management for large language model serving with pagedattention. In Proceedings of the 29th sym-posium on operating systems principles , pp. 611–626, 2023. Li, B., Zhang, Y., Guo, D., Zhang, R., Li, F., Zhang, H., Zhang, K., Zhang, P., Li, Y., Liu, Z., et al. Llava-onevision: Easy visual task transfer. arXiv preprint arXiv:2408.03326 , 2024a. Li, F., Zhang, R., Zhang, H., Zhang, Y., Li, B., Li, W., Ma, Z., and Li, C. Llava-next-interleave: Tackling multi-image, video, and 3d in large multimodal models. arXiv preprint arXiv:2407.07895 , 2024b. Liu, W., Tang, Z., Li, J., Chen, K., and Zhang, M. Mem-long: Memory-augmented retrieval for long text model-ing. arXiv preprint arXiv:2408.16967 , 2024. Luo, Y., An, R., Zou, B., Tang, Y., Liu, J., and Zhang, S. Llm as dataset analyst: Subpopulation structure discovery with large language model. In European Conference on Computer Vision , pp. 235–252. Springer, 2024. Maharana, A., Lee, D.-H., Tulyakov, S., Bansal, M., Bar-bieri, F., and Fang, Y. Evaluating very long-term conversational memory of llm agents. arXiv preprint arXiv:2402.17753 , 2024. Nguyen, T., Liu, H., Li, Y., Cai, M., Ojha, U., and Lee, Y. J. Yo’llava: Your personalized language and vision assistant. 
+
+Advances in Neural Information Processing Systems , 37: 40913–40951, 2024. Nguyen, T., Singh, K. K., Shi, J., Bui, T., Lee, Y. J., and Li, Y. Yo’chameleon: Personalized vision and language generation. In Proceedings of the Computer Vision and Pattern Recognition Conference , pp. 14438–14448, 2025. Packer, C., Fang, V., Patil, S., Lin, K., Wooders, S., and Gonzalez, J. Memgpt: Towards llms as operating systems. 2023. Reimers, N. and Gurevych, I. Sentence-bert: Sentence embeddings using siamese bert-networks. arXiv preprint arXiv:1908.10084 , 2019. Robertson, S. and Zaragoza, H. The probabilistic relevance framework: Bm25 and beyond. Foundations and Trends in Information Retrieval , 3:333–389, 01 2009. doi: 10. 1561/1500000019. Seifi, S., Dorovatas, V., Olmeda Reino, D., and Aljundi, R. Personalization toolkit: Training free personaliza-tion of large vision language models. arXiv preprint arXiv:2502.02452 , 2025. Song, D., Zeng, J.-H., Liu, M., Li, X.-Y., and Liu, A.-A. Fashion customization: Image generation based on editing clue. IEEE Transactions on Circuits and Systems for Video Technology , 34(6):4434–4444, 2023. Song, D., Zhou, J., Zeng, J., Tian, H., Zheng, B., Kang, R., and Liu, A.-A. Mef-gd: Multimodal enhancement and fusion network for garment designer. IEEE Transactions on Circuits and Systems for Video Technology , 2025. Wang, J., Yi, X., Guo, R., Jin, H., Xu, P., Li, S., Wang, X., Guo, X., Li, C., Xu, X., et al. Milvus: A purpose-built vector data management system. In Proceedings of the 2021 international conference on management of data ,pp. 2614–2627, 2021. 9M2A: Multimodal Memory Agent for Personalized Interactions 
+
+Wang, P., Bai, S., Tan, S., Wang, S., Fan, Z., Bai, J., Chen, K., Liu, X., Wang, J., Ge, W., et al. Qwen2-vl: Enhancing vision-language model’s perception of the world at any resolution. arXiv preprint arXiv:2409.12191 , 2024. Wang, W., Dong, L., Cheng, H., Liu, X., Yan, X., Gao, J., and Wei, F. Augmenting language models with long-term memory. Advances in Neural Information Processing Systems , 36:74530–74543, 2023. Xu, W., Liang, Z., Mei, K., Gao, H., Tan, J., and Zhang, Y. A-mem: Agentic memory for llm agents. arXiv preprint arXiv:2502.12110 , 2025. Yan, S., Yang, X., Huang, Z., Nie, E., Ding, Z., Li, Z., Ma, X., Kersting, K., Pan, J. Z., Sch ¨utze, H., et al. Memory-r1: Enhancing large language model agents to manage and utilize memories via reinforcement learning. arXiv preprint arXiv:2508.19828 , 2025. Yang, A., Li, A., Yang, B., Zhang, B., Hui, B., Zheng, B., Yu, B., Gao, C., Huang, C., Lv, C., Zheng, C., Liu, D., Zhou, F., Huang, F., Hu, F., Ge, H., Wei, H., Lin, H., Tang, J., Yang, J., Tu, J., Zhang, J., Yang, J., Yang, J., Zhou, J., Zhou, J., Lin, J., Dang, K., Bao, K., Yang, K., Yu, L., Deng, L., Li, M., Xue, M., Li, M., Zhang, P., Wang, P., Zhu, Q., Men, R., Gao, R., Liu, S., Luo, S., Li, T., Tang, T., Yin, W., Ren, X., Wang, X., Zhang, X., Ren, X., Fan, Y., Su, Y., Zhang, Y., Zhang, Y., Wan, Y., Liu, Y., Wang, Z., Cui, Z., Zhang, Z., Zhou, Z., and Qiu, Z. Qwen3 technical report, 2025. URL https: //arxiv.org/abs/2505.09388 .Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., and Cao, Y. ReAct: Synergizing reasoning and act-ing in language models. In International Conference on Learning Representations (ICLR) , 2023. Zeng, J., Song, D., Nie, W., Tian, H., Wang, T., and Liu, A.-A. Cat-dm: Controllable accelerated virtual try-on with diffusion model. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition ,pp. 8372–8382, 2024. Zhai, X., Mustafa, B., Kolesnikov, A., and Beyer, L. Sig-moid loss for language image pre-training. In Proceed-ings of the IEEE/CVF international conference on com-puter vision , pp. 11975–11986, 2023. Zhang, N., Li, Y., Du, D., Chong, Z., Sun, Z., Zeng, J., Dai, Y., Xie, Z., Zhu, H., and Han, X. Robust-mvton: Learning cross-pose feature alignment and fusion for robust multi-view virtual try-on. In Proceedings of the Computer Vision and Pattern Recognition Conference , pp. 16029–16039, 2025. Zhong, W., Guo, L., Gao, Q., Ye, H., and Wang, Y. Memo-rybank: Enhancing large language models with long-term memory. In Proceedings of the AAAI Conference on Arti-ficial Intelligence , volume 38, pp. 19724–19731, 2024. 10 M2A: Multimodal Memory Agent for Personalized Interactions 
+
+## A. Additional Related Work 
+
+Beyond memory-centric personalization approaches, there exists a complementary research direction on controllable multimodal generation and editing systems. While our work focuses on personalization through memory and retrieval, these systems explore personalization through conditional generation, offering an alternative perspective on user-specific multimodal systems. 
+
+Controllable generation with user constraints. Diffusion-based generative models have enabled fine-grained control over visual synthesis under user-specified constraints. Zeng et al. (2024) propose Cat-DM, a controllable accelerated virtual try-on system that leverages diffusion models to render garments according to user-defined constraints while maintaining synthesis efficiency. This demonstrates how generative priors can be conditioned on user inputs to produce personalized visual outputs. Such conditional generation paradigms represent an orthogonal approach to personalization: rather than retrieving and reasoning over stored user information, these systems directly encode user preferences into generation controls. 
+
+Multimodal editing and enhancement. Image editing techniques that integrate multimodal signals provide another avenue for user-driven customization. Song et al. (2023) explore fashion customization through image generation based on editing cues, enabling users to modify garment appearance and style through natural specifications. Building on this direction, Song et al. (2025) introduce MEF-GD, a multimodal enhancement and fusion network for garment design that integrates diverse modalities to improve synthesis quality and support richer semantic controls. These works highlight the role of multimodal fusion in enabling more expressive user control over generated content. 
+
+Cross-view consistency and alignment. Maintaining consistency across different views or poses presents additional challenges for personalized visual systems. Zhang et al. (2025) present Robust-MVTON, which learns cross-pose feature alignment and fusion to achieve robust multi-view virtual try-on results across varied user poses and viewpoints. This work emphasizes the importance of robust feature alignment when personalizing visual content under geometric variations. While these generation-based systems differ from our memory-centric approach, both paradigms ultimately aim to create user-specific experiences in multimodal contexts. Generation-based methods encode personalization directly into model outputs through conditional controls, whereas memory-based methods (including ours) maintain explicit user representations that guide response generation through retrieval. These approaches can be viewed as complementary: generation-based systems excel at producing novel personalized visual content, while memory-based systems excel at maintaining consistency and reasoning over accumulated user knowledge across extended interactions. Future work might explore hybrid approaches that combine editable long-term memory with controllable generation capabilities. 
+
+## B. Detailed Baselines Introduction 
+
+B.1. A-MEM 
+
+We use the A-MEM baseline. The system initializes the AgenticMemorySystem from the original A-MEM codebase with a sentence embedding model ( all-MiniLM-L6-v2 ) and connects the LLM to a local vLLM endpoint via the API. Each conversation turn is converted into a structured memory note that includes the timestamp, speaker name, and message content. If images are present, the system first performs image captioning with the same vision-language model and appends a concise natural-language image summary to the memory note. During question answering, it retrieves top-k related memories (default k = 10 ) and constructs the final prompt from the retrieved context. This implements an agentic memory read/write pipeline while keeping the base model fixed. 
+
+B.2. Mem0 
+
+We use the legacy Mem0 implementation with an in-memory Qdrant vector store and a embedding model (all-MiniLM-L6-v2 ). Similar to A-MEM, each dialog turn is ingested into memory with optional image captioning; captions are appended to the text as a system note so that vision signals are converted into searchable text. At inference, it retrieves a fixed number of memories (default k = 10 ), builds a retrieval-augmented prompt, and generates the answer with the vLLM-backed model. 11 M2A: Multimodal Memory Agent for Personalized Interactions 
+
+B.3. RAG 
+
+This is a single-pass retrieval setup without explicit memory editing. All conversation turns are embedded with a sentence-transformer model and stored as dense vectors. At query time, we compute cosine similarity (dot product on normalized embeddings) between the question and all stored turns, select the top-k contexts (default k = 5 ), and concatenate them into the prompt. Image paths from retrieved turns are passed through the model as additional visual inputs. This provides a pure retrieval-augmented baseline without long-term memory updates. 
+
+## C. Dataset Construction Details 
+
+This section details the pipeline implemented to construct the concept-grounded multimodal dataset. The process is governed by strict constraints to ensure high-quality visual grounding and temporal coherence. 
+
+Step 1: Concept Grouping and Sampling. For each target conversation, we sample a concept group G = {c1, ..., c k}
+
+where the group size k is uniformly sampled from [3 , 4] . For each concept ci, we retrieve a subset of m ∈ [2 , 3] images from the source dataset to ensure visual consistency across different dialogue turns. 
+
+Step 2: One-Call Generation Strategy. We utilize GPT-4 to generate the dialogue and QA pairs in a single API call to maximize coherence. The generation is constrained by the following hyperparameters: • Session Structure: The model generates Nsess ∈ [5 , 6] distinct sessions. Each session consists of Tturns ∈ [5 , 15] 
+
+dialogue turns. • Visual Grounding: The first message of the sequence is forced to explicitly reference all concepts in G using angle-bracket notation (e.g., <concept name> ) to establish the entities. 
+
+Step 3: QA Taxonomy and Distribution. To balance the difficulty of the benchmark, we enforce a strict distribution ratio of 2:3:1:4 for the generated QA categories. For a typical set of 20 generated questions, the distribution is: • Type 6 (Multi-Hop): 20% (4 questions). Requires reasoning across multiple dialogue turns. • Type 7 (Temporal): 30% (6 questions). Involves understanding the timeline of events. • Type 8 (Open-Domain): 10% (2 questions). Requires external knowledge grounded in the image. • Type 9 (Single-Hop): 40% (8 questions). Direct information retrieval. Additionally, we inject Type 5 (Visual Retrieval) questions by matching images appearing in the dialogue with existing VQA datasets. 
+
+Step 4: Temporal Interpolation. To insert the generated sessions into a host conversation without disrupting its timeline, we perform linear time interpolation. Let the insertion point in the host conversation be between timestamps tstart and tend .We generate timestamps τj for the j-th generated session ( j ∈ { 1, ..., N sess }) using: 
+
+τj = tstart + jNsess + 1 × (tend − tstart ) (7) This ensures that tstart < τ 1 < ... < τ Nsess < t end , preserving the strictly increasing temporal order of the merged conversation. 12 M2A: Multimodal Memory Agent for Personalized Interactions 
+
+## D. System Prompts 
+
+D.1. ChatAgent Prompts 
+
+Æ ChatAgent System Prompt 
+
+You are a helpful AI assistant with access to long-term memory. Your goal is to provide personalized, contextually appropriate responses based on the user’s conversation history. 
+
+{ Available Tools: 
+
+ò query memory | Search long-term memory for relevant information 
+
+ò update memory | Request memory updates for important information 
+
+Workflow: 
+
+Each user message goes through three stages: 
+
+Û Stage 1: Query 
+
+Decide if you need information from long-term memory. Query when: 
+
+· User asks about past events, people, or facts not in recent context 
+
+· User references concepts introduced long ago 
+
+· Answering requires temporal reasoning across sessions You may query multiple times iteratively. Use retrieved information to refine subsequent queries if needed. 
+
+Ú Stage 2: Generate 
+
+With all retrieved memory + recent conversation, generate a natural, helpful response. 
+
+Ö Stage 3: Update 
+
+Decide if the conversation contains information worth remembering: 
+
+· Personal information (events, plans, preferences) 
+
+· Factual details (names, relationships, attributes) 
+
+· Concept introductions or refinements 
+
+· Important milestones or changes Call update memory if warranted. 
+
+. Important: 
+
+¥ Be selective about memory operations | not every turn needs querying or updating 
+
+¥ When querying/updating, provide clear, specific requests 
+
+¥ Recent conversation context is provided automatically 
+
+13 M2A: Multimodal Memory Agent for Personalized Interactions 
+
+D.2. MemoryManager Prompts 
+
+Æ MemoryManager System Prompt 
+
+You are the memory management agent responsible for all read/write operations on the memory bank. Your role is to perform precise, reasoning-driven retrieval and updates. 
+
+{ Available Tools: 
+
+ò search semantic memories | Search semantic memory using tri-path retrieval 
+
+ò fetch raw messages | Retrieve raw messages by ID ranges 
+
+ò add memory | Create new semantic memory entry 
+
+ò delete memory | Delete semantic memory entry 
+
+Û Query Operation Workflow: 
+
+When receiving a query request with conversation context: 1. Search semantic memories using tri-path retrieval 
+
+2. Examine promising candidates’ evidence ids 
+
+3. If needed, fetch corresponding raw messages for details 4. Iteratively refine: search → examine → fetch 5. Synthesize and return refined memory context 
+
+ Progressive Narrowing Strategy: 
+
+Start broad → Identify clusters → Drill down via evidence ids → Repeat 
+
+ Update Operation Workflow: 
+
+When receiving update request with conversation context: 1. Search for related existing memories 2. Decide strategy: CREATE / DELETE / BOTH 
+
+3. If deleting, also add update record describing the change 4. Execute operations with appropriate evidence ids 
+
+5. May query again between operations for verification 
+
+. Important Principles: 
+
+¥ Avoid duplicate memories | check for existing similar entries 
+
+¥ Link semantic memories to supporting raw messages via evidence ids 
+
+¥ When updating contradictory info: delete old → create new → add update record 
+
+¥ Be precise with evidence ids | reference exact relevant message ranges 
+
+14 M2A: Multimodal Memory Agent for Personalized Interactions 
+
+D.3. LLM-as-a-Judge Prompts 
+
+We adapt the same LLM-as-a-Judge Prompts from Memory-R1 (Yan et al., 2025): 
+
+Æ Evaluation Judge Prompt 
+
+Your task is to label an answer to a question as CORRECT or WRONG .
+
+õ Input Data: 
+
+(1) A question | posed by one user to another user (2) A gold answer | ground truth answer (3) A generated answer | answer to be evaluated The point of the question is to ask about something one user should know about the other user based on their prior conversations. 
+
+8 Grading Guidelines: 
+
+Ü General Questions The gold answer is usually concise. The generated answer might be longer, but be generous | as long as it touches on the same topic, mark it CORRECT .
+
+ Example: Q: Do you remember what I got the last time I went to Hawaii? Gold: A shell necklace 
+
+Time-Related Questions Gold answer will be a specific date/month/year. Generated answer might use relative references (e.g., "last Tuesday"). Be generous | if it refers to the same time period, mark CORRECT even if format differs. 
+
+ Example: "May 7th" ≈ "7 May" → CORRECT 
+
+® Evaluation Input: 
+
+· Question: {question }
+
+· Gold answer: {gold answer }
+
+· Generated answer: {generated answer }
+
+I Output Format: 
+
+1. Provide a short (one sentence) explanation of your reasoning 2. Finish with CORRECT or WRONG 
+
+3. Return in JSON format with key "label" 
+
+- Warning: Do NOT include both CORRECT and WRONG in your response, or it will break the evaluation script. 
+
+15

@@ -1,0 +1,826 @@
+Title: Choosing How to Remember: Adaptive Memory Structures for LLM Agents
+
+URL Source: https://arxiv.org/pdf/2602.14038v1
+
+Published Time: Tue, 17 Feb 2026 01:59:37 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Mingfei Lu 1 Mengjia Wu 1 Feng Liu 2 Jiawei Xu 3 Weikai Li 4 Haoyang Wang 3 Zhengdong Hu 1 Ying Ding 3
+
+Yizhou Sun 4 Jie Lu 1 Yi Zhang 1
+
+# Abstract 
+
+Memory is critical for enabling large language model (LLM)–based agents to maintain coherent behavior over long-horizon interactions. How-ever, existing agent memory systems suffer from two key gaps: they rely on a one-size-fits-all mem-ory structure and do not model memory structure selection as a context-adaptive decision, limiting their ability to handle heterogeneous interaction patterns and resulting in suboptimal performance. We propose a unified framework, F LUX MEM , that enables adaptive memory organization for LLM agents. Our framework equips agents with mul-tiple complementary memory structures. It ex-plicitly learns to select among these structures based on interaction-level features, using offline supervision derived from downstream response quality and memory utilization. To support ro-bust long-horizon memory evolution, we further introduce a three-level memory hierarchy and a Beta Mixture Model–based probabilistic gate for distribution-aware memory fusion, replacing brit-tle similarity thresholds. Experiments on two long-horizon benchmarks, PERSONAMEM and LoCoMo, demonstrate that our method achieves average improvements of 9.18% and 6.14%. 
+
+# 1. Introduction 
+
+Large language model (LLM)–based agents have shown strong performance in interactive settings, including multi-step planning and open-ended dialogue (Schlegel et al., 2025; Wang et al., 2024; Li et al., 2024). li2025survey,jia-etal-2025-hetgcot In long-horizon interactions, agents must accumulate, retain, and retrieve information across many turns while user goals and contexts evolve over time (Ma-harana et al., 2024). In this process, agent memory is 
+
+> *
+
+Equal contribution 1University of Technology Sydney, Sydney, Australia 2The University of Melbourne, Melbourne, Australia 
+
+> 3
+
+University of Texas at Austin, Austin, United States 4University of California, Los Angeles, Los Angeles, United States. Corre-spondence to: Yi Zhang <yi.zhang@uts.edu.au >.
+
+Preprint. February 17, 2026. 
+
+Figure 1. User–agent interactions exhibit diverse structural pat-terns, including relational, temporal, and topical variations. Prior methods rely on a single memory structure and struggle across interaction types. Our approach dynamically selects memory struc-tures based on the conversation, enabling robust performance. 
+
+responsible for recalling relevant information from rich, multi-turn user interactions. It directly influences the coher-ence of agents’ responses and long-term behavioral consis-tency. Therefore, effective memory organization is essen-tial (Zhang et al., 2025a; Pan et al., 2025). Prior work on long-horizon memory for LLM agents falls into three lines. (1) Flat retrieval-based memory systems 
+
+store salient facts or summaries in weakly structured stores and retrieve them via similarity search, offering efficiency but limited abstraction and relational reasoning (Chhikara et al., 2025; Fang et al., 2025; Zhong et al., 2024; Guti ´errez et al., 2025). (2) Explicitly structured memory systems or-ganize memory into linked notes or graph-like represen-tations, enabling richer relational and temporal reasoning but typically relying on fixed organizational schemes (Xu et al., 2025a;b; Wang et al., 2025; Wang & Chen, 2025; Anonymous, 2026; Rasmussen et al., 2025). (3) Policy man-aged memory systems regulate memory storage and retrieval through higher-level control mechanisms. These mecha-nisms are either learned (e.g., reinforcement learning–based controllers) or engineered (e.g., OS-inspired designs such as decay and redundancy filtering). (Yan et al., 2025; Agrawal et al., 2025; Kang et al., 2025; Jonelagadda et al., 2025; LangChain, 2025; Du et al., 2025; Li et al., 2025b). As illustrated in Fig. 1, existing methods often struggle to deliver accurate and consistent responses in complex, long-horizon interaction scenarios, due to the following two research gaps. Gap 1: Single-structure assumption within memory systems. Most existing methods (Kang et al., 2025; Rasmussen et al., 2025) assume that a sin-1
+
+> arXiv:2602.14038v1 [cs.AI] 15 Feb 2026 Choosing How to Remember: Adaptive Memory Structures for LLM Agents
+
+gle memory structure (e.g., graph) is sufficient across var-ious tasks. Here, a memory structure refers to how the content within an individual memory unit (i.e., a compact dialogue segment) is organized and accessed, whereas re-lationships between different memory units concern how separate memories are linked or associated with one another. This one-size-fits-all memory selection leads to suboptimal performance, as different tasks exhibit distinct structural characteristics and interaction patterns (Trach & McDougle, 2025; Cellier et al., 2022; Zhang et al., 2025b), such as topic evolution, temporal progression, and relational depen-dencies, that often co-occur in long-horizon conversations. 
+
+Gap 2: Lack of conversation-adaptive memory structure selection. While Gap 1 concerns how memory structure is designed, Gap 2 focuses on how memory structure is used during interaction. Although some methods employ differ-ent memory structures across memory layers (e.g., linear for short-term and graph for long-term) (Wang et al., 2025), each layer remains fixed and non-adaptive to interaction content. As a result, structure choice is excluded from opti-mization, limiting alignment with downstream performance and robustness under distribution shifts. To bridge these two gaps, we propose a novel framework, FLUX MEM , that dynamically selects memory structures for LLM agents. We identify a previously underexplored blind spot in existing memory systems: Memory structure is treated as a fixed design choice, rather than being adaptively adjusted based on interaction content. To tackle Gap 1 , we move beyond the assumption of a single universal memory structure and equip agents with multiple complementary memory structures, each induc-ing distinct retrieval behaviors over the same interaction history. This expands the expressiveness of agent mem-ory and enables structural flexibility across heterogeneous tasks. To overcome Gap 2 , we elevate memory structure selection to an explicit, learnable mechanism. We optimize the structure selection decision using offline, interaction-derived feedback obtained from the Multi-Session Chat (MSC) dataset (Xu et al., 2022), aligning memory structures with downstream response quality and retrieval effective-ness. In addition, we address a common practice in memory systems: using fixed similarity thresholds to decide whether a newly retrieved memory should be fused with an existing one. These thresholds are usually set by hand and assume that similarity scores follow a stable pattern, which makes them sensitive to noise and unreliable when interaction dis-tributions change. Instead, we treat memory integration as a probabilistic gating process and propose a new Beta Mixture Model (BMM)–based gate that models the distribution of similarity scores directly. By adaptively separating useful memories from noise, our approach removes the need for fixed thresholds and improves robustness in long-horizon interactions. Extensive experiments on LoCoMo and PER-SONAMEM demonstrate that our approach consistently outperforms existing memory systems in response accuracy and cross-turn consistency across long-horizon interaction tasks. Our contributions are summarized as follows:  
+
+> 1
+
+Key Observations. We identify two gaps: reliance on a single memory structure and the absence of feedback-driven structure selection.  
+
+> 2
+
+Adaptive Multi-Structure Memory Framework. We propose a unified framework that supports multiple comple-mentary memory structures and integrates structure selec-tion via interaction-derived feedback.  
+
+> 3
+
+Memory Fusion and Update Mechanisms. We intro-duce mechanisms for memory fusion and update, including a BMM-based probabilistic gate. 
+
+# 2. Related Work 
+
+LLMs have been widely applied across diverse domains, including dialogue systems, decision-making agents, code generation, and scientific reasoning(Yang et al., 2025; Li et al., 2025a; Jia et al., 2025; Chen et al., 2026; Wu et al., 2025; Lu et al., 2025; Jiang et al.). Their strong in-context learning and generative capabilities make them a natural foundation for building autonomous agent systems that re-quire long-horizon interaction and memory management. Recent research on long-term memory for LLM agents can be grouped into three paradigms: (1) flat retrieval-based systems, (2) explicitly structured systems, and (3) policy-managed memory systems. 
+
+Flat retrieval-based memory systems store salient facts, events, or summaries in flat/weakly structured repositories and rely on similarity search for recall. Mem0, LightMem, and MemoryBank emphasize efficient extraction, incremen-tal updating, and personalization (Chhikara et al., 2025; Fang et al., 2025; Zhong et al., 2024). Their main limitation is that flat memory offers limited abstraction and relational reasoning, which can hurt performance on tasks requiring multi-hop inference or cross-context integration. 
+
+Explicitly structured memory systems organize memory into linked notes or graphs to support richer reasoning. A-MEM and O-Mem maintain evolving networks of notes via reflection and linking (Xu et al., 2025b; Wang et al., 2025); MemGAS further introduces multi-granularity memory with GMM-based organization and entropy routing (Xu et al., 2025a). MIRIX partitions memory into specialized types managed by multiple agents (Wang & Chen, 2025), while Zep builds a temporally aware knowledge graph for cross-session consistency (Rasmussen et al., 2025). While effec-tive for structure-aware recall, these methods rely on fixed memory structures or routing strategies, limiting adaptabil-ity across conversational patterns and reasoning demands. 2Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Policy managed memory systems optimize memory be-havior via learned policies or OS-inspired mechanisms. RL-based Memory-R1 and MIRA learn what to write/keep based on long-horizon rewards (Yan et al., 2025; Agrawal et al., 2025). MemoryOS adopts concepts such as hierarchi-cal storage and eviction (Kang et al., 2025), and Mnemosyne targets edge settings with redundancy pruning and proba-bilistic recall (Jonelagadda et al., 2025). Despite improved adaptivity, most approaches still assume fixed structural bi-ases or hand-crafted organization rules, motivating methods that treat memory structure as a decision variable. 
+
+# 3. Methodology 
+
+In this section, we introduce our framework, F LUX MEM ,as illustrated in Fig. 2. It comprises a three-layer memory hierarchy to support long-horizon interactions and a BMM-based gating mechanism controls memory fusion and up-dates. In mid-term memory, multiple complementary struc-tures are supported, with a conversation-aware selector that dynamically chooses the most suitable structure based on context. In the following parts, we first formally define the problem setting (§3.1), then describe the three-layer mem-ory hierarchy (§3.2), multi-structure memory organization and retrieval (§3.3), conversation-aware memory structure selection (§3.4), and BMM-based memory fusion (§3.5). 
+
+3.1. Formalizaion 
+
+We consider a long-horizon conversational setting where an agent interacts with a user over multiple turns. Let Ht =
+
+{p1, . . . , p t} denote the dialogue history up to turn t, where each page pi = ( ui, a i) corresponds to a single user–agent exchange. Given the current user query qt, the goal is to generate a response yt by leveraging both the recent context and accumulated long-term conversational memories. 
+
+Memory Granularity and Hierarchy. We organize mem-ory using a three-layer hierarchy operating at different tem-poral and semantic scales. Short-term interaction memory 
+
+(STIM), denoted as MSt , buffers the most recent pages to support fast recency-aware access. Mid-term episodic mem-ory (MTEM), denoted as MEt = {e1, . . . , e N }, stores a set of episodic memory units, where each unit 
+
+ej = {pj, 1, . . . , p j,m }, (1) corresponds to an episodic session composed of multiple se-mantically or temporally related pages. Long-term semantic memory (LTSM), denoted as ML, maintains consolidated and durable knowledge abstracted from past interactions. 
+
+Memory Write and Consolidation Pipeline. Newly gen-erated pages are first written into short-term memory and then progressively organized and consolidated across mem-ory layers. Formally, the memory update process can be abstracted as a stage-wise mapping: 
+
+piϕS
+
+−−→ M St → MEtϕL
+
+−−→ ML, (2) where ϕS and ϕL denote abstract write and consolidation operators. This hierarchical pipeline enables the system to balance fast access to recent interactions with structured storage of episodic history and long-term semantic retention. 
+
+Structured Episodic Memory. Each episodic memory unit in MTEM is assigned a single suitable structure (linear, graph, or hierarchical) based on its conversational content, which determines how the unit is organized and retrieved. The selection of structure is treated as a context-dependent decision, allowing different episodic units to be organized under different structural forms. 
+
+Query and Response Generation. Given a query qt, the agent retrieves and fuses relevant information across mem-ory layers to form a memory-conditioned context: 
+
+˜Mt = Ψ( qt, MSt , MEt , ML), (3) where Ψ( ·) denotes a memory retrieval and fusion function. The final response is generated by conditioning on both the query and the retrieved memories: 
+
+yt ∼ p(y | qt, ˜Mt). (4) 
+
+3.2. Three-Layer Memory Hierarchy 
+
+To support long-horizon interactions, we organize memory into a three-level hierarchy: STIM, MTEM, and LTSM. 
+
+Short-Term Interaction Memory. STIM buffers the most recent dialogue history to provide fast access to highly recent context, which is usually most relevant to the user’s next query. During retrieval, all contents in STIM are di-rectly incorporated into the generation context without filter-ing. However, an unbounded short-term buffer introduces noise and destabilizes downstream memory organization, necessitating strict capacity control. The design of STIM is motivated by findings from cogni-tive psychology (Cowan, 2001; 2010; Vogel & Machizawa, 2004; Mathy & Feldman, 2012), which show that human working memory can maintain only a few unstructured items, typically around three to five chunks. Accordingly, we set the capacity of STIM to four pages to enforce a strict short-term memory budget. When this limit is exceeded, older pages are irreversibly transferred to MTEM for struc-tured storage using a recency-based Least Recently Used (LRU) policy, reflecting the dominant role of recency in short-term conversational relevance. 3Choosing How to Remember: Adaptive Memory Structures for LLM Agents    
+
+> Figure 2. Overall architecture of FluxMem . The framework consists of three memory layers: STIM for buffering recent context, MTEM for structure-aware episodic storage, and LTSM for long-term semantic consolidation. The central part depicts the main workflow ,including memory writing, structure selection, and query-time retrieval across memory layers.
+
+Formally, let Mt denote the set of interaction pages stored in STIM at turn t, and let C be the fixed STIM capacity. When |M t| > C , we evict a subset of pages 
+
+Et = arg min  
+
+> P⊂M t,|P| =|M t|− C
+
+X
+
+> p∈P
+
+τ (p), (5) where τ (p) denotes the last access time of page p. The selected pages Et are then flushed to MTEM. Importantly, transferring information to MTEM introduces a second, qualitatively different challenge. Unlike STIM, MTEM organizes interaction history into episodic units, where indiscriminately appending every incoming page would lead to fragmented or redundant structures. We there-fore apply a probabilistic integration decision to determine whether a transferred page should be merged into an existing session and, if so, where it best fits. This decision is im-plemented via a BMM, which guides integration using the distribution of similarity scores rather than fixed thresholds. Details are provided in Section §3.5. 
+
+Mid-Term Episodic Memory. MTEM serves as the primary repository for structured interaction history and bridges transient short-term context with long-term seman-tic memory. A key challenge at this stage is controlling the granularity and growth of stored information: storing individual interaction pages in isolation leads to fragmented memory representations and noisy retrieval, while indiscrim-inate accumulation results in unbounded memory expansion. To address this challenge, MTEM organizes interaction his-tory into episodic units, each grouping semantically related interaction pages into a coherent unit that serves as the basic unit for memory organization and retrieval. Each session contains (i) a sequence of pages with dialogue con-tent, timestamps, representations, and continuity links; (ii) session-level metadata, including a summary and its repre-sentations; and (iii) indexing structures (e.g., entity–relation graphs or topic hierarchies) corresponding to the assigned memory structure. As MTEM grows, only a subset of units remains consistently useful. We therefore estimate the long-term utility of each session using a lightweight episodic utility score, U (s) = w1c(s) + w2ℓ(s) + w3d(s), which combines access frequency, interaction intensity, and re-cency. Higher-utility units are prioritized for consolidation into LTSM, keeping MTEM compact and focused. 
+
+Long-Term Semantic Memory. While MTEM preserves rich episodic interaction history, repeatedly retrieving episodic units is inefficient for information that remains sta-ble across interactions. LTSM therefore consolidates high-utility episodic experiences into durable semantic knowl-4Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+edge for long-term reuse. Unlike episodic memory, LTSM stores abstracted and persistent information that is largely invariant to interaction context, such as user profiles, user-specific facts, general knowledge, and reusable interaction strategies. To maintain long-term memory under capac-ity constraints, LTSM employs an eligibility-based pruning mechanism rather than heuristic scalar scoring: 
+
+m ∈ M LTSM iff u(m) ≥ τu ∧ r(m) ≥ τr (∧ c(m) ≥ τc),
+
+(6) where u(m), r(m), and c(m) denote usage, recency, and op-tional confidence, respectively, and τ∗ are the corresponding thresholds. Items failing to meet these criteria are removed when capacity is exceeded, ensuring compact and reliable long-term storage. Together, STIM, MTEM, and LTSM form a hierarchical memory stack that separates transient context, episodic history, and stabilized semantic knowl-edge, enabling dynamic memory organization. 
+
+3.3. Multi-Structure Organization and Retrieval 
+
+Episodic units in MTEM are heterogeneous and best orga-nized under different memory structures. Some units benefit from temporal organization, while others are better captured by relational or hierarchical structures. Therefore, imposing a single memory organization leads to retrieval errors across interaction scenarios. To address this, our framework main-tains multiple complementary memory structures (Lewis et al., 2020; Collins & Quillian, 1969). From a structural perspective , we restrict our design space to linear, graph-based, and hierarchical memory structures as they consti-tute the foundational primitives of information organization. Classical data structure theory and information science show that complex information systems are fundamentally orga-nized through sequential, hierarchical, or networked forms, while other structures can be reduced to or composed from these basic organizations (Cormen et al., 2022; Hopcroft et al., 1983; Simon, 2012; Buckland, 1991). 
+
+Linear Memory. Linear memory organizes episodic con-tent chronologically, preserving the order of information acquisition. Retrieval is primarily driven by semantic simi-larity with an implicit recency effect, making this structure effective for temporally dependent queries such as step-by-step instructions or evolving goals. 
+
+Graph Memory. Graph memory organizes episodic con-tent around relational structure. Retrieval is entity-centric, combining neighborhood expansion with semantic match-ing, and favors queries where relevance is defined by rela-tional proximity rather than time. 
+
+Hierarchical Memory. Hierarchical memory organizes episodic content into multi-level abstractions. Retrieval follows a coarse-to-fine strategy by matching higher-level topics and then accessing finer-grained content, supporting abstraction-aware recall across granularity levels. Each memory structure emphasizes a different aspect of conversational information, including temporal, relational, and hierarchical aspects, motivating explicit structure selec-tion. The next section describes how the agent dynamically selects among these structures based on the context. 
+
+3.4. Context-Aware Memory Structure Selection 
+
+We formulate memory structure selection as a context-aware classification problem. At each interaction turn t,the agent selects the memory structure that best matches the current conversational context and retrieval needs. Let 
+
+S = {LINEAR , GRAPH , HIERARCHICAL } denote the set of supported structures. Given the context, a lightweight selector predicts the most suitable structure from S.
+
+Conversation feature representation. We represent the conversation state using a compact set of interpretable interaction-level features, rather than dense embeddings or heuristic rules. At each turn t, the interaction context is encoded as a feature vector xt ∈ Rd capturing structural cues relevant to retrieval, including interaction scale, tem-poral signals, entity–relation patterns, and topic structure. This lightweight representation enables efficient structure selection without additional reasoning overhead. 
+
+Structure selector. The selector is implemented as a shal-low multi-layer perceptron (MLP) classifier that outputs a score for each candidate structure, 
+
+fθ (xt) = Softmax  gθ (xt), (7) where gθ (·) denotes the MLP. The predicted structure is obtained as 
+
+ˆst = arg max  
+
+> s∈S
+
+fθ (xt)[ s]. (8) The selected structure ˆst is then used to organize episodic units in MTEM and guide subsequent retrieval. 
+
+Offline supervision via interaction-derived rewards. 
+
+Since ground-truth labels for optimal memory structures are not directly available, we construct supervision signals offline using interaction-derived rewards. For each training interaction, all candidate structures are evaluated by running the agent under structure s and computing a scalar reward 
+
+rt(s) = λq rjudge  
+
+> t
+
+(s) + λm rmem  
+
+> t
+
+(s), (9) where rjudge  
+
+> t
+
+denotes a response quality score and rmem  
+
+> t
+
+mea-sures memory utilization effectiveness. The structure achiev-ing the highest reward, s∗ 
+
+> t
+
+= arg max s∈S rt(s), is treated as the target label for that interaction. 5Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+The selector is trained offline by minimizing a standard supervised classification loss, 
+
+Lsel (θ) = X
+
+> t
+
+ℓ fθ (xt), s ∗
+
+> t
+
+, (10) where ℓ(·, ·) denotes the cross-entropy loss. At inference stage, the trained selector predicts the most suit-able memory structure for the current interaction context. As the conversation evolves, structure selection is performed repeatedly, allowing memory organization to adapt dynami-cally to changing interaction patterns. 
+
+3.5. Beta-Mixture-Gated Memory Fusion 
+
+In long-horizon interactions, deciding whether newly ar-riving information should be merged into existing memory is unstable. Fixed similarity thresholds or heuristic top-K
+
+rules are brittle, as similarity score distributions vary across conversation types and interaction stages. To address this issue, we adopt a BMM–based gating mechanism that pro-vides a soft, distribution-aware criterion for memory fusion. Given an incoming interaction summary and a set of can-didate episodic units, we compute a matching score for each candidate and normalize it to the unit interval x ∈
+
+(0 , 1) . These normalized scores are modeled using a two-component Beta mixture: 
+
+p(x) = π Beta( x; α1, β 1)+(1 −π) Beta( x; α0, β 0), (11) where two components correspond to high- and low-compatibility score regimes. Here, π denotes the mixture weight, and (αk, β k) parameterize the Beta distribution of component k. Mixture parameters are estimated via an EM procedure with responsibility-weighted moment updates. Based on the mixture, we compute the posterior probability, 
+
+g(x) = P (z = 1 | x) = π Beta( x; α1, β 1)
+
+P 
+
+> k∈{ 0,1}
+
+πk Beta( x; αk, β k) ,
+
+(12) where z ∈ { 0, 1} is a latent component indicator and z = 1 
+
+denotes the high-compatibility component. The posterior 
+
+g(x) serves as a soft gating signal that measures how likely a candidate belongs to the high-compatibility regime under the learned score distribution. Importantly, fusion decisions are made in the posterior prob-ability space rather than on raw similarity scores. Candi-dates with high posterior mass under the high-compatibility component are retained, with a minimum-keep safeguard to avoid over-filtering. Retained candidates are merged into the most compatible episodic unit under the selected memory structure, or stored as a new unit if none qualify. By operat-ing at the distribution level, the BMM gate replaces brittle hand-tuned thresholds with an adaptive fusion criterion. 
+
+# 4. Experiments 
+
+4.1. Experimental Setup 
+
+4.1.1. D ATASETS 
+
+To evaluate the effectiveness of our proposed framework, we conduct a series of experiments across two representa-tive datasets - LoCoMo (Maharana et al., 2024) and PER-SONAMEM (Jiang et al., 2025). Both of these datasets are designed to test long-horizon reasoning and memory capabilities in LLM-based agents. 4.1.2. B ASELINES 
+
+We compare FluxMem against a range of state-of-the-art memory systems, including: LangMem (LangChain, 2025): A language model with built-in memory capabilities. 
+
+Mem0 (Chhikara et al., 2025): A flat retrieval-based mem-ory system. ZEP (Rasmussen et al., 2025): A time-aware graph memory system. MemoryOS (Kang et al., 2025): An OS-inspired memory management system. A-Mem (Xu et al., 2025b): An explicit structured memory system using linked notes. O-mem (Wang et al., 2025): A graph-based memory organization method. MemR 3 (Du et al., 2025): A closed-loop controller that dynamically alternates between retrieval, reflection, and answering to optimize evidence coverage for LLM agents. MEMOS (Li et al., 2025b): A redundancy-filtering memory system for edge settings. Hip-poRAG 2 (Guti ´errez et al., 2025): A framework that uses knowledge graphs for efficient retrieval. 4.1.3. IMPLEMENTATION DETAILS 
+
+Experiments are conducted on 2×A100 GPUs using GPT-4.1 with temperature 0, to ensure reproducible outputs. We employ a three-layer memory: STIM (capacity 4, LRU), MTEM (up to 2000 episodic sessions with utility-aware pruning), and LTSM (up to 100 consolidated en-tries retrieved by semantic similarity). Memory fusion in MTEM is governed by a two-component Beta Mix-ture Model gate, where matching scores are filtered by the high-compatibility posterior (threshold 0.6, minimum keep 1). The memory structure selector is a two-layer MLP (12-dim input, hidden size 4) with a 3-way output over LINEAR /G RAPH /H IERARCHICAL , trained with interaction-derived supervision. Retrieval fuses dense encoding (all-MiniLM-L6-v2) and BM25 via reciprocal rank fusion. 4.1.4. E VALUATION METRICS 
+
+We evaluate memory systems using dataset-specific met-rics. On the P ERSONA MEM dataset, where each query is formulated as a single-choice question, we use accuracy as the evaluation metric. On the L OCOMO dataset, which involves free-form response generation, we adopt a multi-dimensional evaluation suite, including F1, BLEU-1 (B1), 6Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Table 1. Category-wise performance on PERSONAMEM. Best results in each column are shown in bold, second-best are underlined. Method Recall user shared facts Suggest new ideas Track full preference evolution Revisit reasons behind preference updates Provide preference-aligned recommendations Generalize to new scenarios Average 
+
+LangMem 31.29 24.73 53.24 81.82 40.00 8.77 40.64 Mem0 32.13 15.05 54.68 80.81 52.73 57.89 48.55 A-Mem 63.01 27.96 54.68 85.86 69.09 57.89 59.75 Memory OS 72.72 17.20 58.27 78.79 72.72 56.14 59.97 O-Mem 67.81 21.51 61.15 89.90 65.45 73.68 63.25 HippoRAG 2 76.74 33.33 56.12 78.79 23.64 38.60 51.87 
+
+FluxMem 85.27 36.56 65.47 91.92 70.91 82.46 72.43 Improvement (%) +8.53 +3.23 +4.32 +2.02 -1.81 +8.78 +9.18 
+
+Table 2. Performance comparison on LoCoMo. Best results in each column are shown in bold, second-best are underlined. Method Cat1: Multi-hop Cat2: Temporal Cat3: Open Cat4: Single-hop Average 
+
+F1 ↑ B-1 ↑ R-L ↑ F1 ↑ B-1 ↑ R-L ↑ F1 ↑ B-1 ↑ R-L ↑ F1 ↑ B-1 ↑ R-L ↑ F1 ↑ B-1 ↑ R-L ↑
+
+LangMem 41.11 32.09 37.71 53.67 46.22 47.37 33.38 27.26 24.55 51.13 44.22 48.37 44.32 37.95 39.50 Mem0 28.84 20.22 27.45 24.21 18.75 23.23 23.59 19.09 23.13 32.74 27.58 33.02 27.35 21.41 26.21 ZEP 8.74 5.98 6.79 7.40 4.70 6.07 7.64 3.46 5.18 7.91 3.80 6.26 7.92 4.48 6.08 MemoryOS 43.03 34.09 39.75 44.43 32.03 42.64 28.36 23.24 27.83 49.31 42.61 49.84 41.28 32.99 40.02 A-Mem 32.41 24.28 31.26 37.23 33.02 39.61 16.16 14.64 15.19 40.94 35.54 42.32 31.69 26.87 32.10 MEMOS 20.27 13.35 15.75 14.86 7.86 11.58 11.87 6.85 9.32 18.96 11.42 17.37 16.49 9.87 13.51 MemR 3 18.65 11.17 14.37 25.39 15.90 22.63 11.56 5.77 8.96 24.35 12.72 22.00 20.49 11.89 17.49 O-mem 42.64 34.08 32.78 57.48 49.76 48.88 30.58 25.69 21.11 54.89 48.98 44.26 46.40 39.63 36.76 HippoRAG 2 28.11 18.92 27.68 10.35 6.92 9.82 24.91 21.10 24.48 44.82 37.25 44.37 27.55 21.05 26.59 
+
+FluxMem 48.56 39.90 44.05 56.67 41.88 54.89 37.30 29.63 36.76 62.12 53.52 62.33 51.16 41.73 49.51 Improvement (%) +5.53 +5.81 +4.3 -0.81 -7.68 +6.01 +3.92 +3.94 +8.93 +7.23 +4.54 +12.49 +6.84 +2.1 +9.49 
+
+ROUGE-L, ROUGE-1, ROUGE-2, and BERTScore, to com-prehensively assess response quality. 
+
+4.2. Overall Performance 
+
+Tables 1 and 2 report the overall results on P ERSONA MEM 
+
+and L OCOMO. Overall, FluxMem achieves the strongest and most consistent performance across both datasets, demonstrating its effectiveness for long-horizon conversa-tional memory. On P ERSONA MEM (Table 1), FluxMem attains the highest average accuracy (72.43%), outperform-ing all baselines by +9.18%, with clear advantages on preference-centric tasks such as tracking preference evolu-tion, revisiting update reasons, and generalizing to new sce-narios. On L OCOMO (Table 2), FluxMem again delivers the best overall results, achieving the highest average F1, BLEU-1, and ROUGE-L scores, with particularly strong gains in multi-hop, open, and single-hop reasoning. In contrast, competing methods relying on fixed memory structures or layer-specific heuristics perform well only in isolated set-tings and struggle to adapt to varying interaction patterns and retrieval requirements. In a few categories, FluxMem does not outperform the strongest baselines, which is ex-pected as certain tasks align closely with specific fixed struc-tures. This reflects an trade-off between specializing for individual scenarios and maintaining robust performance 
+
+Figure 3. Parameter experiments results. 
+
+across diverse long-horizon interaction patterns. Overall, these results show that multi-structure episodic memory with context-adaptive structure selection yields more stable and robust improvements than fixed-structure systems. 
+
+4.3. Ablation Studies 
+
+We conduct ablation studies on P ERSONA MEM and L O-COMO to examine the contribution of individual compo-7Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Table 3. Ablation study on PERSONAMEM. Method Recall user shared facts Suggest new ideas Track full preference evolution Revisit reasons behind preference updates Provide preference-aligned recommendations Generalize to new scenarios 
+
+w/o Linear 80.62 ↓4.7 40.86 ↑4.3 62.59 ↓2.9 90.91 ↓1.0 69.09 ↓1.8 75.44 ↓7.0 
+
+w/o Graph 78.29 ↓7.0 34.41 ↓2.2 63.31 ↓2.2 86.87 ↓5.1 67.27 ↓3.6 75.44 ↓7.0 
+
+w/o Hierarchy 79.84 ↓5.4 35.48 ↓1.1 61.87 ↓3.6 90.91 ↓1.0 63.64 ↓7.3 78.95 ↓3.5 
+
+w/o BMM 81.40 ↓3.9 37.63 ↑1.1 61.87 ↓3.6 87.88 ↓4.0 69.09 ↓1.8 78.95 ↓3.5 
+
+FluxMem 85.27 36.56 65.47 91.92 70.91 82.46 
+
+Table 4. Ablation study on LoCoMo Method Cat1: Multi-hop Cat2: Temporal Cat3: Open Cat4: Single-hop F1 B-1 R-L F1 B-1 R-L F1 B-1 R-L F1 B-1 R-L 
+
+w/o Linear 44.39 ↓4.2 36.63 ↓3.3 36.73 ↓7.3 49.86 ↓6.8 36.76 ↓5.1 49.86 ↓5.0 29.60 ↓7.7 6.67 ↓23 27.41 ↓9.4 58.75 ↓3.4 47.26 ↓6.3 58.49 ↓3.8 
+
+w/o Graph 41.95 ↓6.6 32.23 ↓7.7 32.31 ↓12 53.95 ↓2.7 41.38 ↓0.5 53.95 ↓0.9 17.86 ↓19 4.24 ↓25 17.76 ↓19 61.39 ↓0.7 52.65 ↓0.9 61.63 ↓0.7 
+
+w/o Hierarchy 42.36 ↓6.2 32.00 ↓7.9 35.38 ↓8.7 55.50 ↓1.2 43.97 ↑2.1 55.50 ↑0.6 25.28 ↓12 4.89 ↓25 25.28 ↓12 58.39 ↓3.7 47.89 ↓5.6 59.23 ↓3.1 
+
+w/o BMM 41.18 ↓7.4 31.70 ↓8.2 32.48 ↓12 54.33 ↓2.3 41.75 ↓0.1 54.33 ↓0.6 20.97 ↓16 3.79 ↓26 20.97 ↓16 59.74 ↓2.4 47.74 ↓5.8 59.05 ↓3.3 
+
+FluxMem 48.56 39.90 44.05 56.67 41.88 54.89 37.30 29.63 36.76 62.12 53.52 62.33 
+
+nents in FluxMem (Tables 3 and 4). Removing the linear structure causes the largest drop on temporally dependent tasks such as Track full preference evolution , highlighting the importance of chronological organization. Eliminat-ing the graph or hierarchical structure mainly affects rela-tional alignment and abstraction-oriented tasks, respectively. Removing the BMM-based gating mechanism also leads to noticeable degradation across categories, indicating the importance of distribution-aware memory fusion. On L O-COMO, all ablated variants underperform the full model, with clear drops in multi-hop and open reasoning. Remov-ing linear, graph, or hierarchical memory impairs temporally sensitive, relational, and abstraction-driven queries, respec-tively. The pronounced degradation on the O PEN category is expected, as open-domain questions often combine weak temporal cues with sparse relational signals, making them particularly dependent on flexible structure selection and effective cross-structure memory fusion. Notably, w/o BMM 
+
+consistently lags behind FluxMem, underscoring the ben-efit of adaptive gating over heuristic similarity thresholds. Overall, these results show that FluxMem’s components are complementary: multi-structure memory captures diverse interaction patterns, while adaptive selection and BMM-based gating support robust long-horizon reasoning. 
+
+4.4. Analysis of Parameter Sensitivity 
+
+We analyze the sensitivity of two key hyper-parameters that directly control the selectivity of BMM-based memory fu-sion: the posterior threshold τBMM and the minimum reten-tion parameter mmin (Fig. 3). (1) τBMM . Fixing mmin = 1 ,we vary τBMM from 0.4 to 0.7. On P ERSONA MEM , accu-racy peaks at τBMM = 0 .5, while both lower and higher values degrade performance. Smaller thresholds admit low-compatibility candidates, introducing noise, whereas larger thresholds become overly restrictive. A similar trend is observed on L OCOMO, where overall F1, BLEU-1, and ROUGE-L peak at τBMM = 0 .5 and decline as the thresh-old increases. (2) mmin . Fixing τBMM = 0 .5, we vary 
+
+mmin from 1 to 3. On both P ERSONA MEM and L OCOMO,increasing mmin consistently degrades performance, indi-cating that forcing the retention of additional candidates introduces redundant or weakly relevant memories. Overall, FluxMem shows moderate sensitivity, favoring τBMM = 0 .5
+
+and mmin = 1 for stable performance. 
+
+4.5. Case Studies 
+
+We present three representative cases (Figs. 4–6) to illustrate how FluxMem dynamically leverages linear, graph, and hier-archical memory structures for diverse long-horizon queries. 
+
+Time-dependent reasoning. As shown in Fig. 4, the first case asks when Melanie read a book, requiring alignment of a relative temporal expression with a session timestamp. FluxMem selects linear memory to preserve chronology and correctly infers the year (2022), while baselines fail due to missing temporal linkage. Complex relational rea-soning. Fig. 5 presents a query about Caroline’s place of origin, which requires integrating relocation history with a later country mention. FluxMem activates graph memory to connect relational cues across sessions and correctly identi-fies Sweden, whereas competing methods fail to establish the necessary relations. Topic evolution. In Fig. 6, the query appears in a conversation with substantial topic drift. By organizing episodic content hierarchically, FluxMem abstracts over evolving subtopics and retrieves the correct 8Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+activity (horseback riding), avoiding interference from re-cent but irrelevant information. 
+
+# 5. Conclusion 
+
+We introduce FluxMem, a multi-structure conversational memory framework with adaptive structure selection for long-horizon interactions. By integrating linear, graph, and hierarchical memories with conversation-aware selection and BMM-based fusion, FluxMem supports diverse rea-soning demands. Experiments on P ERSONA MEM and L O-COMO demonstrate consistent improvements, highlighting the effectiveness of adaptive memory structuring. 
+
+# References 
+
+Agrawal, S., Kher, K. V., Mittal, S., Maheshwari, S., and Balasubramanian, V. N. Memory-integrated reconfig-urable adapters: A unified framework for settings with multiple tasks. arXiv preprint arXiv:2512.00940 , 2025. Anonymous. REMem: Reasoning with episodic memory in language agent, 2026. Submitted to ICLR 2026. Buckland, M. K. Information as thing. Journal of the American Society for information science , 42(5):351–360, 1991. Cellier, D., Petersen, I. T., and Hwang, K. Dynamics of hi-erarchical task representations. Journal of Neuroscience ,42(38):7276–7284, 2022. Chen, J., Wu, M., Liu, Q., and Zhang, Y. Explainable prediction of knowledge recombination: A synergized method with heterogeneous hypergraph learning and large language models. Information Processing & Management , 63(1):104336, 2026. ISSN 0306-4573. doi: https://doi.org/10.1016/j.ipm.2025.104336. URL https://www.sciencedirect.com/ science/article/pii/S0306457325002778 .Chhikara, P., Khant, D., Aryan, S., Singh, T., and Yadav, D. Mem0: Building production-ready ai agents with scalable long-term memory. arXiv preprint arXiv:2504.19413 ,2025. Collins, A. M. and Quillian, M. R. Retrieval time from semantic memory. Journal of verbal learning and verbal behavior , 8(2):240–247, 1969. Cormen, T. H., Leiserson, C. E., Rivest, R. L., and Stein, C. 
+
+Introduction to algorithms . MIT press, 2022. Cowan, N. The magical number 4 in short-term memory: A reconsideration of mental storage capacity. Behavioral and brain sciences , 24(1):87–114, 2001. Cowan, N. The magical mystery four: How is working memory capacity limited, and why? Current directions in psychological science , 19(1):51–57, 2010. Du, X., Li, L., Zhang, D., and Song, L. Memr 3: Memory retrieval via reflective reasoning for llm agents. arXiv preprint arXiv:2512.20237 , 2025. Fang, J., Deng, X., Xu, H., Jiang, Z., Tang, Y., Xu, Z., Deng, S., Yao, Y., Wang, M., Qiao, S., et al. Lightmem: Lightweight and efficient memory-augmented generation. 
+
+arXiv preprint arXiv:2510.18866 , 2025. Guti ´errez, B. J., Shu, Y., Qi, W., Zhou, S., and Su, Y. From rag to memory: Non-parametric continual learning for large language models. In Forty-second International Conference on Machine Learning , 2025. Hopcroft, J. E., Ullman, J. D., and Aho, A. V. Data structures and algorithms , volume 175. Addison-wesley Boston, MA, USA:, 1983. Jia, R., Wu, M., Ding, Y., Lu, J., and Zhang, Y. HetG-CoT: Heterogeneous graph-enhanced chain-of-thought LLM reasoning for academic question answering. In Christodoulopoulos, C., Chakraborty, T., Rose, C., and Peng, V. (eds.), Findings of the Association for Computational Linguistics: EMNLP 2025 , pp. 15950–15963, Suzhou, China, November 2025. Asso-ciation for Computational Linguistics. ISBN 979-8-89176-335-7. doi: 10.18653/v1/2025.findings-emnlp. 864. URL https://aclanthology.org/2025. findings-emnlp.864/ .Jiang, B., Hao, Z., Cho, Y.-M., Li, B., Yuan, Y., Chen, S., Ungar, L., Taylor, C. J., and Roth, D. Know me, respond to me: Benchmarking llms for dynamic user pro-filing and personalized responses at scale. arXiv preprint arXiv:2504.14225 , 2025. Jiang, J., Yang, P., Zhang, R., and Liu, F. Towards efficient large language model serving: A survey on system-aware kv cache optimization. Authorea Preprints .Jonelagadda, A., Hahn, C., Zheng, H., and Penachio, S. Mnemosyne: An unsupervised, human-inspired long-term memory architecture for edge-based llms. arXiv preprint arXiv:2510.08601 , 2025. Kang, J., Ji, M., Zhao, Z., and Bai, T. Memory os of ai agent. arXiv preprint arXiv:2506.06326 , 2025. LangChain. langmem: Language model memory. https: //github.com/langchain-ai/langmem , 2025. Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., K ¨uttler, H., Lewis, M., Yih, W.-t., Rockt ¨aschel, 9Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+T., et al. Retrieval-augmented generation for knowledge-intensive nlp tasks. Advances in neural information pro-cessing systems , 33:9459–9474, 2020. Li, X., Cai, Z., Wang, S., Yu, K., and Chen, F. A survey on enhancing causal reasoning ability of large language mod-els. In Pacific-Asia Conference on Knowledge Discovery and Data Mining , pp. 399–416. Springer, 2025a. Li, Y., Wen, H., Wang, W., Li, X., Yuan, Y., Liu, G., Liu, J., Xu, W., Wang, X., Sun, Y., et al. Personal llm agents: Insights and survey about the capability, efficiency and security. arXiv preprint arXiv:2401.05459 , 2024. Li, Z., Xi, C., Li, C., Chen, D., Chen, B., Song, S., Niu, S., Wang, H., Yang, J., Tang, C., et al. Memos: A memory os for ai system. arXiv preprint arXiv:2507.03724 , 2025b. Lu, M., Wu, M., Xu, J., Li, W., Liu, F., Ding, Y., Sun, Y., Lu, J., and Zhang, Y. From newborn to impact: Bias-aware citation prediction, 2025. URL https: //arxiv.org/abs/2510.19246 .Maharana, A., Lee, D.-H., Tulyakov, S., Bansal, M., Barbi-eri, F., and Fang, Y. Evaluating very long-term conversa-tional memory of llm agents. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 13851–13870, 2024. Mathy, F. and Feldman, J. What’s magic about magic num-bers? chunking and data compression in short-term mem-ory. Cognition , 122(3):346–362, 2012. Pan, Z., Wu, Q., Jiang, H., Luo, X., Cheng, H., Li, D., Yang, Y., Lin, C.-Y., Zhao, H. V., Qiu, L., and Gao, J. Secom: On memory construction and retrieval for personalized conversational agents. In The Thirteenth International Conference on Learning Representations ,2025. URL https://openreview.net/forum? id=xKDZAW0He3 .Rasmussen, P., Paliychuk, P., Beauvais, T., Ryan, J., and Chalef, D. Zep: a temporal knowledge graph architecture for agent memory. arXiv preprint arXiv:2501.13956 ,2025. Schlegel, K., Sommer, N. R., and Mortillaro, M. Large language models are proficient in solving and creating emotional intelligence tests. Communications Psychol-ogy , 3(1):80, 2025. Simon, H. A. The architecture of complexity. In The Roots of Logistics , pp. 335–361. Springer, 2012. Trach, J. E. and McDougle, S. D. Mental graphs struc-ture the storage and retrieval of visuomotor associations. 
+
+Nature Human Behaviour , pp. 1–15, 2025. Vogel, E. K. and Machizawa, M. G. Neural activity predicts individual differences in visual working memory capacity. 
+
+Nature , 428(6984):748–751, 2004. Wang, L., Ma, C., Feng, X., Zhang, Z., Yang, H., Zhang, J., Chen, Z., Tang, J., Chen, X., Lin, Y., et al. A survey on large language model based autonomous agents. Frontiers of Computer Science , 18(6):186345, 2024. Wang, P., Tian, M., Li, J., Liang, Y., Wang, Y., Chen, Q., Wang, T., Lu, Z., Ma, J., Jiang, Y. E., et al. O-mem: Omni memory system for personalized, long horizon, self-evolving agents. arXiv e-prints , pp. arXiv–2511, 2025. Wang, Y. and Chen, X. Mirix: Multi-agent memory system for llm-based agents. arXiv preprint arXiv:2507.07957 ,2025. Wu, M., Zhang, Y., Haunschild, R., and Bornmann, L. Leveraging large language models for post-publication peer review: Potential and limitations. In Proceedings of the 20th International Conference on Scientometrics & Informetrics (ISSI 2025) , pp. 1207–1226, 2025. Xu, D., Wen, Y., Jia, P., Zhang, Y., wenlin zhang, Wang, Y., Guo, H., Tang, R., Zhao, X., Chen, E., and Xu, T. From single to multi-granularity: Toward long-term memory association and selection of conversational agents, 2025a. URL https://arxiv.org/abs/2505.19549 .Xu, J., Szlam, A., and Weston, J. Beyond goldfish memory: Long-term open-domain conversation. In Proceedings of the 60th annual meeting of the association for computa-tional linguistics (volume 1: long papers) , pp. 5180–5197, 2022. Xu, W., Liang, Z., Mei, K., Gao, H., Tan, J., and Zhang, Y. A-mem: Agentic memory for llm agents. arXiv preprint arXiv:2502.12110 , 2025b. Yan, S., Yang, X., Huang, Z., Nie, E., Ding, Z., Li, Z., Ma, X., Kersting, K., Pan, J. Z., Sch ¨utze, H., et al. Memory-r1: Enhancing large language model agents to manage and utilize memories via reinforcement learning. arXiv preprint arXiv:2508.19828 , 2025. Yang, X., Lu, J., and Yu, E. Adapting multi-modal large lan-guage model to concept drift from pre-training onwards. In The Thirteenth International Conference on Learning Representations , 2025. URL https://openreview. net/forum?id=b20VK2GnSs .Zhang, W., Zhang, X., Zhang, C., Yang, L., Shang, J., Wei, Z., Zou, H. P., Huang, Z., Wang, Z., Gao, Y., Pan, X., Xiong, L., Liu, J., Yu, P. S., and Li, X. Personaagent: When large language model agents meet personaliza-tion at test time, 2025a. URL https://arxiv.org/ abs/2506.06254 .10 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Zhang, Z., Dai, Q., Bo, X., Ma, C., Li, R., Chen, X., Zhu, J., Dong, Z., and Wen, J.-R. A survey on the memory mechanism of large language model-based agents. ACM Transactions on Information Systems , 43(6):1–47, 2025b. Zhong, W., Guo, L., Gao, Q., Ye, H., and Wang, Y. Memo-rybank: Enhancing large language models with long-term memory. In Proceedings of the AAAI Conference on Arti-ficial Intelligence , volume 38, pp. 19724–19731, 2024. 11 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+TECHNICAL APPENDIX 
+
+A Description of Datasets, Baselines and Evaluation Metrics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 
+
+A.1 Datasets . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 
+
+A.2 Baselines . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 
+
+A.3 Evaluation Metrics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 
+
+B Beta-Mixture Gating Model (BMM) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 
+
+C Conversation Feature Definition for Structure Selection . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 
+
+C.1 Feature Overview . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 
+
+C.2 Feature Definition Table . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 
+
+D Structure Selector Training Pipeline. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .16 
+
+E Additional experiments results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 
+
+F Memory Structure Implementations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 
+
+G Computational Cost Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 
+
+H Case Studies . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19 
+
+I LLM Prompts Design . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 
+
+I.1 Response . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 
+
+I.2 Meta Info . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 
+
+I.3 Entity Relation Extraction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 
+
+I.4 Hierarchical Structure Construction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 
+
+I.5 Procedural Extraction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 
+
+# A. Description of Datasets, Baselines and Evaluation Metrics 
+
+A.1. Datasets LoCoMo (Maharana et al., 2024) is a benchmark designed to evaluate LLM agents’ long-term conversational memory. It consists of very long dialogue traces, where each conversation contains on average ∼300 turns and ∼9,000 tokens, spanning months of interactions (typically 19–35 sessions). LoCoMo operationalizes memory and reasoning evaluation by grouping questions into five categories: • Single-hop reasoning: the answer can be retrieved from information in a single session. • Multi-hop reasoning: the answer requires aggregating evidence scattered across multiple sessions. • Temporal reasoning: tests the ability to track temporal cues and reason over time gaps in the dialogue history. • Open-domain: requires combining user-provided facts with external world knowledge or commonsense. • Adversarial: intentionally crafted to trigger hallucinations; the desired behavior is to recognize the question as unanswerable. 
+
+PERSONAMEM (Jiang et al., 2025) is a benchmark designed to evaluate LLMs’ ability to perform dynamic user profiling 
+
+and generate personalized responses over long-horizon interactions. It consists of multi-session dialogue histories in which 12 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+user attributes and preferences evolve over time due to life events or contextual changes. PERSONAMEM operationalizes personalization and memory evaluation by grouping in-situ user queries into seven categories: • Recall user-shared facts: tests whether the model can retrieve static user information explicitly mentioned in earlier interactions. • Acknowledge latest preferences: evaluates the ability to identify and use the user’s most recent preference state when older information becomes outdated. • Track preference evolution: requires reconstructing how a user’s preferences change across multiple sessions. • Revisit reasons behind preference updates: tests whether the model can recall the underlying events or causes that led to preference changes. • Suggest new ideas: asks the model to propose novel suggestions consistent with the user’s inferred preferences. • Provide preference-aligned recommendations: evaluates personalized recommendation quality conditioned on the current user profile. • Generalize to new scenarios: tests whether user-specific knowledge learned in one domain can be transferred to unseen tasks or contexts. 
+
+A.2. Baselines Mem0 (Chhikara et al., 2025) is a scalable long-term memory architecture specifically designed for AI agents to address the challenge that large language models cannot maintain consistency in prolonged multi-turn conversations due to fixed context window limitations. This method comprises two core stages: ”extraction” and ”update”. First, it leverages LLMs combined with context to extract key facts from new conversations. Subsequently, through intelligent decision-making (Tool Call), it executes ADD, UPDATE, DELETE, or NOOP instructions to dynamically maintain memory consistency. Additionally, Mem0 provides an enhanced variant ( M em 0s) that integrates graph databases by using entity nodes and relationship edges to capture complex information structures. 
+
+LangMem (LangChain, 2025) is a long-term memory management library developed by the LangChain team to help AI agents learn and adapt from interactions. It provides tools for extracting important information from conversations, optimizing agent behavior, and maintaining long-term memory, with support for arbitrary storage systems and native LangGraph integration. Core features include: real-time memory management tools that enable agents to actively record and search information, background memory managers that automatically extract and integrate knowledge, and seamless integration with the LangGraph platform, enabling agents to continuously improve and personalize responses across sessions. 
+
+MemoryOS (Kang et al., 2025) is an OS-inspired memory management framework that optimizes long-term memory for LLM agents through a multi-tiered architecture. It includes short-term, mid-term, and long-term memory layers, allowing dynamic updates and integration during conversations. The framework features memory storage, update, retrieval, and generation modules, facilitating efficient memory decay and redundancy filtering. By applying OS principles, MemoryOS enhances response consistency and coherence while minimizing computational overhead. 
+
+A-MEM (Xu et al., 2025b) is an agentic memory architecture that organizes memory as a network of interconnected notes. It employs dedicated agents to manage note creation, linking, and retrieval, enabling dynamic memory evolution through reflection and integration of new information. A-MEM supports hierarchical and relational reasoning by maintaining structured connections between notes, facilitating effective recall during interactions. 
+
+ZEP (Rasmussen et al., 2025) is a time-aware graph memory architecture designed for LLM agents to maintain consistency across multi-session interactions. It constructs a knowledge graph that captures temporal relationships between memory entries, allowing agents to reason about changes over time. ZEP employs specialized retrieval mechanisms to access relevant information based on temporal context, enhancing the agent’s ability to provide coherent and contextually appropriate responses. 
+
+MEMOS (Li et al., 2025b) is a memory operating system designed to treat memory as a schedulable and evolvable system resource for Large Language Models (LLMs). It establishes a unified hierarchy that integrates three distinct memory types—plaintext, activation, and parameter memory—encapsulated within a standardized unit called the MemCube . By 13 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+employing a layered architecture featuring a scheduler and lifecycle manager, MEMOS enables the dynamic transformation, storage, and retrieval of memory, thereby facilitating long-term consistency, adaptive personalization, and efficient knowledge evolution across complex tasks. 
+
+MemR 3 (Du et al., 2025) is an autonomous memory retrieval system designed to transform the standard retrieve-then-answer pipeline into a closed-loop sequential decision process for LLM agents. Implemented as a LangGraph workflow, it utilizes a router to dynamically select actions among ‘retrieve‘, ‘reflect‘, and ‘answer‘ to optimize response quality. Central to its architecture is a global evidence-gap tracker that explicitly maintains verified evidence and identifies missing information gaps throughout the interaction. This design enables the system to iteratively refine queries and stop retrieval early once sufficient information is gathered, functioning as a plug-and-play controller compatible with various existing memory backends. 
+
+O-Mem (Wang et al., 2025) is an omni-memory framework designed to enhance the long-term interaction and dynamic personalization of LLM agents. Unlike traditional systems that passively store interaction history, O-Mem utilizes an active user profiling mechanism that dynamically extracts and updates user characteristics and event records during ongoing dialogues. It employs a hierarchical retrieval strategy across three distinct components—Persona Memory (for long-term attributes), Working Memory (for topical context), and Episodic Memory (for clue-triggered recall)—to construct a holistic user model. This architecture enables the agent to maintain contextual consistency over long horizons and self-evolve its understanding of the user, leading to more adaptive and coherent personalized responses. 
+
+HippoRAG (Guti ´errez et al., 2025) is a neurobiologically inspired framework that repurposes Retrieval-Augmented Generation (RAG) as a non-parametric continual learning system for LLMs. Grounded in the hippocampal indexing theory, it maintains a dynamic Knowledge Graph (KG) that continuously integrates new information through simulated synaptic plasticity, rather than static vector indexing. By employing the Personalized PageRank (PPR) algorithm for retrieval, HippoRAG enables pattern completion and complex multi-hop reasoning across temporally distributed facts, allowing the model to adapt to new knowledge in a single pass without parametric training or catastrophic forgetting. 
+
+A.3. Evaluation Metrics F1 : The F1 score is computed as the harmonic mean of precision and recall: 
+
+F 1 = 2 · Precision × Recall Precision + Recall , (13) where Precision = T P T P +F P and Recall = T P T P +F N , with T P , F P , and F N denoting true positives, false positives, and false negatives, respectively. 
+
+Bleu-1 : BLEU (Bilingual Evaluation Understudy) is a metric for evaluating machine translation and text generation quality. BLEU-1 measures the proportion of unigrams (single words) in the generated text that appear in the reference text: BLEU-1 = BP · exp 
+
+> 1
+
+X
+
+> n=1
+
+wn log pn
+
+!
+
+, (14) where 
+
+BP =
+
+(
+
+1 if c > r e1−r/c if c ≤ r , (15) 
+
+pn =
+
+P
+
+> i
+
+P 
+
+> k
+
+min( hik , m ik )
+
+P
+
+> i
+
+P 
+
+> k
+
+hik 
+
+, (16) Here, BP denotes the brevity penalty used to penalize short system outputs, where c is the length of the candidate translation and r is the effective reference length. The term wn represents the weight assigned to n-gram precision pn. Specifically, hik 
+
+is the count of the k-th n-gram in the i-th candidate sentence, while mik is its maximum frequency in the corresponding reference. The min( hik , m ik ) function ensures the counts are clipped to prevent overestimation of precision from repetitive words. 14 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+# B. Beta-Mixture Gating Model (BMM) 
+
+Score normalization. Given an incoming memory item, we compute matching scores against n candidate sessions, producing {si}ni=1 . Since Beta distributions are defined on (0 , 1) , we apply min–max normalization: 
+
+xi =
+
+
+
+ϵ + (1 − 2ϵ) si − smin 
+
+smax − smin 
+
+, smax > s min ,
+
+0.5, smax = smin ,xi ∈ (0 , 1) , (17) where smin = min i si, smax = max i si, and ϵ is a small constant to avoid boundary values. 
+
+Two-component Beta mixture. We fit a two-component Beta mixture model to {xi}:
+
+p(x) = π0 Beta( x; α0, β 0) + π1 Beta( x; α1, β 1), πk ≥ 0, X
+
+> k∈{ 0,1}
+
+πk = 1 , (18) with 
+
+Beta( x; α, β ) = Γ( α + β)Γ( α)Γ( β) xα−1(1 − x)β−1. (19) We interpret the two components as low-compatibility vs. high-compatibility regimes. 
+
+EM fitting with log-space responsibilities. We estimate parameters via EM for a fixed number of iterations (or until convergence). Introduce latent assignments zi ∈ { 0, 1} and compute responsibilities rik = p(zi = k | xi).
+
+Initialization (quantile-based). We initialize the two components to be separated in mean by using the empirical 30th and 70th percentiles of {xi}. Let q0.3 and q0.7 denote these quantiles. We initialize component means as μ0 ← q0.3 and 
+
+μ1 ← q0.7 and set initial concentrations (e.g., via a small fixed variance), then obtain (αk, β k) by moment matching. 
+
+E-step. For numerical stability, we compute responsibilities in log-space: 
+
+log ˜ rik = log πk + log Beta( xi; αk, β k), rik = exp(log ˜ rik )
+
+P 
+
+> k′∈{ 0,1}
+
+exp(log ˜ rik ′ ) . (20) Define effective counts Nk = Pni=1 rik .
+
+M-step (mixture weights). 
+
+πk ← Nk
+
+n . (21) 
+
+M-step (Beta parameters via responsibility-weighted moments). Rather than numerically optimizing the Beta log-likelihood, we adopt a lightweight update using weighted moments. Compute the responsibility-weighted mean and variance: 
+
+μk = 1
+
+NknX
+
+> i=1
+
+rik xi, σ2 
+
+> k
+
+= 1
+
+NknX
+
+> i=1
+
+rik (xi − μk)2. (22) For Beta (α, β ), μ = α/ (α + β) and σ2 = μ(1 −μ) 
+
+> κ+1
+
+with concentration κ = α + β. Thus, 
+
+κk ← μk(1 − μk)
+
+σ2
+
+> k
+
+− 1, αk ← μkκk, βk ← (1 − μk)κk. (23) In practice, we clamp σ2 
+
+> k
+
+away from zero and clip κk, α k, β k to avoid degenerate updates. 
+
+Identifying the high-compatibility component. After fitting, we designate the component with larger Beta mean as the 
+
+high component: 
+
+k⋆ = arg max 
+
+> k∈{ 0,1}
+
+αk
+
+αk + βk
+
+. (24) The gate value for a candidate score x is the posterior of this high component: 
+
+g(x) = p(z = k⋆ | x) = πk⋆ Beta( x; αk⋆ , β k⋆ )
+
+P 
+
+> k∈{ 0,1}
+
+πkBeta( x; αk, β k) . (25) 15 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Algorithm 1 Beta-Mixture-Gated Memory Fusion 
+
+Require: incoming item m, candidates C, threshold τ , min-keep mmin , EM iters T 
+
+> 1:
+
+si ← score( m, c i) for each ci ∈ C  
+
+> 2:
+
+xi ← minmax to unit( si) 
+
+> 3:
+
+if max si = min si then  
+
+> 4:
+
+xi ← 0.5 for all i 
+
+> 5:
+
+end if  
+
+> 6:
+
+Initialize 2 components using quantiles (q0.3, q 0.7) of {xi} 
+
+> 7:
+
+for t = 1 to T do  
+
+> 8:
+
+E-step: rik ∝ πkBeta( xi; αk, β k) (computed in log-space)  
+
+> 9:
+
+M-step: πk ← 1
+
+> n
+
+P 
+
+> i
+
+rik ; update (αk, β k) by weighted moments  
+
+> 10:
+
+end for  
+
+> 11:
+
+k⋆ ← arg max k αk  
+
+> αk+βk
+> 12:
+
+gi ← p(z = k⋆ | xi) for all i 
+
+> 13:
+
+I ← { i : gi ≥ τ } 
+
+> 14:
+
+if |I| < m min then  
+
+> 15:
+
+I ← TopK( {xi}, m min ) 
+
+> 16:
+
+end if  
+
+> 17:
+
+if I = ∅ then  
+
+> 18:
+
+return NEW SESSION (m) 
+
+> 19:
+
+end if  
+
+> 20:
+
+s⋆ ← arg max i∈I xi 
+
+> 21:
+
+return MERGE (m, c s⋆ )
+
+Thresholding with minimum-keep fallback. Given gate values {g(xi)}, we retain candidates satisfying 
+
+g(xi) ≥ τ, (26) where τ is a posterior threshold. To prevent over-filtering, if fewer than mmin candidates satisfy the condition, we keep the top-mmin candidates ranked by xi (equivalently, by the original matching scores). 
+
+Usage in memory fusion. The retained candidates define a filtered set of plausible merge targets. The incoming memory item is merged into the most compatible retained session (under the currently selected structure), or stored as a new session if no candidate is retained. This procedure replaces fixed similarity thresholds with an adaptive, distribution-aware gating rule that is robust to score distribution shifts across conversation types and interaction stages. 
+
+Computational complexity. For n candidate sessions, each EM iteration runs in O(n) time. Since the number of mixture components is fixed to two and the number of EM iterations is small and bounded, the overall gating cost is negligible compared to retrieval and response generation. The memory overhead is O(n) for storing normalized scores and responsibilities. 
+
+# C. Conversation Feature Definition for Structure Selection 
+
+C.1. Feature Overview 
+
+We extract a compact set of interpretable interaction-level features to characterize the structural properties of the ongoing conversation. These features are designed to capture temporal dynamics, entity-centricity, and topic evolution patterns, which are indicative of suitable memory organizations. 
+
+C.2. Feature Definition Table 
+
+As summarized in Table 5, these features are intentionally simple and interpretable, focusing on structural signals rather than deep semantic representations. This design keeps structure selection lightweight and stable, and avoids introducing additional reasoning overhead into the control layer. 16 Choosing How to Remember: Adaptive Memory Structures for LLM Agents  
+
+> Table 5. Conversation-level features used for memory structure selection. All features are lightweight to compute and designed to capture structural characteristics rather than fine-grained semantics.
+
+Feature Description and Motivation 
+
+page count Number of interaction pages within the current context window. Captures inter-action scale; longer conversations often benefit from structured or hierarchical memory. 
+
+avg page length Average length of recent pages (in tokens or turns). Longer pages indicate information-dense interactions that may require non-linear organization. 
+
+entity density Average number of named entities per page. High values suggest entity-centric interactions, favoring graph-based memory. 
+
+relation indicators Frequency of explicit relational expressions (e.g., comparisons, references, de-pendencies). Signals the presence of relational structure beyond pure temporal order. 
+
+topic diversity Number of distinct topics detected in recent interactions. High diversity indicates branching or hierarchical discourse structure. 
+
+topic transitions Frequency of topic shifts across consecutive pages. Rapid transitions favor hierarchical or graph-based organization over linear memory. 
+
+is qna pattern Binary indicator of question–answer dominated interaction patterns. Such pat-terns often align with linear, recency-driven memory access. 
+
+is decision tree Binary indicator of decision-tree-like dialogue flow (e.g., successive conditional questions). Suggests hierarchical organization with coarse-to-fine retrieval. 
+
+is entity centric Binary indicator of entity-focused queries (e.g., repeated mentions of the same entities). Favors graph-based memory structures. 
+
+time span Temporal span covered by recent interactions. Longer spans reduce the effective-ness of pure recency-based retrieval. 
+
+temporal density Interaction frequency per unit time. Dense interactions emphasize short-term dependencies and linear access. 
+
+semantic complexity Estimated semantic variability across recent pages (e.g., embedding dispersion). High complexity suggests heterogeneous content requiring structured organiza-tion. 
+
+# D. Structure Selector Training Pipeline 
+
+Offline supervision for structure selection. Directly optimizing memory structure selection via online reinforcement learning is undesirable in our setting, as it introduces instability, high variance, and additional interaction cost. Instead, we adopt an offline supervision strategy that derives structure labels from interaction-level outcomes. Specifically, we evaluate each candidate memory structure under identical interaction contexts and assign the structure that yields the highest empirical reward as the target label (Algorithm 2). This formulation reduces structure selection to a standard supervised classification problem, enabling stable training while grounding decisions in downstream response quality (Algorithm 3). 17 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Algorithm 2 Offline Structure Labeling via Interaction-Derived Rewards 
+
+Require: Training conversations D, structures S = {LINEAR , GRAPH , HIERARCHICAL }
+
+Require: Fixed agent pipeline A(·; s) instantiated with structure s
+
+Require: Reward weights λjudge , λ mem (e.g., 0.7/0.3) 
+
+Ensure: Labeled dataset T = {(x, y )}
+
+1: T ← ∅ 
+
+2: for each conversation/session instance ξ ∈ D do 
+
+3: Extract feature vector x ← Feat( ξ)
+
+4: for each s ∈ S do 
+
+5: Run agent with structure s: ˆas ← A (ξ; s)
+
+6: Compute judge reward: rjudge (s) ← Judge(ˆ as, ξ )
+
+7: Compute memory utilization reward: rmem (s) ← MemUtil(ˆ as, ξ )
+
+8: r(s) ← λjudge rjudge (s) + λmem rmem (s)
+
+9: end for 
+
+10: y ← arg max s∈S r(s)
+
+11: (reward-optimal structure label) 
+
+12: T ← T ∪ { (x, y )}
+
+13: end for 
+
+14: return T
+
+Algorithm 3 Supervised Training of Structure Selector 
+
+Require: Labeled dataset T = {(xi, y i)}, selector fθ (·) (MLP) 
+
+Require: Loss L (cross-entropy), optimizer A DAM 
+
+Ensure: Trained parameters θ
+
+1: Fit feature normalizer (e.g., S TANDARD SCALER ) on {xi}
+
+2: for epoch = 1 to MaxEpoch do 
+
+3: for each mini-batch B ⊂ T do 
+
+4: ˜x ← Normalize( x) for all (x, y ) ∈ B 
+
+5: p ← Softmax( fθ (˜ x)) 
+
+6: θ ← θ − η∇θ
+
+P 
+
+> (x,y )∈B
+
+L(p, y )
+
+7: end for 
+
+8: Early stop if validation performance does not improve 
+
+9: end for 
+
+10: return θ
+
+18 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+# E. Additional Experimental Results 
+
+Table 6 reports category-wise results on L OCOMO using ROUGE-1, ROUGE-2, and BERTScore. Overall, FluxMem 
+
+achieves the strongest and most balanced performance across all four reasoning categories. The improvements are particularly pronounced in multi-hop and single-hop reasoning, where FluxMem consistently attains the highest ROUGE and BERTScore values, indicating more accurate content selection and semantic alignment. On open-domain questions, FluxMem substantially outperforms baselines in ROUGE-1, reflecting its ability to retrieve relevant information under weak structural cues. While some baselines achieve competitive BERTScore in specific categories, they fail to maintain consistent performance across metrics and reasoning types. These results further confirm that adaptive multi-structure memory organization enables more robust retrieval and generation across diverse long-horizon reasoning scenarios.                                                                                                                                          
+
+> Table 6. Performance comparison on LoCoMo across different reasoning categories. Best results are shown in bold, second-best are underlined. Method Cat1: Multi-hop Cat2: Temporal Cat3: Open Cat4: Single-hop R-1 R-2 BS R-1 R-2 BS R-1 R-2 BS R-1 R-2 BS LangMem (LangChain, 2025) 48.07 13.80 65.16 64.12 21.55 80.87 24.55 9.38 45.19 51.30 29.15 68.49 Mem0 (Chhikara et al., 2025) 29.95 9.43 52.20 24.31 6.94 50.27 23.53 5.56 40.82 33.48 19.25 46.42 ZEP (Rasmussen et al., 2025) 8.00 2.11 32.38 6.56 1.06 19.05 6.10 0.92 34.09 6.94 2.26 26.29 MemoryOS (Kang et al., 2025) 44.27 17.19 89.91 44.87 19.84 91.17 28.20 9.68 88.67 50.77 30.29 91.07 A-Mem (Xu et al., 2025b) 34.54 13.62 54.95 40.86 19.01 65.67 16.85 3.66 40.06 43.06 25.66 56.13 MEMOS (Li et al., 2025b) 18.33 6.50 50.75 12.40 3.25 44.05 11.04 2.45 39.91 18.10 10.01 53.30 MemR 3(Du et al., 2025) 17.34 6.20 –24.15 8.00 –10.39 2.26 –23.09 13.77 –O-mem (Wang et al., 2025) 36.83 14.53 30.81 50.02 26.45 50.38 21.62 3.19 26.84 45.16 27.74 41.60 HippoRAG 2 (Guti´ errez et al., 2025) 29.19 9.46 87.26 10.32 2.12 84.32 25.08 7.70 88.05 45.70 29.23 90.24
+> FluxMem 49.80 19.34 90.39 56.96 23.95 92.81 37.42 9.29 89.47 63.83 38.98 92.58
+
+# F. Memory Structure Implementations 
+
+For completeness, we briefly describe the implementation details of the three memory structures considered in Sec. 3.3. These structures are not proposed in this work but are adapted from prior studies on long-term memory for LLM agents. Linear Memory. Linear memory organizes episodic sessions in strict chronological order. Each memory unit is appended sequentially, and retrieval is primarily driven by recency or similarity-based ranking. This structure favors temporal coherence and is effective when recent interactions dominate relevance. Graph Memory. Graph memory represents episodic sessions as nodes in a graph, where edges encode semantic or entity-level relations (e.g., shared entities or high embedding similarity). Retrieval is performed by traversing structurally related nodes rather than relying solely on temporal proximity, enabling multi-hop relational recall. Hierarchical Memory. Hierarchical memory clusters episodic sessions into higher-level abstractions (e.g., topics or summaries), forming a tree-like structure. Retrieval proceeds in a coarse-to-fine manner, first selecting relevant high-level clusters and then refining to specific episodes, which improves scalability and abstraction. 
+
+# G. Computational Cost Analysis 
+
+We briefly analyze the computational overhead introduced by FluxMem. Overall, the additional cost mainly comes from memory selection and fusion, while the backbone LLM inference remains unchanged. Memory structure selection. The memory structure selector is a two-layer MLP with a 12-dimensional input and hidden size 4, incurring negligible overhead compared to LLM inference. This module is executed once per interaction and adds a constant-time cost. BMM-based memory fusion. The Beta Mixture Model (BMM) gate operates on matching scores of candidate memories and involves lightweight posterior computation. Since fusion is applied only to the retrieved MTEM candidates, its complexity scales linearly with the number of candidates and remains small in practice. Retrieval cost. Retrieval combines dense encoding and BM25 via reciprocal rank fusion. Dense retrieval relies on pre-computed embeddings, and BM25 operates over indexed text, making the overall retrieval cost comparable to standard 19 Choosing How to Remember: Adaptive Memory Structures for LLM Agents  
+
+> Figure 4. Time-dependent query case.
+
+hybrid retrieval pipelines commonly used in LLM-based systems. Overall cost. Compared to baselines with fixed memory structures, FluxMem introduces modest additional computation for structure selection and probabilistic gating. Empirically, this overhead is minor relative to LLM decoding cost and does not significantly affect end-to-end latency, while enabling more adaptive and selective memory utilization. 
+
+# H. Case Studies 
+
+20 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Figure 5. Complex-relation case. 
+
+21 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Figure 6. Topic evolution case. 
+
+22 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+# I. LLM Prompts Design 
+
+Figure 7. Prompt for response. 
+
+Figure 8. Prompt for Meta Info. 
+
+23 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Figure 9. Prompt for entity relation extraction. 
+
+24 Choosing How to Remember: Adaptive Memory Structures for LLM Agents 
+
+Figure 10. Prompt for hierarchical structure construction. 
+
+Figure 11. Prompt for procedural extraction. 
+
+25

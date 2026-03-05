@@ -1,0 +1,487 @@
+Title: Towards Autonomous Memory Agents
+
+URL Source: https://arxiv.org/pdf/2602.22406v1
+
+Published Time: Fri, 27 Feb 2026 01:14:24 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# Towards Autonomous Memory Agents 
+
+# Xinle Wu, Rui Zhang, Mustafa Anis Hussain, Yao Lu 
+
+National University of Singapore Singapore 
+
+## Abstract 
+
+Recent memory agents improve LLMs by extracting experiences and conversation history into an external storage. This enables low-overhead context assembly and online memory update without expensive LLM training. However, existing solutions remain pas-sive and reactive ; memory growth is bounded by information that happens to be available, while memory agents seldom seek external inputs in uncertainties. We propose autonomous memory agents that actively acquire, validate, and curate knowledge at a minimum cost. U-Mem materializes this idea via (i) a cost-aware knowledge-extraction cascade that escalates from cheap self/teacher signals to tool-verified research and, only when needed, expert feedback, and (ii) semantic-aware Thompson sampling to balance exploration and exploitation over memories and mitigate cold-start bias. On both verifiable and non-verifiable benchmarks, U-Mem consistently beats prior memory baselines and can surpass RL-based optimiza-tion, improving HotpotQA (Qwen2.5-7B) by 14.6 points and AIME25 (Gemini-2.5-flash) by 7.33 points. 
+
+## Keywords 
+
+Large Language Model, Memory, Agent, Thompson Sampling 
+
+ACM Reference Format: 
+
+Xinle Wu, Rui Zhang, Mustafa Anis Hussain, Yao Lu. 2026. Towards Au-tonomous Memory Agents. In Proceedings of ACM Conference (Confer-ence ’XX). ACM, New York, NY, USA, 14 pages. https://doi.org/XXXXXXX. XXXXXXX 
+
+## 1 Introduction 
+
+Large language models (LLMs) nowadays empower AI agents to achieve higher and broader goals [ 7 , 20 , 34 ], but deployed systems from research and industry are often ineffective in remembering user interactions, preferences, or domain knowledge beyond the given context window [ 8, 12 , 46 ]. This knowledge discontinuity forces AI agents to repeatedly ask known facts, past mistakes, and recompute answers; this clearly results in increased costs and de-graded user experience [ 44 ]. A recent way to address this problem to improve AI agents with experiences is to update the model param-eters via supervised fine-tuning (SFT) or reinforcement learning (RL) [ 17 , 21 , 26 , 27 ]. However, doing so in practice is often too expensive and operationally infeasible [ 16 ]; besides, many foun-dation models are closed-source or difficult to update without re-gressions [ 5 , 11 ]. This motivates non-parametric solutions that can improve AI agents without touching the model weights [ 1 , 6, 31 , 38 ]. This has driven the recent interest in memory agents [ 3, 4, 24 ,40 , 45 ]: instead of updating model weights, the agent extracts crit-ical experiences from the conversation history, user preferences, task outcomes, domain knowledge, and reasoning patterns, and 
+
+> Conference ’XX, Location
+> 2026. ACM ISBN 978-1-4503-XXXX-X/2018/06 https://doi.org/XXXXXXX.XXXXXXX
+
+Figure 1: Passive vs. autonomous memory agents. 
+
+puts them into an external memory store [ 23 , 25 , 32 , 39 , 42 , 47 , 48 ]. Meanwhile, it retrieves and assembles relevant memories at query time to guide future decisions. This non-parametric, memory-based solution can be deployed on closed-source models with a low overhead and enables memory update when new experiences ar-rive [13, 14, 18, 29, 35, 49]. Despite this progress, existing memory agents remain largely 
+
+passive . Their memory growth and learning are typically bounded by whatever information happens to appear from user interaction. Some recent solutions [ 3 , 24 , 45 ] additionally learn policies for memory operations for what to store, what to forget, and what to retrieve; this can even be done using RL-style objectives to opti-mize these choices [ 22 , 36 , 41 ]. Yet, the memory operations are still reactive, where the agent does not actively seek external inputs when it encounters uncertainty, detects a failure mode, or identifies an opportunity to expand its knowledge base. In practice, there is abundant external data that can be harvested with minimal user frictions, including but not limited to user follow-up questions and corrections, more powerful teacher LLMs, tool-verified data and procedures, deep-research pipelines, and structured self-reflection over successes and failures. It is notable that exploiting these signals does not require human efforts in a traditional sense; instead, it can be framed as actions by the agent’s own autonomy in actively collecting, validating and making use of the available information. We argue that memory agents should be autonomous in how they actively acquire, validate, and curate knowledge. As shown in Fig-ure 1, an autonomous memory agent goes beyond passive data logging and retrieval: it decides when additional information is needed, where to obtain it (e.g., from a teacher, tools, or research), and is aware of the cost that is going to incur. This clearly dis-tinguishes from recent art in self-evolving agents that are mostly passive. An autonomous memory agent can still evolve over time without requiring constant human annotation; this enables person-alization and domain adaptation in real applications. Nevertheless, autonomy does not preclude human supervision; rather, it treats human experts as a last resort, consulted only when cheaper knowl-edge sources fail to provide sufficient confidence. To realize this vision, we face new challenges. (1) Cost-awareness .We note that, external knowledge, such as teacher LLMs, tool usage,  
+
+> arXiv:2602.22406v1 [cs.AI] 25 Feb 2026 Conference ’XX, Month 2026, Location Xinle Wu et al.
+
+Figure 2: Overview of U-Mem. 
+
+research, is associated with different costs; the agent must decide who to query and when escalation is worth it. These issues are amplified in distribution shifts and cold-starts, where there is lit-tle feedback history to decide if new memories can be crucial for emerging needs. (2) Generalization . Achieving high accuracy and generalization at the same time is non-trivial. The agent should pro-vide a good level of accuracy across both verifiable tasks, i.e., with objective checks, and non-verifiable tasks , i.e., where correctness is ambiguous and feedback is model- or preference-related. In this paper, we take a preliminary step toward this direction and propose U-Mem , the first memory agent that aims for autonomous knowledge acquisition and utility-driven update under cost con-straints. To address the technical challenges, U-Mem leverages a cost-aware knowledge extraction cascade that progressively harvests correct knowledge by escalating supervision only when necessary; the cascade starts from inexpensive self-reflection and more power-ful teacher models, moves to tool-augmented verification and deep research when needed, and consults human experts as a last resort. To address the cold-start and adaptation issue, we develop semantic-aware Thompson sampling to leverage feedback from downstream queries to improve the memory retrieval and utilization over time. By combining semantic relevance with posterior sampling over memory utility, the agent can systematically exploit proven memo-ries while still exploring new ones. To evaluate the effectiveness of autonomous memory agents, we conduct extensive experiments on diverse benchmarks with open-weight and proprietary models, spanning verifiable reasoning (e.g., AIME) and non-verifiable generation (e.g., AdvancedIF). Results demonstrate that U-Mem consistently outperforms state-of-the-art memory baselines and, remarkably, matches or exceeds expensive Reinforcement Learning (RL) baselines. For instance, U-Mem boosts the performance of Qwen2.5-7B on HotpotQA by over 14%, and further enhances strong proprietary models like Gemini-2.5-flash by 7.3% on AIME25. These findings validate the efficacy of autonomous memory acquisition and establish U-Mem as a robust, cost-effective method for evolving agents in dynamic deployment scenarios. 
+
+Contributions. We summarize our main contributions as follows: 
+
+• Unlike memory agents that are often passive, we propose au-tonomous memory agents that proactively collect external knowl-edge and evidence to grow and refine long-term memory. 
+
+• We propose a cost-aware knowledge extraction cascade that turns both successes and failures into durable memory, adap-tively escalating supervision (teacher, tools, deep research, hu-man) to maximize correctness. We also develop semantic-aware Thompson sampling to balance exploration and exploitation and integrate semantic relevance with learned utility. 
+
+• We evaluate autonomous memory agents across both verifi-able and non-verifiable tasks, demonstrating that autonomy can substantially extend the capability boundary of memory-based agent evolution under realistic budget constraints. 
+
+## 2 Related Work 
+
+Reinforcement learning for LLMs is a standard paradigm in model fine-tuning and post-training alignment. RL training tech-niques have evolved from Proximal Policy Optimization (PPO) [ 30 ]to more stable, direct techniques like DPO [ 28 ] and the efficient, critic-free GRPO [ 9 ]. Methodology-wise, the training approaches diverge by feedback types: verifiable domains (e.g., math) often uti-lize ground-truth outcome supervision (RLVR) [ 19 ], whereas non-verifiable tasks often rely on preference models or AI feedback [ 15 ]. While being effective, these paradigms remain computationally expensive due to the iterative parameter updates. 
+
+LLMs with a memory bank . Existing research on LLM long-term memory can be categorized into two streams: dialogue memory, and reasoning trajectory memory. The former focuses on construct-ing a memory bank and extracting user profiles, preferences, and factual context from multi-session dialogues to enhance personal-ization and consistency. For instance, A-Mem [ 40 ] builds an agentic memory that stores long interactions as structured notes and con-tinuously links and evolves them into an interconnected memory network for better long-term recall. Mem0 [ 4] proposes a scalable memory pipeline that extracts, consolidates/updates, and retrieves salient information from multi-session dialogues to support effi-cient long-term context recall. While effective for open-ended chat, these methods primarily address what the user said, rather than how to solve complex problems. Towards Autonomous Memory Agents Conference ’XX, Month 2026, Location 
+
+Self-evolving memory agents . More relevant to our work is the second stream, which aims to distill transferable knowledge from the agent’s reasoning trajectories. ReasoningBank [ 24 ] leverages test-time scaling to sample multiple candidate paths, synthesizing memories by contrasting self-generated successful and failed tra-jectories. ReMe [ 3] proposes a framework for agent evolution that integrates multi-faceted experience distillation, context-adaptive reuse, and utility-based refinement. A critical limitation of these ap-proaches is their dependency on the LLM’s intrinsic capability; they presume the model can eventually generate a correct solution via repeated sampling. In essence, these systems remain self-contained and passive in knowledge harvesting; their knowledge growth is strictly limited to the model’s pretraining data distribution. They are not designed to autonomously seek external knowledge when in-trinsic reasoning fails, thus having "hard failures" where the model consistently makes errors. 
+
+Our ideas: autonomous memory agents . Unlike off-the-shelf post-training and memory solutions that are often passive and cost– agnostic , U-Mem represents a shift towards autonomous memory agents: (1) Our framework is active to autonomously decide when to transcend internal limitations to acquire high-fidelity external knowledge from tools or even experts, and dynamically learns which memories are valuable through semantic-aware exploration. (2) On the other hand, our solution is also cost-aware in both com-pute and data samples. Recent work such as MemRL [ 45 ] and Me-mento [ 47 ] leverages query feedback to optimize the memory re-trieval, but they overlook cold-start with new memories and various task difficulties. U-Mem aims to address these issues. 
+
+## 3 Methods 3.1 Problem Formulation 
+
+We formalize the continuous improvement of an LLM agent as a streaming decision process. Consider a stream of tasks Q =
+
+{𝑞 1, 𝑞 2, . . . , 𝑞 𝑇 } arriving sequentially. The agent is parameterized by a frozen LLM backbone 𝜃 and a dynamic memory store M𝑡 . At each time step 𝑡 , the system state is defined as 𝑆 𝑡 = ⟨𝜃, M𝑡 ⟩. Un-like traditional Reinforcement Learning (RL) which updates 𝜃 , our framework keeps 𝜃 fixed and evolves M𝑡 to maximize performance. The interaction workflow for a query 𝑞 𝑡 proceeds as follows: 
+
+• Retrieval: The agent retrieves a subset of relevant memories 
+
+𝐶 𝑡 = R ( 𝑞 𝑡 , M𝑡 ) based on the current memory state. 
+
+• Inference: Conditioned on the retrieved context, the frozen LLM generates a reasoning trajectory 𝑦 𝑡 ∼ 𝜋 𝜃 (·| 𝑞 𝑡 , 𝐶 𝑡 ).
+
+• Feedback: The environment provides a scalar feedback signal 
+
+𝑟 𝑡 = Eval (𝑦 𝑡 , 𝑞 𝑡 ). We consider a unified feedback formulation covering both verifiable tasks (where 𝑟 𝑡 is a ground-truth binary outcome) and non-verifiable tasks (where 𝑟 𝑡 is a preference score from an external judge). 
+
+• Memory Evolution: Based on the trajectory 𝑦 𝑡 and feedback 𝑟 𝑡 ,the memory extraction module E distills new insights to update the state: M𝑡 +1 ← Update (M 𝑡 , E ( 𝑞 𝑡 , 𝑦 𝑡 , 𝑟 𝑡 )) .
+
+Objective. Our goal is to design an optimal retrieval policy R
+
+and extraction mechanism E that maximize the cumulative reward 
+
+Í𝑇 𝑡 =1 𝑟 𝑡 over the task stream. This formulation frames memory man-agement as a dual problem to parameter optimization: maximizing long-term utility through experience accumulation rather than weight updates. 
+
+Evaluation Protocol. To rigorously evaluate the "learning-by-using" capability, we adopt a Train-Test protocol. The agent first processes a Training Stream where it is allowed to evolve M contin-uously. Performance is then reported on a held-out Test Set , where the memory state is frozen ( M𝑡𝑒𝑠𝑡 = M𝑓 𝑖𝑛𝑎𝑙 ). 
+
+## 3.2 Overview of U-Mem 
+
+As illustrated in Figure 2, U-Mem enables continuous, training-free evolution via a unified Retrieve-Infer-Evolve cycle. The workflow commences with a task router (instantiated by the frozen LLM back-bone) that directs incoming queries to verifiable or non-verifiable streams. In the Retrieval phase, we employ Semantic-Aware Thomp-son Sampling (SA-CTS) to select memories by balancing semantic similarity with learned utility distributions. Subsequently, the agent performs Inference using the enhanced prompt. Finally, during Mem-ory Evolution , a Cost-Aware Cascade (for verifiable tasks) or pair-wise comparison (for non-verifiable tasks) distills experiences into memories, while environmental feedback updates memory utility posteriors to refine future retrieval without parameter updates. 
+
+## 3.3 Memory for Verifiable Tasks 
+
+In verifiable domains (e.g., mathematical reasoning, code genera-tion), we posit that the substantial expansion of an agent’s capability boundary stems from learning from failures rather than merely rein-forcing successes. To this end, we introduce a Cost-Aware Memory Extraction Cascade to adaptively distill high-quality corrective in-sights from failure trajectories. For memory retrieval, we propose Semantic-Aware Thompson Sampling (SA-CTS), a utility-driven retrieval mechanism designed to filter noise and precisely surface the most helpful memories for current reasoning. 
+
+Memory Extraction Cascade . Standard memory approaches of-ten prioritize extracting insights from successful trajectories. How-ever, we argue that the most capability-expanding signals lie in failures. Extracting memories from failures is non-trivial. Naive self-reflection on incorrect trajectories often leads to hallucinated attribution , as the agent lacks the knowledge to identify its own errors. Recent work like ReasoningBank [24] attempts to mitigate this via parallel sampling (generating 𝑘 trajectories). However, this fails when the model is fundamentally weak on a task, resulting in 
+
+𝑘 incorrect trajectories and no valid reference for learning. To guarantee high-quality extraction, we introduce a Cost-Aware Cascade . The core principle is that effective reflection requires a 
+
+correct reference trajectory (𝜏 𝑟𝑒 𝑓 ) for contrastive analysis. Upon gen-erating a failure trajectory 𝜏 𝑓 𝑎𝑖𝑙 , we escalate the request for 𝜏 𝑟𝑒 𝑓 
+
+through a hierarchy of increasing cost and reliability: 
+
+• Level 1: Teacher LLM. We first query a stronger model. If suc-cessful, its output serves as 𝜏 𝑟𝑒 𝑓 .
+
+• Level 2: Tool-Augmented Teacher. If the teacher model fails, we equip it with external tools (e.g., a code interpreter), which have been proven to significantly improve the correctness of LLMs. 
+
+• Level 3: Human Expert (Simulated). As a last resort, we request a solution from a high-authority source, ideally a human expert. While expensive, this ensures the distillation of high-value, Conference ’XX, Month 2026, Location Xinle Wu et al. 
+
+capability-expanding knowledge. In our experimental eval-uation, to ensure scalability and reproducibility, we employ 
+
+Gemini-3-pro-preview as a proxy for human experts. Once 𝜏 𝑟𝑒 𝑓 is obtained, the agent performs Contrastive Reflec-tion by analyzing the divergence between 𝜏 𝑓 𝑎𝑖𝑙 and 𝜏 𝑟𝑒 𝑓 . The dis-tilled insights are formalized into a structured memory schema 
+
+𝑚 = ⟨Title , Description , Content ⟩ to support precise retrieval . We categorize these memories into two types: 
+
+• Global Procedural Memory: A high-level recipe summarizing the correct workflow derived from 𝜏 𝑟𝑒 𝑓 (e.g., "For geometry proofs involving centroids, first apply the median property, then establish the segment ratios..."). 
+
+• Local Corrective Memory: Specific error-correction rules derived from the divergence point (e.g., "When calculating variance, do not square the sum directly; instead, calculate the mean of squares..."). If the agent succeeds initially, we bypass the cascade and directly extract Global Procedural Memory to reinforce the successful be-havior. We maintain separate stores for global and local memories, employing a flat storage structure. 
+
+Semantic-Aware Thompson Sampling for Retrieval . Existing memory frameworks typically rely on dense vector retrieval based on semantic similarity. While effective for recall, this approach often retrieves "relevant noise"—memories that are semantically related to the query but offer no substantial aid to the reasoning process. Recent works like MemRL [ 45 ] attempt to mitigate this by learning a scalar utility value for each memory based on environmental feedback (e.g., task success). However, we identify two critical limitations in current utility-based retrieval paradigms such as MemRL: 
+
+• Cold-Start Inequity (The Exploration Bias): In streaming set-tings, newly created memories have not yet received feedback and thus lack reliable utility estimates (often undefined or con-servatively initialized). Under deterministic greedy ranking, such memories are rarely retrieved, which prevents them from being evaluated and updated. This creates a self-reinforcing loop where older memories—having accumulated historical feedback—dominate retrieval, even when some new memories could be highly valuable. 
+
+• Reward Bias via Task Difficulty: MemRL relies on absolute re-wards as feedback. This introduces significant noise: a simple task may yield a positive reward even with irrelevant memories (false positive utility), while a complex task may result in failure despite retrieving useful memories (false negative utility). This confounds intrinsic task difficulty with memory efficacy. To address these challenges, we propose Semantic-Aware Thomp-son Sampling (SA-CTS) . Instead of maintaining a scalar point es-timate, we model the utility of each memory 𝑚 𝑖 as a Gaussian distribution N ( 𝜇 𝑖 , 𝜎 2 
+
+> 𝑖
+
+), representing the estimated utility and the 
+
+epistemic uncertainty , respectively. This probabilistic formulation fundamentally resolves the exploration dilemma: even if a new memory’s mean utility 𝜇 is not yet dominant, a large variance 𝜎 2
+
+allows it to be sampled at a high value. This grants it a chance to enter the top-𝑘 context, receive feedback, and update its poste-rior—forming a closed-loop evolution mechanism absent in greedy approaches. 
+
+Semantic-Aware Initialization. To construct the initial prior for a new memory 𝑚 𝑛𝑒𝑤 , we transfer statistics from its 𝑛 -nearest neighbors 
+
+N𝑛 (𝑚 𝑛𝑒𝑤 ) in the embedding space. The distribution is initialized as: 
+
+𝜇 𝑛𝑒𝑤 = 1
+
+𝑛 
+
+> 𝑛
+
+∑︁ 
+
+> 𝑗 =1
+
+𝜇 𝑗 , 𝜎 2 
+
+> 𝑛𝑒𝑤
+
+= 1
+
+𝑛 
+
+> 𝑛
+
+∑︁ 
+
+> 𝑗 =1
+
+
+
+𝜎 2 
+
+> 𝑗
+
++ ( 𝜇 𝑗 − 𝜇 𝑛𝑒𝑤 )2 
+
++ 𝜖 𝑒𝑥𝑝𝑙𝑜𝑟𝑒 
+
+(1) Crucially, the hyperparameter 𝜖 𝑒𝑥𝑝𝑙𝑜𝑟𝑒 acts as a "hard exploration switch," guaranteeing a non-zero variance for all new memories to ensure meaningful exposure regardless of neighbor consensus. 
+
+Probabilistic Retrieval. During inference, given a query 𝑞 𝑡 , we em-ploy Thompson Sampling to balance exploration and exploitation. For each candidate memory 𝑚 𝑖 , we sample a utility estimate ˜𝑢 𝑖 from its posterior: 
+
+˜𝑢 𝑖 ∼ N ( 𝜇 𝑖 , 𝜎 2 
+
+> 𝑖
+
+) (2) The final retrieval score fuses semantic relevance with the sampled utility: Score (𝑚 𝑖 ) = (1 − 𝜆 ) · sim (𝑞 𝑡 , 𝑚 𝑖 ) + 𝜆 · ˜𝑢 𝑖 (3) where 𝜆 ∈ [ 0, 1] balances the semantic prior and the learned utility. Unlike deterministic greedy selection, the stochasticity of ˜𝑢 𝑖 allows high-variance (new or uncertain) memories to occasionally override low-variance established ones, dynamically optimizing the retrieval set. 
+
+Advantage-based Bayesian Update. To decouple memory efficacy from task difficulty ( Reward Bias ), we employ an Advantage-based feedback mechanism. We define the signal as the performance differential between memory-augmented inference ( 𝑦 𝑚𝑒𝑚 ) and base inference ( 𝑦 𝑏𝑎𝑠𝑒 ): 
+
+𝑟 𝑎𝑑𝑣 = S( 𝑦 𝑚𝑒𝑚 ) − S( 𝑦 𝑏𝑎𝑠𝑒 ) (4) For verifiable tasks, we instantiate S( 𝑦 ) as a binary correctness reward against ground truth, i.e., S( 𝑦 ) = I[𝑦 is correct ] ∈ { 0, 1}.This differential reward isolates the marginal contribution of the retrieved memories, cancelling out the intrinsic difficulty of the task. Finally, we update the posterior of utilized memories via Bayesian approximation. Assuming likelihood noise variance 𝜎 2 
+
+> 𝑛𝑜𝑖𝑠𝑒
+
+, the up-date rules are: 
+
+𝜇 𝑝𝑜𝑠𝑡 = 𝜎 2 
+
+> 𝑝𝑟𝑖𝑜𝑟
+
+𝑟 𝑎𝑑𝑣 + 𝜎 2 
+
+> 𝑛𝑜𝑖𝑠𝑒
+
+𝜇 𝑝𝑟𝑖𝑜𝑟 
+
+𝜎 2 
+
+> 𝑝𝑟𝑖𝑜𝑟
+
++ 𝜎 2
+
+> 𝑛𝑜𝑖𝑠𝑒
+
+, 𝜎 2 
+
+> 𝑝𝑜𝑠𝑡
+
+= 𝜎 2 
+
+> 𝑝𝑟𝑖𝑜𝑟
+
+𝜎 2
+
+> 𝑛𝑜𝑖𝑠𝑒
+
+𝜎 2 
+
+> 𝑝𝑟𝑖𝑜𝑟
+
++ 𝜎 2
+
+> 𝑛𝑜𝑖𝑠𝑒
+
+(5) This ensures the utility converges to the true marginal gain provided by the memory, robust to heterogeneous task difficulties. 
+
+Streaming Memory Evolution and Maintenance . In a continu-ous task stream, an append-only memory store inevitably suffers from unbounded growth and knowledge redundancy, diluting the retrieval density of high-value insights. To maintain a compact and evolving knowledge base, we implement an online Memory Consolidation mechanism. Immediately following the extraction phase (Sec. 3.3), the agent performs a semantic audit by comparing the newly generated memory 𝑚 𝑛𝑒𝑤 against the retrieved context set C𝑟𝑒𝑡𝑟𝑖𝑒𝑣𝑒𝑑 used in the current task. Acting as a curator, the LLM executes one of three discrete operations to refine the store: Towards Autonomous Memory Agents Conference ’XX, Month 2026, Location 
+
+• Append (Novelty): If 𝑚 𝑛𝑒𝑤 contains orthogonal insights not present in C𝑟𝑒𝑡𝑟𝑖𝑒𝑣𝑒𝑑 , it is appended to the store, expanding the agent’s knowledge boundary. 
+
+• Merge (Refinement): If 𝑚 𝑛𝑒𝑤 is semantically similar to an exist-ing memory 𝑚 𝑜𝑙𝑑 but offers superior clarity or generality, we replace 𝑚 𝑜𝑙𝑑 with a merged version, consolidating fragmented knowledge into a stronger representation. 
+
+• Prune (Maintenance) : If 𝑚 𝑛𝑒𝑤 is a duplicate of an existing mem-ory 𝑚 𝑜𝑙𝑑 (or if 𝑚 𝑜𝑙𝑑 is fully encompassed by a newly merged entry), the redundant 𝑚 𝑜𝑙𝑑 is removed. This keeps the retrieval space compact and ensures high information density. 
+
+## 3.4 Memory for Non-Verifiable Tasks 
+
+In non-verifiable domains (e.g., creative writing, open-ended chat, or summarization), a definitive ground truth is absent, rendering the concept of binary “success” or “failure” inapplicable. However, we posit that the core principle of memory acquisition remains the same: learning from contrast . Even without a binary signal, the agent can distill actionable insights by analyzing the divergence between a higher-quality response and a lower-quality one. To this end, we replace the Cost-Aware Cascade used in verifiable tasks with a Pairwise Contrastive Extraction strategy. 
+
+Pairwise Contrastive Extraction . For a given task 𝑞 𝑡 , the agent generates two candidate reasoning trajectories. An external eval-uator (e.g., an LLM-as-a-judge or human annotator) evaluates the pair to determine a winner, 𝑦 win , and a loser, 𝑦 lose .The agent then acts as an extractor to analyze this pair and distill the preference into a structured template: 
+
+Mpref = ⟨Trigger , Dimension , Comparison ⟩ (6) 
+
+• Trigger: The specific context or constraint where this preference applies (e.g., “When asked to write a concise marketing email...” ). 
+
+• Dimension: The evaluation axis driving the decision (e.g., “Tone” ,
+
+“Clarity” , or “Safety” ). 
+
+• Comparison: An explicit, actionable directive derived from the contrast (e.g., “Prefer direct bullet points ( 𝑦 win ) over dense narra-tive paragraphs ( 𝑦 lose )” ). Relative signals are not only more robust to calibration noise but can also be used to induce a consistent preference signal in prac-tice. Finally, we directly reuse the SA-CTS retrieval and streaming consolidation mechanisms detailed in Sec. 3.3, where we define the advantage feedback as 𝑟 𝑎𝑑𝑣 = I[𝑦 𝑚𝑒𝑚 ≻ 𝑦 𝑏𝑎𝑠𝑒 ], where ≻ denotes the LLM judge’s pairwise preference. 
+
+## 4 Experiments 4.1 Experimental Setup 
+
+Datasets and Protocols . For verifiable tasks , we employ AIME [2 ], a challenging mathematics competition dataset, where we utilize historical problems (1983–2024) for knowledge acquisition and the held-out 2025 set for evaluation; and HotpotQA [43 ], a multi-hop rea-soning benchmark, where we use the training set for memory popu-lation and report performance on the official validation set. For non-verifiable tasks , following [ 33 ], we select AdvancedIF [10 ], which evaluates the agent’s ability to follow complex, multi-constraint in-structions, and the STEM subset of HelpSteer3 [ 37 ], which assesses domain-specific helpfulness in science and engineering. Detailed 
+
+Table 1: Datasets used in our experiments and their statistics. Dataset Domain Train Set Test Set 
+
+AIME Math Reasoning 943 30 HotpotQA Multi-hop QA 2000 500 AdvancedIF Instruction Following 1316 329 HelpSteer3 (STEM) Technical Helpfulness 2000 500 
+
+statistics are provided in Table 1. We provide our source code and data processing scripts in an anonymized repository 1.
+
+Baselines. We compare U-Mem against three categories of base-lines: (1) No Memory , the frozen LLM without parameter updates or external memory, serving as the performance lower bound; (2) State-of-the-art memory frameworks, including ReasoningBank [24 ], which synthesizes memories from parallel trajectories, ReMe [3], a dy-namic procedural memory framework utilizing context-adaptive reuse, and MemRL [ 45 ], which employs feedback-driven Q-learning to optimize retrieval utility; and (3) RL-Based Agents representing the internalization paradigm, where we employ GRPO [ 9 ] for both verifiable tasks and non-verifiable tasks. 
+
+Evaluation Metrics. For verifiable tasks, we report Accuracy on the test sets. For non-verifiable tasks, following [ 33 ] we use an LLM-as-a-judge overall score with gpt-5.1 . The judge outputs an aggregate rubric-based score for each response, and we report the mean normalized score (%) on the test set. 
+
+Implementation Details. We employ Qwen2.5-7B-Instruct and 
+
+Qwen2.5-14B-Instruct as the primary backbone models to evaluate the scalability of our framework across different parameter scales. All experiments are conducted on a computational node equipped with 3× NVIDIA H200 GPUs. 
+
+RL Training Configurations (for Baselines). To construct competitive baselines, we implement Reinforcement Learning (RL) fine-tuning using Group Relative Policy Optimization (GRPO) with AdamW. We apply LoRA adapters with rank 𝑟 =16 , 𝛼 =32 , and dropout set to 0.05 .Training is conducted with a learning rate of 1e −5 over 3 epochs, utilizing a question-grouped batch size of 4 and a gradient accumula-tion steps of 4. We enforce a KL regularization coefficient of 0.1 and an advantage clipping threshold of 0.2. The reward design aligns with the task type: (1) For verifiable tasks , we use binary rewards (𝑟 ∈ { 0, 1}) based on exact-match correctness against ground truth. (2) For non-verifiable tasks , we employ Gemini-3.0-pro-preview 
+
+as an LLM-as-a-judge to assign rubric-based scores, which serve as the reward signal for GRPO optimization. 
+
+U-Mem Framework Configurations. For the autonomous memory mechanism, we configure the components as follows: (1) We uti-lize Gemini-3.0-flash as the Level-1 Teacher LLM. The Level-2 Tool-Augmented stage is supported by a secure Python code interpreter. For the Level-3 "Human Expert" proxy, we leverage 
+
+Gemini-3-pro-preview to simulate high-quality, authoritative feed-back. (2) We constrain the memory extraction module to distill a maximum of 𝑚 = 3 distinct insights per trajectory. (3) We em-ploy qwen3-4B-embedding for vector representations. Retrieval is  
+
+> 1Available at: https://anonymous.4open.science/r/code-release-456D/ Conference ’XX, Month 2026, Location Xinle Wu et al.
+
+Table 2: Main results on verifiable and non-verifiable tasks. Qwen2.5-7B Qwen2.5-14B Method Verifiable Non-verifiable Verifiable Non-verifiable AIME25 HotpotQA AdvancedIF STEM AIME25 HotpotQA AdvancedIF STEM No Mem. 6.67 ± 3.33 37 .80 ± 2.17 45 .13 ± 1.72 56 .16 ± 2.72 12 .00 ± 3.80 60 .00 ± 2.74 49 .53 ± 3.22 62 .56 ± 3.01 
+
+ReasoningBank 9.33 ± 1.49 46 .40 ± 1.54 44 .98 ± 0.57 55 .98 ± 2.99 12 .67 ± 2.79 62 .40 ± 1.97 49 .01 ± 2.72 62 .79 ± 2.09 
+
+ReMe 8.00 ± 1.83 44 .20 ± 1.87 47 .05 ± 1.32 58 .16 ± 1.02 12 .00 ± 1.83 61 .80 ± 2.43 50 .67 ± 2.22 63 .98 ± 1.88 
+
+MemRL 7.33 ± 1.49 47 .80 ± 2.16 46 .77 ± 1.65 57 .37 ± 1.78 10 .00 ± 3.33 64 .40 ± 2.17 49 .73 ± 1.86 64 .03 ± 2.14 
+
+RL-based 13 .33 ± 3.33 46 .60 ± 3.36 46 .50 ± 1.48 58 .12 ± 2.11 17 .33 ± 2.79 64 .40 ± 3.21 51 .02 ± 2.71 64 .72 ± 2.31 
+
+U-Mem 13 .33 ± 2.36 52 .40 ± 0.89 49 .34 ± 0.86 58 .68 ± 1.72 18 .67 ± 1.83 65 .20 ± 1.79 51 .28 ± 1.64 65 .99 ± 0.93 
+
+performed separately for each memory store: for verifiable tasks, we retrieve the top-𝑘 = 3 items from both the Global Procedural and Local Corrective memory bases; for non-verifiable tasks, we retrieve top-𝑘 = 3 from the Preference memory base. (4) We set the generation temperature to 𝜏 = 0.7 during the exploration/training phase and 𝜏 = 0.2 for final evaluation on the test set. (5) We set the exploration constant 𝜖 𝑒𝑥𝑝𝑙𝑜𝑟𝑒 = 0.1 and the likelihood noise variance 𝜎 2 
+
+> 𝑛𝑜𝑖𝑠𝑒
+
+= 1.0 for the Thompson Sampling mechanism. (6) We empirically set the fusion coefficient 𝜆 = 0.1. (7) We use 𝑛 =10 nearest neighbors for semantic initialization. To ensure statistical reliability, all memory-based experimental results are reported as the mean and standard deviation averaged over 5 independent runs. Prompt templates can be found in Appendix C. 
+
+## 4.2 Main Results 
+
+Table 2 reports the comparative performance across verifiable and non-verifiable domains. Key observations can be summarized as: (1) Consistent State-of-the-Art Performance: U-Mem achieves the best performance across all datasets and model scales, significantly outperforming the "No Memory" lower bound and existing mem-ory baselines. While passive approaches like ReasoningBank and MemRL occasionally struggle to surpass the "No Memory" base-line (e.g., ReasoningBank on AdvancedIF with Qwen2.5-14B), U-Mem delivers robust improvements, demonstrating the efficacy of autonomous acquisition and distributional utility modeling (via SA-CTS). (2) Competitive Alternative to RL: Most notably, U-Mem 
+
+matches or exceeds the performance of computationally expensive RL-based agents (GRPO) without modifying model parameters. On the challenging AIME25 mathematical reasoning task (Qwen2.5-14B), U-Mem outperforms the RL baseline ( 18 .67% vs. 17 .33% ) with lower variance ( ±1.83 vs. ±2.79 ), suggesting that actively curated memory can serve as a more stable and cost-effective substitute for continuous fine-tuning in dynamic deployment scenarios. 
+
+## 4.3 Ablation Studies 
+
+Component Ablations . To validate the necessity of each compo-nent in U-Mem , we conduct an ablation study using the Qwen2.5-7B model on the HotpotQA dataset. We dissect the framework across three critical dimensions: extraction source (the cascade), retrieval strategy, and memory maintenance. The quantitative results are summarized in Table 3. 
+
+Table 3: Component Ablations on HotpotQA (Qwen2.5-7B). Method Accuracy (%) Expert Calls 
+
+Extraction Variants 
+
+Only Teacher (Level 1) 49 .40 ± 1.45 0% Only Human Expert (Level 3) 52 .80 ± 0.97 100% 
+
+Retrieval & Update Variants 
+
+w/o SA-CTS 47 .80 ± 1.48 –w/ MemRL’s Retrieval 50 .40 ± 0.96 –w/o Streaming Update 49 .20 ± 1.02 –
+
+U-Mem (Full Framework) 52 .40 ± 0.89 23.17% 
+
+Efficacy of the Cost-Aware Cascade. We compare our adaptive cas-cade against two static baselines: Only Teacher , which exclusively relies on the Level-1 model (lowest cost), and Only Human Expert ,which indiscriminately queries the Level-3 proxy for all failures (highest cost). As shown in Table 3, Only Teacher lags significantly behind U-Mem (49 .40% vs. 52 .40% ). This performance gap high-lights that while Level-1 is cost-effective, it hits a capability ceiling on complex reasoning tasks; access to stronger, authoritative su-pervision (i.e., the Expert) is indispensable for resolving the "hard tail" of failure cases that weaker models cannot self-correct. Con-versely, Only Human Expert achieves the performance upper bound of 52 .80% . Crucially, U-Mem retains 99.2% of this upper-bound per-formance while invoking the expensive expert for only 23.17% of the cases. This demonstrates the cascade’s Pareto efficiency: it ef-fectively filters out "shallow" errors solvable by weaker models, strategically reserving high-cost supervision only when essential to bridge the gap to peak performance. For a comprehensive analy-sis of token consumption and training time overhead, please refer to Appendix B.1. 
+
+Impact of SA-CTS. To isolate the contribution of our retrieval mech-anism, we compare the full framework against two variants: (1) w/o SA-CTS : A vanilla RAG approach that retrieves memories solely based on static semantic similarity; and (2) w/ MemRL’s Retrieval :A deterministic utility-based baseline that ranks memories using a greedy Q-value estimate. Results in Table 3 demonstrate the sta-tistical superiority of U-Mem . First, it surpasses w/o SA-CTS by a substantial margin of 4.6%, verifying that semantic relevance Towards Autonomous Memory Agents Conference ’XX, Month 2026, Location 
+
+Table 4: Ablation studies on HotpotQA (Qwen2.5-7B): Impact of Learning Sources and Retrieval Hyperparameter 𝑘 .Setting Accuracy (%) 
+
+Study A: Effectiveness of Learning Source 
+
+Success Trajectories Only 50 .80 ± 1.12 
+
+Failure Trajectories Only (Contrastive) 51 .60 ± 0.45 
+
+U-Mem (Hybrid) 52 .40 ± 0.89 
+
+Study B: Effect of Retrieved Memory Number ( 𝑘 )
+
+𝑘 = 1 50 .20 ± 1.10 
+
+𝑘 = 3 (Default) 52 .40 ± 0.89 
+
+𝑘 = 5 50 .80 ± 0.84 
+
+𝑘 = 10 48 .80 ± 0.84 
+
+alone is insufficient—discerning functional utility is essential to fil-ter out "relevant but unhelpful" noise. Second, U-Mem outperforms the state-of-the-art MemRL mechanism by 2.0%. We attribute this gain to the exploration advantage of Thompson Sampling: unlike MemRL’s greedy ranking which may permanently starve new, po-tentially high-value memories (the cold-start problem), SA-CTS’s probabilistic sampling ensures fair exposure for new insights, en-abling continuous discovery and effective self-evolution. 
+
+Necessity of Streaming Updates. The w/o Streaming Update variant adopts an append-only strategy, disabling the merge and delete operations. This results in a performance degradation of 3.2%. We attribute this decline to memory saturation : without active curation, the store becomes bloated with redundant or near-duplicate entries. These redundancies dilute the information density of the top-𝑘 
+
+context window, crowding out diverse and orthogonal insights. This confirms that active memory consolidation—merging similar instances and pruning obsolete ones—is a prerequisite for sustaining long-term capability growth. 
+
+Analysis of Learning Sources and Hyperparameters . To dis-sect the mechanisms driving U-Mem ’s performance, we investigate two pivotal design choices: the specific value of learning from fail-ures versus successes, and the sensitivity of the system to retrieval volume ( 𝑘 ). The quantitative results are presented in Table 4. 
+
+Efficacy of Learning from Failure. A core hypothesis of our work is that meaningful capability expansion stems primarily from cor-recting errors rather than merely reinforcing successes. To validate this, we compare the full hybrid framework against Success Only 
+
+and Failure Only variants. As shown in Table 4 (Study A), Success Only yields the lowest performance ( 50 .80% ). We attribute this to the fact that success-based memories largely reinforce what the model already knows, providing limited marginal gain in capabil-ity. Conversely, Failure Only achieves a higher accuracy of 51 .60% ,confirming that contrastive reflection on errors effectively targets the agent’s capability boundary , rectifying specific "blind spots" and misconceptions. However, the hybrid U-Mem outperforms both (52 .40% ). This suggests a synergistic effect: failure-driven memories fix specific reasoning deficits (correction), while success-driven memories stabilize the execution of correct patterns on borderline tasks (consolidation), collectively forming a more robust policy. 
+
+Sensitivity to Retrieval Number ( 𝑘 ). We analyze the impact of re-trieval context size 𝑘 on inference accuracy, with results summa-rized in Table 4 (Study B). Performance initially improves as 𝑘 
+
+increases from 1 to 3 ( 50 .20% → 52 .40% ). This indicates that for multi-step reasoning tasks like HotpotQA, a single memory is of-ten insufficient to cover the requisite evidential chain; a slightly larger context window improves informational recall. However, performance degrades noticeably as 𝑘 extends to 5 and 10. We at-tribute this drop to context dilution and noise injection: despite the utility filtering of SA-CTS, retrieving a large number of memories in-evitably introduces lower-relevance or distracting information into the prompt. Empirically, 𝑘 = 3 strikes the optimal balance between providing sufficient guidance and maintaining a high signal-to-noise ratio. 
+
+## 4.4 More Analysis 
+
+Scalability with Experience Accumulation . A critical require-ment for any learning paradigm is scalability : performance should improve predictably as the volume of available data increases. To verify whether U-Mem exhibits such scaling properties, we conduct an analysis on the HotpotQA dataset using Qwen2.5-7B. We vary the size of the source training set (experience pool) from 0 to 1,000 tasks, from which the agent autonomously extracts and populates its memory store. As illustrated in Figure 3, we observe a clear positive correlation between the scale of the experience pool and the agent’s test accu-racy. Starting from a baseline of 37 .80% , the performance improves significantly as the agent "sees" more data, eventually peaking at 
+
+52 .40% . Notably, the performance does not plateau or degrade sig-nificantly even as the memory pool grows larger. This indicates that U-Mem ’s selection mechanism (SA-CTS) effectively manages the retrieval space, allowing the agent to continuously benefit from a larger scale of experience without being overwhelmed by noise. This confirms that U-Mem offers a scalable, data-driven pathway for agent evolution, akin to the scaling laws observed in pre-training but achieved non-parametrically. 
+
+Figure 3: Scaling trend of U-Mem on HotpotQA. Impact of Task Distribution Similarity . We investigate the cor-relation between the similarity of the knowledge acquisition set to the evaluation set and the resulting performance gains. We quan-tify this alignment using the Average Maximum Cosine Similarity (AMCS) , defined as: 
+
+SS(D test , Dtrain ) = 1
+
+|D test |∑︁ 𝑥 ∈ D test 
+
+max  
+
+> 𝑦 ∈ D train
+
+sim (𝜙 (𝑥 ), 𝜙 (𝑦 )) (7) Conference ’XX, Month 2026, Location Xinle Wu et al. 
+
+Table 5: Performance comparison on stronger foundation models across four benchmarks. Gemini-2.5-flash DeepSeek-chat Method Verifiable Non-verifiable Verifiable Non-verifiable AIME25 HotpotQA AdvancedIF STEM AIME25 HotpotQA AdvancedIF STEM No Mem. 46 .67 ± 4.08 62 .40 ± 2.08 58 .62 ± 2.41 64 .92 ± 3.41 46 .67 ± 2.36 58 .90 ± 2.38 54 .82 ± 2.49 61 .82 ± 3.24 
+
+ReasoningBank 52 .00 ± 3.80 68 .40 ± 2.77 59 .67 ± 2.66 64 .99 ± 2.10 48 .67 ± 3.80 60 .80 ± 2.14 58 .74 ± 1.71 62 .22 ± 1.48 
+
+ReMe 50 .00 ± 2.36 69 .20 ± 1.08 60 .96 ± 1.83 65 .02 ± 2.84 48 .00 ± 1.83 59 .80 ± 2.06 58 .04 ± 1.91 63 .88 ± 1.73 
+
+MemRL 50 .67 ± 2.79 70 .40 ± 1.59 59 .83 ± 2.37 65 .32 ± 2.55 48 .00 ± 1.83 61 .00 ± 1.83 58 .67 ± 2.04 63 .12 ± 0.95 
+
+U-Mem 54 .00 ± 2.79 71 .60 ± 1.09 62 .87 ± 0.94 66 .12 ± 2.01 50 .67 ± 1.49 61 .20 ± 1.22 59 .97 ± 1.62 64 .33 ± 1.75 
+
+where a higher SS indicates that for typical test queries, there exists a highly relevant counterpart in the history. As illustrated in Figure 4, we observe a strong positive correlation (Pearson 𝑟 = 0.888 ) between the alignment score and the perfor-mance gains of U-Mem across benchmarks. Domains with high structural recurrence, such as AIME, exhibit the most significant improvements, whereas diverse tasks like STEM show more modest gains. These findings highlight the critical importance of embedding alignment and semantic overlap in driving effective memory-based evolution, suggesting that non-parametric learning follows gener-alization laws similar to parametric methods. 
+
+Figure 4: Correlation between task similarity and memory benefit. Each point denotes a task; the x-axis is AMCS (task similarity), and the y-axis is U-Mem’s performance gain over the base model. Pearson correlation: r = 0.888.. Scalability to Stronger Foundation Models . While the previ-ous comparisons utilized open-weight models (Qwen2.5 series) to enable a fair head-to-head comparison with parameter-update methods (RL), real-world agent deployments often rely on power-ful proprietary or large-scale foundation models where gradient access is restricted. To demonstrate the universality and scalability of U-Mem , we extend our evaluation to two strong models: Gemini-2.5-flash and DeepSeek-chat. In this setting, RL-based baselines are omitted as parameter updates are operationally infeasible. The results, summarized in Table 5, demonstrate that U-Mem is model-agnostic and effective even atop highly capable baselines. We observe that U-Mem consistently achieves the best performance across all benchmarks, outperforming both the "No Memory" base-line and state-of-the-art memory frameworks (ReasoningBank, ReMe, and MemRL). This confirms its ability to further extend the capability boundary of even the strongest existing models. 
+
+## 4.5 Case Study 
+
+To visualize how U-Mem transcends the "internally bounded" limi-tations of passive memory agents, we present a qualitative analysis on a representative "hard failure" problem from AIME 2025. The task asks to find the number of subsets of 16 chairs chosen by 8 people such that "no person sits next to two other people," with the final answer modulo 1000. The No Memory baseline fails consistently ( 0/5 success rate) due to a stubborn inductive bias: the model conflates the specific "no-three-in-a-row" constraint with the ubiquitous "no-two-adjacent" problem. Existing memory agents struggle to correct this deep-seated reasoning error. ReasoningBank and ReMe , relying on self-sampling, fail to generate a single correct trajectory to serve as a ref-erence, resulting in zero effective memory extraction. MemRL , while attempting to extract insights from the failure, suffers from attribu-tion error: it extracts trivial procedural details—such as "calculating the number of gaps between people"—which are factually correct but insufficient to resolve the methodological flaw. In contrast, U-Mem triggers the cost-aware cascade to consult a Level-1 Teacher LLM. By contrasting the model’s failed trajectory with the suc-cessful external trajectory, U-Mem distills a high-order Corrective Strategy: (1) Explicitly define "Forbidden Patterns" to distinguish "no-three-in-a-row" from standard adjacency; and (2) When vari-able constraints involve upper bounds (e.g., a gap holding at most 2 people), immediately pivot from combinatorial formulas to Gen-erating Functions. When re-evaluating the task, U-Mem retrieves this precise methodological correction, successfully overriding its intrinsic bias to derive the correct answer ( 907 ). 
+
+## 5 Conclusion 
+
+This paper presented U-Mem, a framework that transitions agents from passive information logging to autonomous knowledge acqui-sition. By synergizing a cost-aware cascade for active acquisition with Semantic-Aware Thompson Sampling (SA-CTS) for adaptive retrieval, U-Mem represents a significant step towards autonomous memory agents. We demonstrated that this non-parametric ap-proach is consistently effective across verifiable and non-verifiable domains, achieving performance that matches or exceeds computa-tionally expensive Reinforcement Learning (RL) methods. U-Mem thus establishes a scalable, data-efficient paradigm for continuous adaptation in dynamic environments. Towards Autonomous Memory Agents Conference ’XX, Month 2026, Location 
+
+## References 
+
+[1] Lakshya A Agrawal, Shangyin Tan, Dilara Soylu, Noah Ziems, Rishi Khare, Krista Opsahl-Ong, Arnav Singhvi, Herumb Shandilya, Michael J Ryan, Meng Jiang, et al . 2025. Gepa: Reflective prompt evolution can outperform reinforcement learning. arXiv preprint arXiv:2507.19457 (2025). [2] AIME. 2025. AIME Problems and Solutions. https://artofproblemsolving.com/ wiki/index.php?title=AIME_Problems_and_Solutions [3] Zouying Cao, Jiaji Deng, Li Yu, Weikang Zhou, Zhaoyang Liu, Bolin Ding, and Hai Zhao. 2025. Remember me, refine me: A dynamic procedural memory framework for experience-driven agent evolution. arXiv preprint arXiv:2512.10696 (2025). [4] Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, and Deshraj Ya-dav. 2025. Mem0: Building production-ready ai agents with scalable long-term memory. arXiv preprint arXiv:2504.19413 (2025). [5] Gheorghe Comanici, Eric Bieber, Mike Schaekermann, Ice Pasupat, Noveen Sachdeva, Inderjit Dhillon, Marcel Blistein, Ori Ram, Dan Zhang, Evan Rosen, et al . 2025. Gemini 2.5: Pushing the frontier with advanced reasoning, multi-modality, long context, and next generation agentic capabilities. arXiv preprint arXiv:2507.06261 (2025). [6] Qingxiu Dong, Lei Li, Damai Dai, Ce Zheng, Jingyuan Ma, Rui Li, Heming Xia, Jingjing Xu, Zhiyong Wu, Baobao Chang, et al . 2024. A survey on in-context learning. In Proceedings of the 2024 conference on empirical methods in natural language processing . 1107–1128. [7] Jinyuan Fang, Yanwen Peng, Xi Zhang, Yingxu Wang, Xinhao Yi, Guibin Zhang, Yi Xu, Bin Wu, Siwei Liu, Zihao Li, et al . 2025. A comprehensive survey of self-evolving ai agents: A new paradigm bridging foundation models and lifelong agentic systems. arXiv preprint arXiv:2508.07407 (2025). [8] Huan-ang Gao, Jiayi Geng, Wenyue Hua, Mengkang Hu, Xinzhe Juan, Hongzhang Liu, Shilong Liu, Jiahao Qiu, Xuan Qi, Yiran Wu, et al . 2025. A survey of self-evolving agents: On path to artificial super intelligence. arXiv preprint arXiv:2507.21046 1 (2025). [9] Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al . 2025. Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning. arXiv preprint arXiv:2501.12948 (2025). [10] Yun He, Wenzhe Li, Hejia Zhang, Songlin Li, Karishma Mandyam, Sopan Khosla, Yuanhao Xiong, Nanshu Wang, Xiaoliang Peng, Beibin Li, et al . 2025. AdvancedIF: Rubric-Based Benchmarking and Reinforcement Learning for Advancing LLM Instruction Following. arXiv preprint arXiv:2511.10507 (2025). [11] Yufei He, Juncheng Liu, Yue Liu, Yibo Li, Tri Cao, Zhiyuan Hu, Xinxing Xu, and Bryan Hooi. 2025. Evotest: Evolutionary test-time learning for self-improving agentic systems. arXiv preprint arXiv:2510.13220 (2025). [12] Dan Hendrycks, Dawn Song, Christian Szegedy, Honglak Lee, Yarin Gal, Erik Brynjolfsson, Sharon Li, Andy Zou, Lionel Levine, Bo Han, et al . 2025. A definition of AGI. arXiv preprint arXiv:2510.18212 (2025). [13] Zhengjun Huang, Zhoujin Tian, Qintian Guo, Fangyuan Zhang, Yingli Zhou, Di Jiang, Zeying Xie, and Xiaofang Zhou. 2025. Licomemory: Lightweight and cognitive agentic memory for efficient long-term reasoning. arXiv preprint arXiv:2511.01448 (2025). [14] Minwei Kong, Ao Qu, Xiaotong Guo, Wenbin Ouyang, Chonghe Jiang, Han Zheng, Yining Ma, Dingyi Zhuang, Yuhan Tang, Junyi Li, et al . 2025. AlphaOPT: For-mulating Optimization Programs with Self-Improving LLM Experience Library. 
+
+arXiv preprint arXiv:2510.18428 (2025). [15] Harrison Lee, Samrat Phatale, Hassan Mansoor, Kellie Ren Lu, Thomas Mesnard, Johan Ferret, Colton Bishop, Ethan Hall, Victor Carbune, and Abhinav Rastogi. 2023. Rlaif: Scaling reinforcement learning from human feedback with ai feedback. (2023). [16] Hongyu Li, Liang Ding, Meng Fang, and Dacheng Tao. 2024. Revisiting catastrophic forgetting in large language model tuning. arXiv preprint arXiv:2406.04836 (2024). [17] Xuefeng Li, Haoyang Zou, and Pengfei Liu. 2025. Torl: Scaling tool-integrated rl. 
+
+arXiv preprint arXiv:2503.23383 (2025). [18] Yibo Li, Zijie Lin, Ailin Deng, Xuan Zhang, Yufei He, Shuo Ji, Tri Cao, and Bryan Hooi. 2026. Just-In-Time Reinforcement Learning: Continual Learning in LLM Agents Without Gradient Updates. arXiv preprint arXiv:2601.18510 (2026). [19] Aixin Liu, Bei Feng, Bing Xue, Bingxuan Wang, Bochao Wu, Chengda Lu, Cheng-gang Zhao, Chengqi Deng, Chenyu Zhang, Chong Ruan, et al . 2024. Deepseek-v3 technical report. arXiv preprint arXiv:2412.19437 (2024). [20] Bang Liu, Xinfeng Li, Jiayi Zhang, Jinlin Wang, Tanjin He, Sirui Hong, Hongzhang Liu, Shaokun Zhang, Kaitao Song, Kunlun Zhu, et al . 2025. Advances and chal-lenges in foundation agents: From brain-inspired intelligence to evolutionary, collaborative, and safe systems. arXiv preprint arXiv:2504.01990 (2025). [21] Haipeng Luo, Huawen Feng, Qingfeng Sun, Can Xu, Kai Zheng, Yufei Wang, Tao Yang, Han Hu, Yansong Tang, and Di Wang. 2025. AgentMath: Empowering Mathematical Reasoning for Large Language Models via Tool-Augmented Agent. 
+
+arXiv preprint arXiv:2512.20745 (2025). [22] Weitao Ma, Xiaocheng Feng, Lei Huang, Xiachong Feng, Zhanyu Ma, Jun Xu, Jiuchong Gao, Jinghua Hao, Renqing He, and Bing Qin. 2026. Fine-Mem: Fine-Grained Feedback Alignment for Long-Horizon Memory Management. arXiv preprint arXiv:2601.08435 (2026). [23] Jiayan Nan, Wenquan Ma, Wenlong Wu, and Yize Chen. 2025. Nemori: Self-organizing agent memory inspired by cognitive science. arXiv preprint arXiv:2508.03341 (2025). [24] Siru Ouyang, Jun Yan, I Hsu, Yanfei Chen, Ke Jiang, Zifeng Wang, Rujun Han, Long T Le, Samira Daruki, Xiangru Tang, et al . 2025. Reasoningbank: Scaling agent self-evolving with reasoning memory. arXiv preprint arXiv:2509.25140 
+
+(2025). [25] Daivik Patel and Shrenik Patel. 2025. Engram: Effective, lightweight memory orchestration for conversational agents. arXiv preprint arXiv:2511.12960 (2025). [26] Zehan Qi, Xiao Liu, Iat Long Iong, Hanyu Lai, Xueqiao Sun, Wenyi Zhao, Yu Yang, Xinyue Yang, Jiadai Sun, Shuntian Yao, et al . 2024. Webrl: Training llm web agents via self-evolving online curriculum reinforcement learning. arXiv preprint arXiv:2411.02337 (2024). [27] Cheng Qian, Emre Can Acikgoz, Qi He, Hongru Wang, Xiusi Chen, Dilek Hakkani-Tür, Gokhan Tur, and Heng Ji. 2025. Toolrl: Reward is all tool learning needs. 
+
+arXiv preprint arXiv:2504.13958 (2025). [28] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. 2023. Direct preference optimization: Your language model is secretly a reward model. Advances in neural information processing systems 36 (2023), 53728–53741. [29] Preston Rasmussen, Pavlo Paliychuk, Travis Beauvais, Jack Ryan, and Daniel Chalef. 2025. Zep: a temporal knowledge graph architecture for agent memory. 
+
+arXiv preprint arXiv:2501.13956 (2025). [30] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. 2017. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 
+
+(2017). [31] Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023. Reflexion: Language agents with verbal reinforcement learning. 
+
+Advances in Neural Information Processing Systems 36 (2023), 8634–8652. [32] Xiangru Tang, Tianrui Qin, Tianhao Peng, Ziyang Zhou, Daniel Shao, Tingting Du, Xinming Wei, Peng Xia, Fang Wu, He Zhu, et al . 2025. Agent kb: Lever-aging cross-domain experience for agentic problem solving. arXiv preprint arXiv:2507.06229 (2025). [33] Kimi Team, Tongtong Bai, Yifan Bai, Yiping Bao, SH Cai, Yuan Cao, Y Charles, HS Che, Cheng Chen, Guanduo Chen, et al . 2026. Kimi K2. 5: Visual Agentic Intelligence. arXiv preprint arXiv:2602.02276 (2026). [34] Lei Wang, Chen Ma, Xueyang Feng, Zeyu Zhang, Hao Yang, Jingsen Zhang, Zhiyuan Chen, Jiakai Tang, Xu Chen, Yankai Lin, et al. 2024. A survey on large language model based autonomous agents. Frontiers of Computer Science 18, 6 (2024), 186345. [35] Yu Wang and Xi Chen. 2025. Mirix: Multi-agent memory system for llm-based agents. arXiv preprint arXiv:2507.07957 (2025). [36] Yu Wang, Ryuichi Takanobu, Zhiqi Liang, Yuzhen Mao, Yuanzhe Hu, Julian McAuley, and Xiaojian Wu. 2025. Mem-{\ alpha }: Learning memory construction via reinforcement learning. arXiv preprint arXiv:2509.25911 (2025). [37] Zhilin Wang, Jiaqi Zeng, Olivier Delalleau, Hoo-Chang Shin, Felipe Soares, Alexander Bukharin, Ellie Evans, Yi Dong, and Oleksii Kuchaiev. 2025. HelpSteer3-Preference: Open Human-Annotated Preference Data across Diverse Tasks and Languages. arXiv preprint arXiv:2505.11475 (2025). [38] Zora Zhiruo Wang, Jiayuan Mao, Daniel Fried, and Graham Neubig. 2024. Agent workflow memory. arXiv preprint arXiv:2409.07429 (2024). [39] Tianxin Wei, Noveen Sachdeva, Benjamin Coleman, Zhankui He, Yuanchen Bei, Xuying Ning, Mengting Ai, Yunzhe Li, Jingrui He, Ed H Chi, et al . 2025. Evo-Memory: Benchmarking LLM Agent Test-time Learning with Self-Evolving Memory. arXiv preprint arXiv:2511.20857 (2025). [40] Wujiang Xu, Zujie Liang, Kai Mei, Hang Gao, Juntao Tan, and Yongfeng Zhang. 2025. A-mem: Agentic memory for llm agents. arXiv preprint arXiv:2502.12110 
+
+(2025). [41] Sikuan Yan, Xiufeng Yang, Zuchao Huang, Ercong Nie, Zifeng Ding, Zonggen Li, Xiaowen Ma, Kristian Kersting, Jeff Z Pan, Hinrich Schütze, et al . 2025. Memory-r1: Enhancing large language model agents to manage and utilize memories via reinforcement learning. arXiv preprint arXiv:2508.19828 (2025). [42] Cheng Yang, Xuemeng Yang, Licheng Wen, Daocheng Fu, Jianbiao Mei, Rong Wu, Pinlong Cai, Yufan Shen, Nianchen Deng, Botian Shi, et al . 2025. Learning on the job: An experience-driven self-evolving agent for long-horizon tasks. arXiv preprint arXiv:2510.08002 (2025). [43] Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William Cohen, Ruslan Salakhutdinov, and Christopher D Manning. 2018. HotpotQA: A dataset for diverse, explainable multi-hop question answering. In Proceedings of the 2018 conference on empirical methods in natural language processing . 2369–2380. [44] Shaozhe Yin, Jinyu Guo, Kai Shuang, Xia Liu, and Ruize Ou. 2025. Learning Wisdom from Errors: Promoting LLM’s Continual Relation Learning through Exploiting Error Cases. arXiv preprint arXiv:2508.12031 (2025). Conference ’XX, Month 2026, Location Xinle Wu et al.                
+
+> [45] Shengtao Zhang, Jiaqian Wang, Ruiwen Zhou, Junwei Liao, Yuchen Feng, Weinan Zhang, Ying Wen, Zhiyu Li, Feiyu Xiong, Yutao Qi, et al .2026. MemRL: Self-Evolving Agents via Runtime Reinforcement Learning on Episodic Memory.
+> arXiv preprint arXiv:2601.03192 (2026). [46] Zeyu Zhang, Quanyu Dai, Xiaohe Bo, Chen Ma, Rui Li, Xu Chen, Jieming Zhu, Zhenhua Dong, and Ji-Rong Wen. 2025. A survey on the memory mechanism of large language model-based agents. ACM Transactions on Information Systems
+> 43, 6 (2025), 1–47. [47] Huichi Zhou, Yihang Chen, Siyuan Guo, Xue Yan, Kin Hei Lee, Zihan Wang, Ka Yiu Lee, Guchun Zhang, Kun Shao, Linyi Yang, et al .2025. Memento: Fine-tuning llm agents without fine-tuning llms. arXiv preprint arXiv:2508.16153
+> (2025). [48] Sizhe Zhou and Jiawei Han. 2025. A Simple Yet Strong Baseline for Long-Term Conversational Memory of LLM Agents. arXiv preprint arXiv:2511.17208 (2025). [49] Yuqing Zhou, Zhuoer Wang, Jie Yuan, Hong Wang, Samson Koelle, Ziwei Zhu, and Wei Niu. 2026. WISE-Flow: Workflow-Induced Structured Experience for Self-Evolving Conversational Service Agents. arXiv preprint arXiv:2601.08158
+> (2026).
+
+## A Reproducibility Statement 
+
+To ensure the reproducibility of our work, we provide the source code in an anonymous GitHub repository available at: https:// anonymous.4open.science/r/code-release-456D/. Regarding the datasets described in Table 1 and Section 4.1, we note that the partition be-tween the training stream (experience pool) and the test set is gen-erated dynamically. To guarantee the exact replication of the data splits used in our experiments, our repository includes the specific random seeds and preprocessing scripts required to reconstruct these partitions. 
+
+## B Additional Experiments B.1 Cost Efficiency Analysis 
+
+We evaluate the cost efficiency of U-MEM against baselines regard-ing token consumption (using Gemini-2.5-flash ) and training time (using Qwen2.5-7B ). For token consumption (averaged token number for each instance), Figure 5 shows that while all memory agents incur overhead compared to the No Memory baseline, U-MEM is significantly more efficient than sampling-heavy methods like ReasoningBank and ReMe, which require processing parallel trajectories. Although U-MEM consumes slightly more tokens than MemRL, this investment is justified by its superior performance, avoiding the attribution errors common in MemRL’s low-cost but shallow reflection. Regarding training time (which, for U-MEM, denotes the stream-ing memory acquisition phase without parameter updates), Figure 6 demonstrates that U-MEM consistently outperforms the RL base-line (GRPO). On the AIME benchmark, U-MEM completes memory acquisition in just 10.5 hours compared to 19.5 hours for RL fine-tuning—a near 2× speedup. Similar efficiency gains are observed on AdvancedIF (2.7h vs. 9.7h) and STEM (9.3h vs. 17.6h). These results highlight U-MEM as a highly efficient, gradient-free alternative to RL, capable of continuous evolution with significantly lower computational latency. 
+
+## C Prompts 
+
+We provide example prompts used in U-Mem . First, the prompts for Memory Extraction—covering both success summarization and failure correction—are presented in Figures 7, 8, and 9. Second, the prompts for Memory-Augmented Inference, which integrate re-trieved insights into the reasoning context, are shown in Figures 10 
+
+Figure 5: Comparison of average tokens usage between U-MEM, ReasoningBank, ReMe, MemRL and No Mem. 
+
+Figure 6: Comparison of training time (GPU hours) between U-MEM and RL (GRPO). U-MEM achieves comparable or bet-ter performance with significantly reduced time costs. 
+
+and 11. Finally, the prompt governing Streaming Memory Mainte-nance (i.e., consolidation, merging, and pruning) is illustrated in Figure 12. Towards Autonomous Memory Agents Conference ’XX, Month 2026, Location 
+
+AIME Success Memory Extraction 
+
+You are a Logic Path Analyzer. TASK: Given a successful solution trace, extract reusable high-level procedural memories that summarize the correct reasoning. INPUTS: [Question] :{question} [Successful Trace] : {reasoning} ANALYSIS LOGIC: 1. Identify the dominant solution pipeline used in the Trace. 2. Abstract it into transferable steps that generalize beyond this single problem. GENERATION INSTRUCTIONS: - Produce only 1 memory. - Must be transferable: each memory must state WHEN it applies (trigger condition). - Prefer actionable rules over narration. - Use the format: "Step 1: [Action]. Step 2: [Action]..." (Abstract the Teacher’s workflow). OUTPUT FORMAT: Your output must strictly follow the format shown below: MEMORY 1: TITLE: <short name> DESCRIPTION: <one sentence summary> CONTENT: Step 1: . . . Step 2: . . . 
+
+Figure 7: AIME Success Memory Extraction Conference ’XX, Month 2026, Location Xinle Wu et al. 
+
+AIME Failure Memory Extraction (Cascade) 
+
+You are a Logic Path Analyzer. TASK: Compare the [Student Trace] (Failed Path) with the [Teacher Trace] (Successful Path) as paths in a decision tree. Identify the First Bifurcation Point (where the student diverged) and generate abstract Memories to fix it. INPUTS: [Question] :{question} [Student Trace]: {reasoning} [Teacher Trace]: {reasoning_teacher} ANALYSIS LOGIC: 1. Compare Paths: Does the Student’s overall methodology (Root-to-Leaf path) match the Teacher’s? 2. Determine Error Type: Type A (Global Strategy Failure): The Student used a completely wrong pipeline. Type B (Local Node Failure): The Student used the correct pipeline but made a wrong decision at a specific node due to bias, laziness, false assumption or other reasons. GENERATION INSTRUCTIONS: - Produce up to {max_items} memories TOTAL. Avoid overlap; merge if redundant. - Must be transferable: each memory must state WHEN it applies (trigger condition). - Prefer actionable rules over narration. If Type A (Global Failure): Generate a "Global Procedural Memory" 
+
+Goal: Define the solution process. Format: "Step 1: [Action]. Step 2: [Action]..." (Abstract the Teacher’s workflow). If Type B (Local Failure): Generate a "Local Corrective Memory" Goal: Fix the specific bad decision node. Format: "In context [X], do not assume [Y]. Instead, perform [Z]." OUTPUT FORMAT: Your output must strictly follow the format shown below: MEMORY 1: TITLE: <short name> DESCRIPTION: <one sentence summary> CONTENT: <detailed strategy> MEMORY 2: . . . 
+
+Figure 8: AIME Failure Memory Extraction (Cascade) Towards Autonomous Memory Agents Conference ’XX, Month 2026, Location 
+
+Non-verifiable Pairwise Memory Extraction 
+
+You are an AI assistant. TASK: Given an input prompt and two candidate responses, extract reusable instruction-following rules by explaining why the Better response is superior to the Worse response. INPUTS: [Input/Prompt]: {context_text} [Better response]: {r1} [Worse response]: {r2} ANALYSIS LOGIC: 1. Identify the decisive preference axes that make the Better response superior. 2. Localize the key failure points in the Worse response with respect to explicit constraints in the Input. 3. Convert each failure axis into a transferable conditional directive: a trigger + a concrete action that would have prevented the failure. GENERATION INSTRUCTIONS: - Return 1 to 3 rules total; merge overlapping rules. - Each rule must be conditional on a clear trigger (WHEN it applies). OUTPUT FORMAT: Your output must strictly follow the format shown below: MEMORY 1: 
+
+TRIGGER: The specific instruction/constraint where this rule applies (e.g., ’When asked to order items by cost’, ’When the user forbids numbered lists’). DIMENSION: The key failure axis (e.g., format adherence, constraint satisfaction, ordering, completeness, relevance, accuracy) COMPARISON: An actionable, testable directive that improves compliance. It must be conditional on the trigger (e.g., ’When ordering is requested, sort items by the specified criterion before writing the list’). MEMORY 2: 
+
+Figure 9: Non-verifiable Pairwise Memory Extraction. AIME Solving Prompt with Retrieved Memory 
+
+You are a math problem solver. Solve problems step-by-step using clear reasoning. You may be provided with relevant problem-solving strategies from past experience. Use them if they are helpful for the current problem. === Retrieved Problem-Solving Strategies === [Strategy 1] {title_1} Type: {Global Solution Flow|Local Correction} Description: {description_1} {content_1} [Strategy 2] {title_2} Type: {Global Solution Flow|Local Correction} Description: {description_2} {content_2} ... === End Strategies === Problem: {question} Please put your final answer within \boxed{}. 
+
+Figure 10: AIME solving Prompt with Retrieved Memory Conference ’XX, Month 2026, Location Xinle Wu et al. 
+
+AdvancedIF Solving Prompt with Retrieved Rules 
+
+You are a helpful assistant. Please answer following open-ended problems. If relevant, use these instruction-following rules as guidance: Preference 1: {trigger_1}. For "{dimension_1}", {comparison_1} Preference 2: {trigger_2}. For "{dimension_2}", {comparison_2} ... Preference K: {trigger_K}. For "{dimension_K}", {comparison_K} Problem: {last_user_request_text} 
+
+Figure 11: AdvancedIF solving Prompt with Retrieved Memory Memory Update (Refinement & Consolidation) 
+
+You are a Memory Refinement Expert. Context: An agent successfully solved a task and generated several "New STRATEGIES" as memories. During the task, it had also retrieved several "Historical Memories" to assist its reasoning. Task: You are provided with this combined subset (New STRATEGIES + Retrieved Memories). Your goal is to refine this specific pool of memories into an optimized, consolidated set of memories. Objectives for Refinement and Consolidation: 1. Elimination (Redundancy Check): Identify any newly generated memories or historical memories that are completely or highly similar to others, and suggest eliminating these redundant items. 2. Consolidation (Merging): Identify memories that can be merged (e.g., a new memory is a more specific or general form of a historical one), and combine them into a single, more comprehensive and robust knowledge unit. 3. Refinement (Optimization): If the phrasing or content of a memory is not general enough or is imprecise, modify its content to increase its transferability and value for future, similar problems. 4. Retention (Keep): Directly retain any memory that is valuable, non-redundant, and does not require merging or refinement. Your final output must be the optimal, consolidated set of strategies. Note on Historical Memories: A retrieved historical memory might have been irrelevant to the current problem’s solution, but this does not necessarily make it useless. Evaluate all retrieved memories based on their generalizability and potential to help solve other problems in the future. PROBLEM THAT SUCCEED: {question} 
+
+AGENT’S REASONING TRAJECTORY: {reasoning} NEWLY EXTRACTED ORIGINAL STRATEGIES (MEMORIES): {new_memories} RETRIEVED HISTORICAL MEMORIES: {retrieved_memories} Strictly output the final refined and consolidated strategy list in this format: MEMORY 1: TITLE: <concise strategy name> DESCRIPTION: <one sentence summary> CONTENT: <detailed transferable strategy> MEMORY 2: . . . 
+
+Figure 12: Memory Update.

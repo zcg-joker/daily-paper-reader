@@ -1,0 +1,687 @@
+Title: Learning to Remember: End-to-End Training of Memory Agents for Long-Context Reasoning
+
+URL Source: https://arxiv.org/pdf/2602.18493v1
+
+Published Time: Tue, 24 Feb 2026 01:02:32 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# Learning to Remember: End-to-End Training of Memory Agents for Long-Context Reasoning 
+
+Kehao Zhang 1,3*, Shangtong Gui 4, Sheng Yang 4, Wei Chen 4, Yang Feng 1,2,3†‡ 1Key Laboratory of Intelligent Information Processing, Institute of Computing Technology, Chinese Academy of Sciences (ICT/CAS) 
+
+> 2
+
+Key Laboratory of AI Safety, Chinese Academy of Sciences 
+
+> 3
+
+University of Chinese Academy of Sciences, Beijing, China 
+
+> 4
+
+Li Auto Inc. 
+
+zhangkehao22z@ict.ac.cn,fengyang@ict.ac.cn 
+
+Abstract 
+
+Long-context LLMs and Retrieval-Augmented Generation (RAG) systems process informa-tion passively, deferring state tracking, contra-diction resolution, and evidence aggregation to query time, which becomes brittle under ultra-long streams with frequent updates. We pro-pose the Unified Memory Agent (UMA), an end-to-end reinforcement learning framework that unifies memory operations and question an-swering within a single policy. UMA maintains a dual memory representation: a compact core summary for global context and a structured Memory Bank that supports explicit CRUD (create, update, delete, reorganize) over key-value entries, enabling proactive consolidation during streaming. To evaluate long-horizon memory behavior, we introduce Ledger-QA, a diagnostic benchmark for continuous state tracking where answers are latent values de-rived from accumulated updates rather than lo-cal span retrieval. Across 13 datasets spanning Ledger-QA, Test-Time Learning, and Accu-rate Retrieval, UMA substantially outperforms long-context and RAG baselines on dynamic reasoning and learning tasks while remaining competitive on standard retrieval benchmarks, underscoring the importance of learned, end-to-end memory management. 
+
+1 Introduction 
+
+Context windows of Large Language Models (LLMs) now spanning millions of tokens(Google, 2025; Anthropic, 2025; OpenAI, 2025; Qwen, 2025; Liu et al., 2024), however, long-context models face fundamental challenges beyond win-dow size. First, computational complexity scales quadratically with sequence length in standard at-tention mechanisms(Vaswani et al., 2017), making     
+
+> *This work was done during Kehao Zhang’s internship at Li Auto Inc.
+> †Corresponding author: Yang Feng.
+> ‡The Code is at https://github.com/ictnlp/ unified-memory-agent.git .
+
+processing extremely long contexts prohibitively expensive. Second, empirical studies reveal a con-text rot phenomenon(Hong et al., 2025): as input length increases, model performance degrades sig-nificantly even when all relevant information is present—models struggle to effectively locate and utilize critical details buried within massive con-texts. Retrieval-Augmented Generation (RAG) ad-dresses scalability by retrieving only relevant pas-sages at query time(Xu et al., 2024), but inherits a deeper limitation shared with long-context ap-proaches: passive information processing . Both paradigms treat context as static raw material, de-ferring all reasoning to query time. As illustrated in Figure 1, RAG systems must reprocess raw re-trieved passages for every query. For reasoning-intensive tasks—such as tracking entity states over time, resolving contradictions, or accumulating ev-idence from fragmented observations—this causes both accuracy degradation and computational re-dundancy. 
+
+Memory-augmented agents offer a fundamen-tally different paradigm: proactive reasoning that consolidates information as it arrives rather than reprocessing raw inputs per query. However, exist-ing approaches face critical limitations. Heuristic-based systems like Mem0(Chhikara et al., 2025), Zep(Rasmussen et al., 2025) rely on hand-crafted prompts and memory schemas, lacking task adap-tivity. Decoupled architectures such as Memory-R1(Yan et al., 2025) and Mem-alpha(Wang et al., 2025b) separate memory management from task execution through independent training, prevent-ing end-to-end optimization—credit from task out-comes cannot flow back to shape memory deci-sions. We propose Unified Memory Agent (UMA) , an end-to-end reinforcement learning framework that jointly optimizes memory operations (create, up-date, delete, reorganize) and task execution within a 1
+
+> arXiv:2602.18493v1 [cs.LG] 13 Feb 2026 Figure 1: Expense-tracking example: RAG reprocesses retrieved logs per query, while Agentic Memory main-tains a structured state and answers by reading the rele-vant fields.
+
+unified policy. To diagnose proactive reasoning ca-pabilities, we introduce Ledger-QA , a benchmark requiring continuous state tracking where perfor-mance directly reflects the ability to consolidate information proactively rather than reprocess raw history per query. We conduct extensive evaluation across 13 datasets spanning three task categories: continuous reasoning (Ledger-QA), test-time learn-ing, and accurate retrieval. Experiments demon-strate that UMA substantially outperforms long-context and RAG baselines on dynamic reasoning tasks while remaining competitive on standard re-trieval benchmarks, with ablations confirming the necessity of end-to-end optimization. 
+
+2 Method 
+
+2.1 Problem Formulation as MDP 
+
+We formulate the long-context reasoning task as a Markov Decision Process (MDP). To handle se-quences exceeding the context window, we de-compose the input into a stream of chunks C =
+
+{c1, . . . , c n}. The MDP tuple (S, A, P, R) is de-fined as follows: 
+
+State Space ( S). At step t, the state st =(Mt, x t, h t) consists of: • Mt = ( mcore , B): The dual-component mem-ory, comprising a high-level summary ( mcore )and a structured key-value bank ( B). • xt: The current input focus. To circumvent con-text window limits, this is dynamically switched between a local text chunk ck (during mainte-nance) and a specific query q (during QA). • ht: The immediate interaction history, which buffers recent observations and is periodically cleared to manage context length. 
+
+Action Space ( A). We unify all operations into a single action space, categorized by the phase of interaction. Crucially, read-only tools are available in both phases to ensure the agent can verify beliefs or query the ledger at any time. Detailed specifica-tions for all tools (inputs/outputs) are provided in Appendix A. • Memory Operations ( Amem ): Used during the chunk processing phase to maintain the state. 
+
+– Add , Update , Delete : CRUD operations to modify the structured bank B.
+
+– Retrieve , List : Read-only operations to check existing keys or values in B before mod-ification. 
+
+– UpdateCore : A special terminal action that commits the current progress to mcore and trig-gers the transition to the next chunk. • QA Operations ( Aqa ): Used during the query phase to synthesize the answer. 
+
+– BM25(query) , Embedding(query) : Hybrid retrieval over raw text chunks C.
+
+– Retrieve(key) , List() : Access to the struc-tured memory bank B.
+
+– Answer(text) : The terminal action to gener-ate the final response. 
+
+Transition Dynamics ( P). The system evolves through a hierarchical process: • Inner Loop: Standard tool actions update B or append to ht without advancing the input stream. • Outer Loop: The UpdateCore action triggers a state transition where xt advances to ck+1 and ht
+
+is reset. • Phase Transition: Upon processing cn, the sys-tem transitions to the QA phase, where xt be-comes a query q sampled from the task distribu-tion P (q|C).This stochastic transition implies that the optimal policy must construct a memory state Mn robust enough to maximize the expected return over all potential future queries. 2Figure 2: Overview of UMA. Phase I incrementally maintains a structured Memory Bank and core summary via CRUD over chunks; Phase II answers queries using both structured retrieval from the bank and raw-context retrieval. 
+
+2.2 Unified Memory Agent Architecture 
+
+Based on the MDP formulation, UMA employs a unified policy πθ(at|st) to generate actions. The architecture is designed to handle the inputs explic-itly as follows: 
+
+Input Representation. At any time step t, the in-put context provided to the LLM is a concatenation of four segments: Input t = [ Isys , m core t , x t, h t] (1) • System Instruction ( Isys ): Specifies the phase-specific operational guidelines—governing ei-ther memory maintenance or question answer-ing—and defines the available toolset ( Amem or 
+
+Aqa ). • Core Memory ( mcore t ): The evolving high-level summary that provides global context. • Current Focus ( xt): The raw text of the current chunk ck (in Phase I) or the user query q (in Phase II). • Interaction History ( ht): The trajectory of re-cent tool calls and their execution results The framework of Unified Memory Agent contains two phase, as illustrated in Figure 2. 
+
+Phase I: Sequential Memory Maintenance. For each chunk ck, the agent initializes ht = ∅. It iteratively samples actions 
+
+at ∼ πθ(·| Isys , m core , c k, h t) (2) The environment executes the tool and appends the result to ht. This loop continues until the agent outputs UpdateCore , which compresses relevant insights into mcore and advances the process to 
+
+ck+1 .
+
+Phase II: Hybrid Retrieval-Augmented QA. 
+
+After processing the final chunk, the input focus xt
+
+switches to the query q. The agent utilizes the fully constructed memory Mn and an empty history ht.It can invoke hybrid retrieval tools (accessing both the structured bank via Retrieve and raw text via 
+
+BM25 /Embedding ) to gather evidence. The process terminates when the agent generates the Answer 
+
+action. 
+
+2.3 Training: Task-Stratified GRPO 
+
+We propose a Task-Stratified Group Relative Pol-icy Optimization algorithm. By viewing GRPO as a Monte Carlo (MC) advantage estimator without a value network, we adapt it to handle the hierarchi-cal structure of our task as illustrated in Figure 3. 
+
+2.3.1 Nested Trajectory Sampling 
+
+To estimate the value of memory actions effectively, we employ a nested sampling strategy during train-ing. For a given context C:1. Memory Rollout: We sample N distinct memory trajectories {τ 1
+
+> mem
+
+, . . . , τ Nmem }, re-sulting in N different final memory states 
+
+{M 1
+
+> n
+
+, . . . , MNn }.2. Query Sampling: For each memory state Min,we sample M different questions {q1, . . . , q M }
+
+from the dataset. 3. QA Rollout: For each pair (Min, q j ), we gen-erate a QA trajectory τ i,j qa and compute its final reward Ri,j .3Figure 3: Illustration of Task-Stratified GRPO. For a given input, multiple trajectories are sampled containing interleaved Memory (blue) and QA (red) steps. (Right) The reward function combines immediate tool execution feedback ( rtool ) with outcome assessments ( routcome ). Crucially, memory steps receive a Future Utility Signal 
+
+derived from subsequent QA rewards. (Bottom) Advantages are normalized within distinct groups: all memory steps are aggregated into a global pool ( Gmem ), while QA steps are normalized strictly within their specific query groups ( Gqa,j ). 
+
+This process yields a total of N × M complete trajectories per update step. 
+
+2.3.2 Reward Function 
+
+The total reward Ri,j for a trajectory is a weighted sum of immediate and terminal signals: 
+
+Ri,j = λtool rtool + routcome (aans , y j ) (3) where rtool = Nvalid /N total represents the suc-cess rate of tool invocations (rewarding valid API usage while penalizing syntax errors), and routcome 
+
+evaluates the correctness of the final answer against the ground truth yj .
+
+2.3.3 Monte Carlo Advantage Estimation 
+
+Standard GRPO estimates the advantage A by nor-malizing rewards within a group, using the group mean as the baseline. We extend this to our two-stage process: 
+
+Advantage for Memory Steps ( Amem ). The "re-turn" of a memory trajectory τ imem is the expected utility it provides for future queries. We estimate this by averaging the rewards of all M questions as-sociated with it. The baseline is the global average across all N memory trajectories. 
+
+Gmem i = 1
+
+M
+
+> M
+
+X
+
+> j=1
+
+Ri,j , ¯Gmem = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+Gmem i
+
+(4) 
+
+Aimem = Gmem i − ¯Gmem 
+
+σ(Gmem ) (5) This encourages the policy to generate memory states that are robust across diverse queries. 
+
+Advantage for QA Steps ( Aqa ). For a specific question qj , the difficulty is intrinsic. Therefore, we normalize the reward of a QA trajectory τ i,j qa rel-ative only to other trajectories answering the same 
+
+question qj (but based on different memories). 
+
+¯R·,j = 1
+
+N
+
+> N
+
+X
+
+> k=1
+
+Rk,j , A i,j qa = Ri,j − ¯R·,j 
+
+σ(R·,j ) (6) This isolates the reasoning capability from the ques-tion difficulty, ensuring fair credit assignment. Finally, the policy πθ is updated by maximizing the GRPO objective using these stratified advan-tages: 
+
+J (θ) = 1
+
+N M 
+
+> N
+
+X
+
+> i=1
+> M
+
+X
+
+> j=1
+
+h
+
+Limem + Li,j qa 
+
+i
+
+(7) where 
+
+Limem = X 
+
+> t∈τimem
+
+h
+
+min( ρtAimem ,
+
+clip (ρt, 1 − ϵ, 1 + ϵ)Aimem )
+
+− βD KL (πθ|| πref )t
+
+i
+
+(8) 4Li,j qa = X 
+
+> t∈τi,j qa
+
+h
+
+min( ρtAi,j qa ,
+
+clip (ρt, 1 − ϵ, 1 + ϵ)Ai,j qa )
+
+− βD KL (πθ|| πref )t
+
+i
+
+(9) Here, ρt = πθ (at|st)  
+
+> πref (at|st)
+
+denotes the importance sam-pling ratio between the current policy πθ and the behavior policy πref used for trajectory collection. 
+
+3 The Ledger-QA Benchmark 
+
+Existing long-context benchmarks primarily focus on retrieval-centric tasks, where the answer is ex-plicitly located within a specific text span. How-ever, real-world agents often operate in dynamic en-vironments requiring state tracking —continuously updating a structured belief state based on unstruc-tured interactions. To rigorously evaluate this ca-pability, we introduce Ledger-QA , a synthetic benchmark simulating long-horizon personal fi-nance management. Unlike existing datasets de-rived from static corpora, Ledger-QA is program-matically generated to simulate dynamic state up-dates over long horizons. 
+
+3.1 Dataset Construction 
+
+The construction pipeline consists of three stages, designed to mimic the complexity of real-world bookkeeping: 
+
+Long-Horizon Timeline Simulation. We simu-late a user’s consumption behavior over a continu-ous timeline (e.g., a full year). Unlike independent QA samples, the data in Ledger-QA is organized as a chronological stream of N sessions. Each session corresponds to a specific date, ensuring temporal dependencies. 
+
+Natural Dialogue Synthesis. For each session, we employ an advanced LLM (e.g., Gemini-3-Pro) to synthesize natural user-assistant conversations. To ensure realism and complexity, the generation covers a diverse taxonomy of 8 major consump-tion categories (e.g., Dining, Transportation) and incorporates significant noise, such as chit-chat, clarifications, and informal expressions. This de-sign forces the agent to filter irrelevant information and precisely extract structured transaction records (Date, Scene, Amount) from the noisy unstructured text. 
+
+Ground Truth & Query Generation. Parallel to the dialogue, we maintain a structured list of ‘Transaction‘ objects to calculate the ground truth. We generate questions that require reasoning over this structured data rather than simple text match-ing. We design 8 different question categories. The construction methodology and examples are detailed in Appendix B. 
+
+3.2 Why Ledger-QA is Challenging 
+
+Ledger-QA fundamentally differs from standard RAG benchmarks by demanding long-horizon state aggregation rather than local information retrieval. Answers (e.g., "Total spending") are la-tent values derived from summing scattered transac-tions ( v1 +· · · +vn) across the entire timeline. This requires the agent to maintain a continuous, high-fidelity belief state, where a single extraction error at any point propagates to the final result, render-ing simple retrieval or approximate summarization ineffective. 
+
+4 Experiment 
+
+4.1 Experimental Setup 4.1.1 Evaluation Benchmarks 
+
+To rigorously evaluate the Unified Memory Agent across the full spectrum of memory capabili-ties—from dynamic updates to static retrieval—we conduct experiments on three distinct categories of tasks. 
+
+Dynamic State Tracking. Existing benchmarks largely focus on read-only retrieval. To evaluate the capability of maintaining and updating a persistent state over long horizons, we utilize our proposed 
+
+Ledger-QA (described in Section 3). This dataset serves as a litmus test for the agent’s ability to perform precise CRUD operations and maintain a consistent ledger (e.g., calculating running totals) among a stream of noisy dialogue, a capability absent in standard RAG benchmarks. 
+
+Test-Time Learning (TTL). Following the pro-tocol in MemoryAgentBench (Hu et al., 2025), we evaluate on six datasets: TREC-Coarse , TREC-Fine , NLU , Clinic , Banking77 , and PubMed-RCT .In these tasks, the input stream consists of labeled examples rather than narrative text. The agent must "learn" classification rules in-context by storing them in memory and subsequently applying this learned knowledge to answer test queries, assess-5ing the agent’s capacity for inductive reasoning via memory construction. 
+
+Accurate Retrieval (AR). To verify that our memory compression and indexing mechanisms preserve fine-grained details, we select seven estab-lished benchmarks: HotpotQA (Yang et al., 2018), 
+
+LoCoMo (Maharana et al., 2024), LongMemEval 
+
+(Wu et al., 2025), MSC (Xu et al., 2022), PearlTQA 
+
+(Du et al., 2024), SQuAD (Rajpurkar et al., 2016), and ConvoMem (Pakhomov et al., 2025). These tasks demand high-precision information extrac-tion from long documents or conversation histories. 
+
+Evaluation Metric. Given the open-ended nature of agentic interactions, we employ an LLM-as-a-Judge paradigm for robust evaluation. Specifically, we utilize Qwen/Qwen3-30B-A3B-Instruct-2507 
+
+as the evaluator to assess the correctness of the agent’s answers against the ground truth. The de-tailed evaluation prompts and scoring criteria are provided in Appendix C. Detailed statistics and specific taxonomies for all evaluation datasets are provided in Appendix D. 
+
+4.1.2 Baselines 
+
+We compare UMA against a diverse set of base-lines. First, we evaluate standard approaches: Con-cat , which inputs the full context to test the back-bone’s native capacity, and RAG , which retrieves the top-20 chunks using a hybrid strategy combin-ing dense embeddings and sparse BM25 via Re-ciprocal Rank Fusion (RRF). Second, we include recurrent summarization models: MemAgent (Yu et al., 2025) iteratively updates a running mem-ory state based on the query, while MemAgent-woq performs query-agnostic compression, chal-lenging the agent to identify salient information without guidance. Finally, we compare against ad-vanced agentic frameworks: Mem1 (Zhou et al., 2025) interleaves chunk reading with dynamic re-trieval to maintain an evolving internal state, and 
+
+MemAlpha (Wang et al., 2025b) utilizes an RL-optimized policy to manage a composite memory system (core, episodic, and semantic), represent-ing the current state-of-the-art in trainable memory agents. Implementation details are provided in Ap-pendix E. 
+
+4.1.3 Implementation Details Training Dataset Preparation. To foster a ro-bust policy capable of handling diverse memory op-erations, we construct a composite training dataset from three sources: (1) Multi-Hop Retrieval Data 
+
+derived from HotpotQA (Yu et al., 2025) to sim-ulate retrieval-intensive environments; (2) Gen-eral Long-Context Data adapted from MemAlpha (Wang et al., 2025b); and (3) State-Tracking Data 
+
+from our synthetic Ledger-QA to target dynamic updates. Detailed statistics for these datasets are provided in Appendix F. 
+
+Training Setup. We implement our framework using a customized version of veRL (Sheng et al., 2024). The policy is initialized from 
+
+Qwen/Qwen3-4B-Instruct and optimized via Task-Stratified Group Relative Policy Optimization (GRPO) on a cluster of 32 NVIDIA H200 GPUs. Comprehensive hyperparameters and configuration details are deferred to Appendix G. 
+
+4.2 Main Results 
+
+Table 1 presents the comparative performance across 13 standard benchmarks. We observe that: 
+
+Superiority in Test-Time Learning (TTL). Our Unified Memory Agent demonstrates exceptional performance on TTL tasks (e.g., Banking77, Clinic, TREC-Fine), consistently surpassing MemAlpha by a large margin. Notably, Banking77 and Clinic were not seen during training, yet our agent achieves 87.00% and 91.00% accuracy respectively, demonstrating that our agent has generalization ca-pabilities. 
+
+Robustness in Retrieval & Reasoning. On Ac-curate Retrieval (AR) tasks, our method remains highly competitive, highlighting our agent’s capa-bility in handling multi-session dialogues. 
+
+4.3 Results on Ledger-QA 
+
+To evaluate the capability of dynamic state tracking over long horizons, we test all baselines on the Ledger-QA benchmark with varying session counts 
+
+N ∈ { 2, 5, . . . , 50 }. As shown in Figure 4, the results reveal a distinct separation in performance trends as the timeline extends. 
+
+Vulnerability of Baselines. In short-horizon set-tings ( N ≤ 5), standard approaches like RAG and MemAgent-woq achieve competitive accuracy (70–90%), indicating that static retrieval or simple summarization suffices for limited contexts. How-ever, performance collapses as N increases. RAG consistently plummets to below 20% at N = 50 ,failing to aggregate scattered updates. Similarly, 6Method Test-Time Learning (TTL) Accurate Retrieval (AR) Bank77 Clinic NLU Pub T-C T-F Convo Hotpot LoCo LME MSC Perl SQuAD Avg. Baselines 
+
+Concat 72.00 79.00 71.00 57.80 71.00 18.00 5.36 65.62 33.43 33.00 61.20 42.50 64.42 51.87 RAG ( k = 20 ) 81.00 70.00 65.00 53.30 10.00 10.00 51.34 77.34 57.35 61.20 55.80 85.25 25.56 54.09 MemAgent 26.00 14.00 24.00 51.20 61.00 37.00 60.27 51.56 64.15 59.40 53.00 71.50 78.06 50.09 MemAgent-woq 27.00 41.00 34.00 47.00 70.00 44.00 2.68 14.84 29.71 9.80 29.60 26.75 25.80 30.94 Mem1 0.00 4.00 0.00 45.40 7.00 0.00 1.56 6.25 22.41 8.00 9.60 7.75 18.43 10.03 MemAlpha 83.00 78.00 71.00 57.40 78.00 60.00 8.48 78.91 48.64 55.60 56.60 79.50 83.40 64.50 
+
+> Ablation
+
+UMA (w/o RL & Phase I) 34.00 28.00 24.00 40.20 23.00 15.00 79.91 62.50 54.88 41.00 38.20 65.50 82.23 45.26 UMA (w/o Phase I) 84.00 79.00 74.00 47.70 81.00 25.00 86.61 71.09 47.43 51.40 28.80 69.75 83.71 63.81 UMA (w/o RL) 76.00 72.00 61.00 38.80 70.00 20.00 85.49 66.41 47.99 50.80 66.20 62.50 80.71 61.38 UMA (Global Group) 72.00 79.00 82.00 74.00 89.00 55.00 83.71 76.56 61.98 44.00 75.40 83.00 80.92 73.58 UMA (2 Stage) 84.00 84.00 69.00 45.00 78.00 43.00 85.49 69.53 45.97 52.20 67.60 71.50 66.45 66.29 
+
+UMA 87.00 91.00 82.00 67.20 95.00 75.00 88.17 77.34 50.28 54.80 68.00 82.50 87.32 77.36 
+
+Table 1: Main results and ablation studies (Accuracy %). Pub : PubMed-RCT; Convo : ConvoMem; LoCo :LoCoMo; LME : LongMemEval; T-C/T-F : TREC-Coarse/Fine. Ablation Analysis : We investigate the impact of the memory maintenance phase and RL training. w/o Phase I : Removes the sequential memory maintenance phase, relying solely on iterative retrieval during QA. w/o RL : Uses the full architecture but without reinforcement learning optimization. w/o RL & Phase I : Represents the base model performing iterative retrieval without any memory mechanisms. Global Group : A variant where advantages for all steps (Memory and QA) are normalized within a single global group, ignoring task heterogeneity. 2 Stage : Trains a memory maintenance model and a QA model in two separate stages (specialized for Phase I and Phase II respectively), without end-to-end joint optimization. 
+
+Note: For comprehensive evaluation, we also report Exact Match (EM), F1, and ROUGE scores for all tasks in Appendix H. 0 10 20 30 40 50 
+
+> Number of Sessions
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Accuracy
+> Ledger-QA benchmarks (Agent Performance vs Session Count)
+> Concat
+> Mem1
+> MemAgent
+> MemAgent-woq
+> MemAlpha
+> RAG(k=20)
+> UMA
+
+Figure 4: Performance comparison on Ledger-QA across varying session counts. The x-axis represents the number of dialogue sessions (simulating increasing time horizons), and the y-axis denotes accuracy. De-tailed numerical results are provided in Table 8 in Appendix I. 
+
+despite moderate mid-range performance, MemA-gent eventually succumbs to context rot and error accumulation, dropping to ∼20%. This confirms that without a persistent structured store, neither retrieval nor implicit compression can sustain long-horizon consistency. 
+
+Robustness of Unified Memory Agent. In con-trast, our UMA (pink line) demonstrates excep-tional resilience. It consistently outperforms all baselines by a significant margin, particularly in the long-horizon regime ( N ≥ 20 ). Even at the most challenging setting of 50 sessions, UMA maintains an accuracy of over 50%, whereas the best base-line struggles to reach 25%. This validates that our explicit memory operations effectively decouple state maintenance from sequence length, enabling robust bookkeeping even in ultra-long contexts. 
+
+4.4 Ablation Studies 
+
+To disentangle the contributions of our unified ar-chitecture and the reinforcement learning paradigm, we conduct a comprehensive ablation analysis as shown in the bottom section of Table 1. 
+
+Impact of Memory Maintenance (Phase I). We first examine the necessity of the sequential mem-ory maintenance phase by comparing the full archi-tecture against the retrieval-only variants. • Without RL: Even using the base model, the agent equipped with memory capabilities ( w/o RL , 61.38%) significantly outperforms the state-less baseline ( w/o RL & Phase I , 45.26%). This suggests that simply providing the agent with a "write" capability allows for better information retention than reactive retrieval alone. • With RL: The gap persists after training. The full UMA achieves 76.46% average accuracy, 7surpassing the trained retrieval-only agent ( w/o Phase I ) at 63.81%. 
+
+Impact of RL Training. Next, we evaluate the effectiveness of our Task-Stratified GRPO by com-paring the base models with their RL-trained coun-terparts. • On Retrieval-Only Agent: RL training boosts the performance of the retrieval-only agent from 45.26% ( w/o RL & Phase I ) to 63.81% ( w/o Phase I ). This demonstrates that our reward mechanism effectively teaches the model to uti-lize retrieval tools more precisely, even without a persistent memory. • On Unified Agent: The gain is equally substan-tial for the full architecture, rising from 61.38% (w/o RL ) to 76.46% ( UMA ). The base model often struggles to manage the memory lifecycle coherently, whereas the RL-trained policy learns to perform timely updates and precise lookups, unlocking the full potential of the memory bank. 
+
+Impact of Stratified Advantage Grouping. We further validate our Task-Stratified GRPO by com-paring it with a Global Group variant that normal-izes advantages across all steps indiscriminately. As shown in Table 1, the Global Group variant underperforms our method (73.58% vs. 76.46%). This confirms that mixing heterogeneous rewards (binary QA scores vs. aggregated memory utility) dilutes the learning signal. Our stratified approach, by normalizing within task-specific groups, ensures fairer credit assignment and more effective policy optimization. 
+
+Two-Stage vs. Unified End-to-End Training. 
+
+We further investigate whether UMA can be learned via a decoupled two-stage pipeline that trains memory maintenance and QA separately (UMA (2 Stage) ). As shown in Table 1, this variant reaches 66.29% average accuracy, which is consis-tently below the jointly-optimized UMA (76.46%). We attribute the gap to a train–test mismatch: opti-mizing Phase I in isolation cannot anticipate what information will be maximally useful under the fi-nal QA policy, while optimizing Phase II cannot retroactively shape upstream memory decisions. In contrast, unified end-to-end RL enables direct credit assignment from QA outcomes back to mem-ory operations, encouraging memory entries that are compact, precise, and future-query-aware. 
+
+5 Related Work 
+
+Internal Memory and Context Compression. 
+
+Several approaches extend context by modifying model internals, such as embedding information in parameters (Wang et al., 2025a; Zhang et al., 2025), compressing KV caches (Qian et al., 2025; Li et al., 2024), or utilizing soft prompts (Burt-sev et al., 2020; Ge et al., 2023). While offering high inference efficiency, these methods require white-box access and suffer from inherent capac-ity bottlenecks compared to external architectures (Wang and Chen, 2025), limiting their utility for ultra-long horizons. 
+
+Prompt-based External Memory. To bypass in-ternal limits, frameworks like MemGPT (Packer et al., 2023) and SCM (Wang et al., 2023) manage external storage via OS-like hierarchies or graph schemas. While compatible with black-box models, they rely heavily on zero-shot instruction follow-ing. This creates a dependency on large proprietary models, as smaller models struggle to reliably exe-cute complex memory updates via prompting alone (Wang et al., 2025b), often leading to suboptimal retrieval in dynamic settings. 
+
+Trainable Memory Agents. Recent work shifts towards training models for autonomous memory management. Approaches include recurrent com-pression via RL (Yu et al., 2025), interleaving re-trieval with reasoning (Zhou et al., 2025), and uti-lizing composite memory structures (Yan et al., 2025; Wang et al., 2025b). Unlike our unified ap-proach, these methods typically decouple memory maintenance from reasoning or rely on transient summaries. Our work advances this domain by unifying memory operations and reasoning into a single policy, enabling more effective cross-session state tracking. 
+
+6 Conclusion 
+
+In this paper, we proposed the Unified Memory Agent, an end-to-end framework that jointly opti-mizes memory acquisition and utilization via rein-forcement learning. By employing a Task-Stratified GRPO strategy, our method effectively aligns the heterogeneous objectives of long-horizon memory maintenance and downstream question answering. To address the lack of benchmarks for dynamic state tracking, we introduced Ledger-QA , a dataset requiring persistent updates to an evolving ledger. Experimental results demonstrate that our agent sig-nificantly outperforms baselines on state-tracking 8tasks while remaining competitive on standard re-trieval benchmarks. Ablation studies confirm the necessity of both the learned policy and the explicit memory update mechanism. Looking forward, our work suggests that robust long-context intelligence demands active, learned state management rather than passive retrieval alone. 
+
+Limitations 
+
+While our Unified Memory Agent demonstrates promising capabilities, several limitations remain. First, our current implementation enforces a hard context window limit (e.g., 16k tokens) via trun-cation. Although the memory bank mitigates in-formation loss, an infinite-horizon setting where the agent must manage memory over millions of tokens without any raw context fallback remains an open challenge. Second, the Ledger-QA bench-mark, while rigorous, is synthetically generated. Real-world bookkeeping or state-tracking scenar-ios may involve more unstructured noise and ambi-guity than our current simulation covers. Finally, our training relies on a specific set of tools (CRUD + Retrieval); extending this framework to support multi-modal memory (e.g., images, audio) or more complex tool-use patterns requires further investi-gation. 
+
+References 
+
+Anthropic. 2025. Claude opus 4.5. https://www. anthropic.com/news/claude-opus-4-5 . Ac-cessed: 2026-01-04. Mikhail S Burtsev, Yuri Kuratov, Anton Peganov, and Grigory V Sapunov. 2020. Memory transformer. 
+
+arXiv preprint arXiv:2006.11527 .Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, and Deshraj Yadav. 2025. Mem0: Building production-ready ai agents with scalable long-term memory. arXiv preprint arXiv:2504.19413 .Yiming Du, Hongru Wang, Zhengyi Zhao, Bin Liang, Baojun Wang, Wanjun Zhong, Zezhong Wang, and Kam-Fai Wong. 2024. Perltqa: A personal long-term memory dataset for memory classification, retrieval, and synthesis in question answering. arXiv preprint arXiv:2402.16288 .Tao Ge, Jing Hu, Lei Wang, Xun Wang, Si-Qing Chen, and Furu Wei. 2023. In-context autoencoder for con-text compression in a large language model. arXiv preprint arXiv:2307.06945 .Google. 2025. Gemini 3. Technical report, Google DeepMind. Accessed: 2026-01-04. Kelly Hong, Anton Troynikov, and Jeff Huber. 2025. Context rot: How increasing input tokens impacts llm performance. Technical report, Chroma. Yuanzhe Hu, Yu Wang, and Julian McAuley. 2025. Eval-uating memory in llm agents via incremental multi-turn interactions. arXiv preprint arXiv:2507.05257 .Yuhong Li, Yingbing Huang, Bowen Yang, Bharat Venkitesh, Acyr Locatelli, Hanchen Ye, Tianle Cai, Patrick Lewis, and Deming Chen. 2024. Snapkv: Llm knows what you are looking for before gener-ation. Advances in Neural Information Processing Systems , 37:22947–22970. Aixin Liu, Bei Feng, Bing Xue, Bingxuan Wang, Bochao Wu, Chengda Lu, Chenggang Zhao, Chengqi Deng, Chenyu Zhang, Chong Ruan, and 1 others. 2024. Deepseek-v3 technical report. arXiv preprint arXiv:2412.19437 .Adyasha Maharana, Dong-Ho Lee, Sergey Tulyakov, Mohit Bansal, Francesco Barbieri, and Yuwei Fang. 2024. Evaluating very long-term conversational memory of llm agents. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 13851– 13870. OpenAI. 2025. Gpt-5.2. https://openai.com/ index/introducing-gpt-5-2/ . Accessed: 2026-01-04. Charles Packer, Vivian Fang, Shishir G Patil, Kevin Lin, Sarah Wooders, and Joseph E Gonzalez. 2023. Memgpt: Towards llms as operating systems. CoRR .Egor Pakhomov, Erik Nijkamp, and Caiming Xiong. 2025. Convomem benchmark: Why your first 150 conversations don’t need rag. arXiv preprint arXiv:2511.10523 .Hongjin Qian, Zheng Liu, Peitian Zhang, Kelong Mao, Defu Lian, Zhicheng Dou, and Tiejun Huang. 2025. Memorag: Boosting long context processing with global memory-enhanced retrieval augmentation. In 
+
+Proceedings of the ACM on Web Conference 2025 ,pages 2366–2377. Qwen. 2025. Qwen3 technical report: Unified think-ing and non-thinking modes for massive scaling. Technical report, Alibaba Group. ArXiv:2511.21631 [cs.CL]. Pranav Rajpurkar, Jian Zhang, Konstantin Lopyrev, and Percy Liang. 2016. Squad: 100,000+ questions for machine comprehension of text. In Proceedings of the 2016 Conference on Empirical Methods in Natu-ral Language Processing , pages 2383–2392. Preston Rasmussen, Pavlo Paliychuk, Travis Beauvais, Jack Ryan, and Daniel Chalef. 2025. Zep: a tempo-ral knowledge graph architecture for agent memory. 
+
+arXiv preprint arXiv:2501.13956 .
+
+9Guangming Sheng, Chi Zhang, Zilingfeng Ye, Xibin Wu, Wang Zhang, Ru Zhang, Yanghua Peng, Haibin Lin, and Chuan Wu. 2024. Hybridflow: A flexible and efficient rlhf framework. arXiv preprint arXiv: 2409.19256 .Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. Attention is all you need. Advances in neural information processing systems , 30. Bing Wang, Xinnian Liang, Jian Yang, Hui Huang, Shuangzhi Wu, Peihao Wu, Lu Lu, Zejun Ma, and Zhoujun Li. 2023. Scm: Enhancing large lan-guage model with self-controlled memory framework. 
+
+arXiv e-prints , pages arXiv–2304. Yu Wang and Xi Chen. 2025. Mirix: Multi-agent mem-ory system for llm-based agents. arXiv preprint arXiv:2507.07957 .Yu Wang, Xinshuang Liu, Xiusi Chen, Sean O’Brien, Junda Wu, and Julian McAuley. 2025a. Self-updatable large language models by integrating con-text into model parameters. In The Thirteenth Inter-national Conference on Learning Representations .Yu Wang, Ryuichi Takanobu, Zhiqi Liang, Yuzhen Mao, Yuanzhe Hu, Julian McAuley, and Xiaojian Wu. 2025b. Mem-α: Learning memory construction via reinforcement learning. arXiv e-prints , pages arXiv–2509. Di Wu, Hongwei Wang, Wenhao Yu, Yuwei Zhang, Kai-Wei Chang, and Dong Yu. 2025. Longmemeval: Benchmarking chat assistants on long-term interac-tive memory. In The Thirteenth International Con-ference on Learning Representations .Jing Xu, Arthur Szlam, and Jason Weston. 2022. Be-yond goldfish memory: Long-term open-domain con-versation. In Proceedings of the 60th annual meeting of the association for computational linguistics (vol-ume 1: long papers) , pages 5180–5197. Peng Xu, Wei Ping, Xianchao Wu, and 1 others. 2024. Retrieval meets long context large language models. 
+
+arXiv preprint arXiv:2310.03025 .Sikuan Yan, Xiufeng Yang, Zuchao Huang, Ercong Nie, Zifeng Ding, Zonggen Li, Xiaowen Ma, Kristian Ker-sting, Jeff Z Pan, Hinrich Schütze, and 1 others. 2025. Memory-r1: Enhancing large language model agents to manage and utilize memories via reinforcement learning. arXiv preprint arXiv:2508.19828 .Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William Cohen, Ruslan Salakhutdinov, and Christo-pher D Manning. 2018. Hotpotqa: A dataset for diverse, explainable multi-hop question answering. In Proceedings of the 2018 conference on empiri-cal methods in natural language processing , pages 2369–2380. Hongli Yu, Tinghong Chen, Jiangtao Feng, Jiangjie Chen, Weinan Dai, Qiying Yu, Ya-Qin Zhang, Wei-Ying Ma, Jingjing Liu, Mingxuan Wang, and 1 others. 2025. Memagent: Reshaping long-context llm with multi-conv rl-based memory agent. arXiv e-prints ,pages arXiv–2507. Guibin Zhang, Muxin Fu, and Shuicheng Yan. 2025. Memgen: Weaving generative latent memory for self-evolving agents. arXiv preprint arXiv:2509.24704 .Zijian Zhou, Ao Qu, Zhaoxuan Wu, Sunghwan Kim, Alok Prakash, Daniela Rus, Jinhua Zhao, Bryan Kian Hsiang Low, and Paul Pu Liang. 2025. Mem1: Learning to synergize memory and reason-ing for efficient long-horizon agents. arXiv preprint arXiv:2506.15841 .
+
+A Tool Definitions 
+
+Our agent interacts with the environment and its in-ternal state via a structured API. Below we provide the detailed specifications for each tool available in the Memory Toolset (Tmem ) and the Retrieval Toolset (Tqa ). 
+
+A.1 Memory Toolset ( Tmem )
+
+Used during the Sequential Memory Maintenance 
+
+phase to manage the persistent Memory Bank ( B). • Add(key: str, value: str) → str : Cre-ates a new entry in the memory bank. Input: Aunique title ( key ) and the content ( value ). Out-put: Returns "Success" if the key is new; returns an error message if the key already exists. • Update(key: str, value: str) → str :Modifies an existing entry. Input: The target key 
+
+and the new value . Output: Returns "Success" if the update is applied; returns an error if the key is not found. • Delete(key: str) → str : Removes an entry. 
+
+Input: The target key . Output: Returns "Suc-cess" upon deletion; returns an error if the key does not exist. • Retrieve(key: str) → str : Reads the full content of a specific memory. Input: The target 
+
+key . Output: Returns the stored value string; returns an error if the key does not exist. • List() → List[str] : Scans the memory bank. 
+
+Input: None. Output: Returns a list of all cur-rent keys (titles), enabling the agent to survey stored topics before performing operations. 10 A.2 Retrieval Toolset ( Tqa )
+
+Used during the Hybrid Retrieval-Augmented QA 
+
+phase to fetch information from both the structured memory and the raw context. Note that Retrieve 
+
+and List are also available in this phase to access the Memory Bank. • Embedding(query: str, top_k: int) →
+
+List[str] : Performs dense retrieval over the raw context chunks. Input: A search query and the number of chunks to retrieve (top_k ). Mechanism: Encodes the query using 
+
+sentence-transformers/all-MiniLM-L6-v2 
+
+and retrieves the top-k chunks based on co-sine similarity. Output: A list of the most semantically relevant text chunks. • BM25(query: str, top_k: int) →
+
+List[str] : Performs sparse retrieval over the raw context chunks. Input: A search query and the number of chunks to retrieve ( top_k ). Mech-anism: Uses the BM25 algorithm to match key-words. Output: A list of the top-k chunks with the highest keyword overlap. 
+
+B Details of Ledger-QA Construction 
+
+The construction of the Ledger-QA benchmark em-ploys a three-stage pipeline designed to simulate realistic, long-horizon bookkeeping scenarios. Un-like traditional methods that generate structured data first and then condition the dialogue on it, we employ a joint synthesis strategy . We provide the LLM with high-level user intents (e.g., "wants to buy coffee"), and the LLM simultaneously gener-ates both the natural dialogue and the correspond-ing structured transaction records. This ensures that details such as amounts and descriptions are contextually appropriate and naturally woven into the conversation. 
+
+B.1 Consumption Scene Taxonomy 
+
+To simulate a diverse personal finance environment, we define a hierarchical taxonomy of consumption scenes. The dataset covers 8 major categories, each with multiple sub-scenes: • Dining: Fast Food, Restaurant, Coffee, Bub-ble Tea, BBQ, Hot Pot, Snacks, Takeout. • Transportation: Subway, Bus, Taxi, Gas, Parking, Train, Flight. • Shopping: Clothing, Electronics, Daily Ne-cessities, Cosmetics, Books, Groceries, Furni-ture. • Entertainment: Movie, KTV, Gaming, Gym, Travel, Concert, Escape Room. • Utilities: Water & Electricity, Property Fee, Phone Bill, Internet, Gas Bill, Rent. • Medical: Medicine, Doctor Visit, Health Checkup, Dental, Glasses. • Education: Training Course, Books & Mate-rials, Online Course, Exam Registration, Tu-ition. • Other: Transfer, Red Envelope, Donation, Pet, Beauty & Salon. 
+
+B.2 Data Generation Pipeline Stage 1: Timeline & Scenario Sampling. For each sample, we first generate a chronological time-line spanning a full year. We randomly sample N
+
+dates (sessions) from this range. For each session, we stochastically select a subset of consumption scenes (e.g., Dining-Coffee , Transportation-Taxi )to form the user’s "intent" for that day. 
+
+Stage 2: Joint Dialogue & Transaction Synthe-sis. We feed the selected date and scene intents into an advanced LLM (e.g., Gemini-3-Pro). The model is instructed to act as a user-assistant pair and generate a JSON object containing two aligned fields: 1. Dialogue: The natural conversation turns. 2. Transactions: The structured ground truth (Amount, Description, etc.) corresponding to the dialogue. Crucially, we do not pre-determine the amounts. The LLM decides reasonable amounts based on the context (e.g., $5 for coffee vs. $500 for a flight), ensuring semantic consistency. 
+
+Stage 3: Question Generation. We extract the ground-truth transaction ledger generated in Stage 2 and programmatically generate questions across 8 distinct templates. The question types include: 1. Time-Range Scene Amount: "How much was spent on Dining from Jan to Mar?" 2. Time-Range Multi-Scene: "Total spending on Dining and Travel in Q1?" 3. Global Total: "What was the total spending across all records?" 4. Max Scene: "Which category had the highest spending?" 11 Prompt for Joint Synthesis (Simplified)  
+
+> Please generate a natural conversation between a user and an AI assistant about expense tracking.
+> Context:
+> - Date: {date} - The user wants to record: {selected_scenes} -[Instruction: First Session vs. Continuation]
+> Requirements:
+> - The dialogue should be natural, containing {min_turns}-{max_turns} turns. - Each consumption scene needs a specific amount ( you decide a reasonable amount ). - Return JSON with two fields: 1. "dialogue": List of turns. 2. "transactions": List of records (scene, amount, descrip-tion, date).
+
+Table 2: Prompt template used for the joint generation of dialogue and structured data. 
+
+5. Max Frequency Date: "On which date were there the most transactions?" 6. Max Single Amount: "What was the largest single transaction?" 7. Point Query: "How much was spent on Cof-fee on 2024-05-01?" 8. Single Date Scene Amount: "How much was spent on Dining on 2024-05-01?" 
+
+B.3 Dataset Statistics 
+
+To evaluate the agent’s robustness across varying temporal horizons, we constructed a comprehen-sive suite of datasets ranging from short-term inter-actions (2 sessions) to long-horizon histories (50 sessions). 
+
+Training Set. We utilize the 10-session configu-ration for training, consisting of 200 samples with over 6,000 questions. This provides a balanced difficulty level for the agent to learn state-tracking policies. 
+
+Test Set. The test set is stratified by session count (N ∈ { 2, 5, 10 , 20 , 30 , 40 , 50 }). Detailed statistics for each configuration are presented in Table 3. 
+
+B.4 Generation Algorithm 
+
+The core logic of our joint synthesis pipeline is formalized in Algorithm 1. 
+
+C Evaluation Prompts 
+
+To ensure consistent and fair evaluation, we employ an LLM-as-a-Judge approach using 
+
+Qwen/Qwen3-30B-A3B-Instruct-2507 . The spe-cific prompts used for different benchmarks are detailed below. 
+
+General Prompt. For all benchmarks except LongMemEval, we utilize a unified evaluation tem-plate designed to assess semantic correctness:    
+
+> "I will give you a question, a correct answer, and a response from a model. Please answer yes if the response contains the correct answer. Otherwise, answer no. If the response is equivalent to the correct answer or contains all the intermediate steps to get the correct answer, you should also answer yes. If the response only contains a subset of the information required by the answer, answer no.
+> Question: {question}
+> Correct Answer: {answer}
+> Model Response: {prediction} Is the model response correct? Answer yes or no only."
+
+LongMemEval Prompts. Following the official implementation (Wu et al., 2025), we apply task-specific prompts to handle the nuances of different reasoning types (e.g., temporal reasoning, knowl-edge updates). • Default / Fact Retrieval: Same as the General Prompt above. • Temporal Reasoning: Adds tolerance for off-by-one errors: 
+
+> "...In addition, do not penalize off-by-one er-rors for the number of days. If the question asks for the number of days/weeks/months, etc., and the model makes off-by-one errors (e.g., pre-dicting 19 days when the answer is 18), the model’s response is still correct..."
+
+• Knowledge Update: Allows inclusion of previ-ous information if the update is correct: 
+
+> "...If the response contains some previous infor-mation along with an updated answer, the re-sponse should be considered as correct as long as the updated answer is the required answer..."
+
+• Single-Session Preference: Evaluates personal-ization based on a rubric:  
+
+> "...Please answer yes if the response satisfies the desired response... The response is correct as long as it recalls and utilizes the user’s per-sonal information correctly.
+> Rubric: {rubric}..."
+
+• Abstention: Checks for correct identification of unanswerable questions: 12 Algorithm 1 Ledger-QA Data Generation Pipeline 
+
+Require: Date range [Dstart , D end ], Number of sessions N , Diversify flag diversif y 
+
+Ensure: Context chunks C, Question set Q, Ground-truth Ledger L 
+
+> 1:
+
+D ← SampleSortedDates (Dstart , D end , N ) 
+
+> 2:
+
+L ← ∅ ▷ Initialize global transaction ledger  
+
+> 3:
+
+C ← ∅ ▷ Initialize dialogue history  
+
+> 4:
+
+for i ← 1 to N do  
+
+> 5:
+
+di ← D [i] 
+
+> 6:
+
+Sintent ← SampleScenes (Taxonomy ) ▷ Randomly select user intents  
+
+> 7:
+
+P ← FormatPrompt (di, Sintent , is_first = ( i == 1)) ▷ Construct prompt for joint synthesis  
+
+> 8:
+
+Response ← LLM gen (P ) ▷ Generate dialogue and transaction simultaneously  
+
+> 9:
+
+Dialogue i, Trans i ← ParseJSON (Response ) 
+
+> 10:
+
+C.append (FormatChunk (di, Dialogue i))  
+
+> 11:
+
+L.extend (Trans i) 
+
+> 12:
+
+end for  
+
+> 13:
+
+Qraw ← ApplyTemplates (L, Types = {1.. 8}) ▷ Generate questions based on the full ledger  
+
+> 14:
+
+if diversify then ▷ Optional: Diversify phrasing  
+
+> 15:
+
+Q ← LLM paraphrase (Qraw ) 
+
+> 16:
+
+else  
+
+> 17:
+
+Q ← Q raw  
+
+> 18:
+
+end if  
+
+> 19:
+
+return C, Q, L 
+
+> "...Please answer yes if the model correctly identifies the question as unanswerable. The model could say that the information is incom-plete...
+> Explanation: {explanation} Does the model correctly identify the question as unanswerable? Answer yes or no only."
+
+D Evaluation Dataset Details 
+
+We employ a diverse set of benchmarks to evalu-ate the agent’s capabilities. Detailed statistics for all evaluation datasets are summarized in Table 3. Below we detail the preprocessing and construc-tion logic for each dataset, corresponding to the implementation in our codebase. 
+
+D.1 Dynamic State Tracking Ledger-QA (Synthetic). As detailed in Ap-pendix B, we generate synthetic bookkeeping data. In our experiments, we utilize the configuration of 10 sessions per sample to balance complexity and evaluation speed. 
+
+D.2 Test-Time Learning (TTL) 
+
+For TTL tasks, we source data from MemoryA-gentBench (Hu et al., 2025). To ensure the agent understands the classification nature of these tasks, we prepend a specific instruction hint to each query if not already present: 
+
+"Sentence: {original_query} What are the labels for the above sen-tence?" 
+
+D.3 Accurate Retrieval (AR) HotpotQA. Following MemAgent (Yu et al., 2025), we ensure strict data isolation by using non-overlapping training and validation splits. We inject ground-truth documents into 200 shuffled distractors, requiring the agent to retrieve evidence from the chunked stream to solve multi-hop queries without any risk of data leakage. 
+
+LoCoMo. We adapt prompts for specific ques-tion categories to ensure valid evaluation: • Temporal (Cat 2): We append "Use DATE of CONVERSATION to answer with an approxi-mate date" to guide relative time reasoning. • Adversarial (Cat 5): We convert these into a multiple-choice format "(A) {distractor} (B) Not mentioned" (with randomized order). The agent must select "Not mentioned" to demonstrate correct rejection of unanswerable queries. 
+
+LongMemEval. We utilize the longmemeval_s 
+
+subset. Questions are timestamped (e.g., 
+
+[2024-01-01] Question... ) to provide tempo-ral context. 13 Category Dataset Samples Avg. Qs Avg. Len (Tok) Avg. Chunks                                                                                  
+
+> State Tracking Ledger-QA (2 sessions) 520.6 1,693 2.0 Ledger-QA (5 sessions) 430.8 4,204 5.0 Ledger-QA (10 sessions) 334.3 8,192 10.0 Ledger-QA (20 sessions) 334.0 16,487 20.0 Ledger-QA (30 sessions) 334.3 24,772 30.0 Ledger-QA (40 sessions) 335.0 32,792 40.0 Ledger-QA (50 sessions) 335.0 40,610 50.0 Test Time Learning Banking77 1100.0 127,568 111.0 Clinic150 1100.0 130,702 38.0 NLU 1100.0 134,060 115.0 PubMed-RCT 10 100.0 16,724 10.0 TREC-Coarse 1100.0 123,606 111.0 TREC-Fine 1100.0 125,531 108.0 Accurate Retrieval ConvoMem 764.0 522,602 300.0 HotpotQA 128 1.0 27,945 200.0 LoCoMo 10 198.6 22,161 27.2 LongMemEval 500 1.0 107,863 47.8 MSC (Batch=5) 100 5.0 9,853 25.0 PearlTQA 4100.0 13,038 23.0 SQuAD 30 96.8 10,561 10.0
+
+Table 3: Detailed statistics of all evaluation datasets. Avg. Len (Tok) denotes the average total context length in tokens. Avg. Chunks denotes the average number of context chunks per sample processed by the agent. 
+
+MSC (Multi-Session Chat). We use a modified version of MSC introduced by MemGPT (Packer et al., 2023) provided at https://huggingface. co/datasets/MemGPT/MSC-Self-Instruct . To increase context length, we batch 5 base samples into a single evaluation instance ( batch_size=5 ). Each instance thus contains 25 sessions (5 samples 
+
+× 5 sessions), and the agent is queried about spe-cific details from any of the batched conversations. 
+
+ConvoMem. We filter the pre_mixed_test-cases provided at https://huggingface.co/ datasets/Salesforce/ConvoMem/tree/main to select only those with a total conversation length exceeding 2 million characters to ensure they qual-ify as long-context tasks. Each conversation turn is formatted as "{Speaker}: {Text}". We choose the 
+
+user_evidence category for evaluation. 
+
+E Baseline Implementation Details 
+
+We implement the baseline methods Mem1 and 
+
+MemAlpha using the codebase provided at https: //github.com/wangyu-ustc/Mem-alpha . For all experiments, we enforce a strict context window limit of 16k tokens. When the total input length (in-cluding memory/context, query, and instructions) exceeds this limit, we apply left-truncation to the memory or context sequence, retaining only the most recent tokens to fit within the 16k window. 
+
+Backbone Models. To isolate the contribution of the memory mechanism, we standardize the back-bone model where possible: • Standard Backbone: Unless otherwise speci-fied (e.g., for Concat, RAG, MemAgent), we uti-lize Qwen/Qwen3-4B-Instruct-2507 for both the context processing and final QA phases. • Specialized Memory Models: For baselines that require specific pre-trained weights for memory operations, we follow their original configura-tions: 
+
+– Mem1: Uses Mem-Lab/Qwen2.5-7B-RL-RAG-Q2-EM-Release for the memory for-mation phase. 
+
+– MemAlpha: Uses YuWangX/Memalpha-4B 
+
+for the memory formation phase. Crucially, for the final Question Answering phase, both Mem1 and MemAlpha revert to the standard Qwen/Qwen3-4B-Instruct-2507 
+
+backbone to ensure a fair comparison of reason-ing capabilities. 
+
+F Training Data Details 
+
+Table 4 summarizes the detailed statistics of the datasets utilized in our training phase. 14 Data Sources. Our training data is curated from three main sources: (1) HotpotQA (Modified): 
+
+We construct a retrieval-intensive version of Hot-potQA following the protocol in MemAgent (Yu et al., 2025), augmenting each sample with 200 documents. (2) Ledger-QA (Synthetic): We generate a specialized dataset for dynamic state tracking as described in Section 3. (3) MemAl-pha Corpus: For all other datasets (SQuAD, PerLTQA, NLU, TREC, PubMed, BookSum), we directly incorporate the high-quality training cor-pus provided by MemAlpha (Wang et al., 2025b) to ensure broad coverage of reasoning tasks (pro-vided at https://huggingface.co/datasets/ YuWangX/Memalpha-full ). 
+
+Data Isolation. We strictly enforce data isolation to prevent leakage. For HotpotQA , we follow the MemAgent protocol, constructing our training and evaluation sets from the original HotpotQA training and validation splits, respectively. For Ledger-QA ,the training and test samples are synthesized inde-pendently with distinct seed parameters. For the 
+
+MemAlpha Corpus , we utilize the official train-ing split provided by the authors, ensuring zero overlap with the evaluation benchmarks used in our experiments. Consistent with our dual-track training strategy (see Appendix G), the Generalist Agent is trained on the combination of HotpotQA and MemAlpha corpus to foster broad generalization, while the Specialist Agent is fine-tuned specifically on the Ledger-QA dataset. To maintain training efficiency, for MemAlpha corpus containing a large number of queries per instance (e.g., SQuAD, NLU), we randomly sample up to 10 queries per training sam-ple. 
+
+G Training Configuration 
+
+We implement our training framework based on a customized version of veRL (Sheng et al., 2024), optimized for multi-conversation and multi-turn agent rollouts. The policy model is initialized from 
+
+Qwen/Qwen3-4B-Instruct and optimized using AdamW with a learning rate of 1 × 10 −6. We employ the Task-Stratified Group Relative Policy Optimization (GRPO) algorithm with a group size of G = 16 samples per context and a KL diver-gence penalty coefficient of β = 0 .001 .To balance generalization across diverse tasks with the specific demands of intensive state track-ing, we adopt a dual-track training strategy: • Generalist Agent (for TTL & AR): To ensure robust performance across broad retrieval and reasoning tasks, this model is trained on the combined Multi-Hop and General Long-Context datasets for 2 epochs. • Specialist Agent (for Ledger-QA): Given the unique requirement for continuous numerical up-dates and long-horizon consistency in Ledger-QA, we train a separate model specifically on the Ledger-QA training set. This model is trained for 6 epochs to fully adapt to the state-tracking dynamics, allowing us to probe the architectural upper bound for this specialized domain. All experiments are conducted on a cluster of 32 NVIDIA H200 GPUs (4 nodes × 8 GPUs). To manage memory efficiency during long-horizon rollouts, we utilize vLLM for inference with a ten-sor parallelism size of 1 and set the GPU memory utilization to 0.5. The maximum sequence length for both prompts and responses is set to 8,192 to-kens. The total training time spans approximately 2 days for the Generalist Agent and 0.5 days for the Specialist Agent. 
+
+H Detailed Evaluation Metrics 
+
+In addition to the accuracy metric reported in the main text, we provide the Exact Match (EM), F1, and ROUGE scores for all evaluated benchmarks to offer a more granular view of model performance. Table 5 presents the Exact Match scores, which measure the percentage of predictions that match the ground truth verbatim. Table 6 presents the F1 scores, which account for partial overlaps between the prediction and the reference answer. Table 7 presents the ROUGE-L scores, evaluating the lexi-cal overlap and fluency of the generated responses. 
+
+I Numerical Results on Ledger-QA 
+
+Table 8 provides the exact accuracy scores for the Ledger-QA benchmark across different session counts, corresponding to the trends illustrated in Figure 4. 15 Dataset Samples Avg. Qs Avg. Len (Tok) Avg. Chunks 
+
+HotpotQA 8192 1.0 25,667 61 SQuAD 264 10.0 10,780 10.0 PerLTQA 27 10.0 12,046 23.3 NLU 180 10.0 6,100 10.0 TREC-Coarse 180 10.0 3,900 10.0 PubMed-RCT 90 10.0 16,760 10.0 BookSum 1,387 1.0 15,328 8.0 Ledger-QA 200 34.0 8,254 10.0 
+
+Table 4: Detailed statistics of the training datasets. Avg. Len (Tok) denotes the average total context length in tokens. Avg. Chunks denotes the average number of context chunks per sample processed by the agent. 
+
+Method Test-Time Learning (TTL) Accurate Retrieval (AR) Bank77 Clinic NLU Pub T-C T-F Convo Hotpot LoCo LME MSC Perl SQuAD Avg. 
+
+Concat 66.00 79.00 71.00 57.80 70.00 18.00 0.45 30.47 13.95 18.20 27.00 5.50 40.68 38.31 RAG ( k = 20 ) 4.00 12.00 2.00 17.50 0.00 0.00 3.79 0.78 0.20 0.40 1.40 1.00 0.34 3.34 MemAgent 24.00 13.00 23.00 11.70 61.00 37.00 2.90 14.06 2.92 8.80 5.20 1.00 3.31 15.99 MemAgent-woq 27.00 41.00 34.00 0.00 69.00 42.00 0.00 0.00 0.05 0.00 0.40 0.00 0.17 16.43 Mem1 0.00 4.00 0.00 0.00 7.00 0.00 0.00 0.00 0.05 0.00 0.00 0.00 0.00 0.85 MemAlpha 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 UMA (w/o RL & Phase I) 26.00 27.00 22.00 39.00 12.00 7.00 18.08 34.38 16.52 20.20 15.60 10.50 46.68 22.69 UMA (w/o Phase I) 84.00 79.00 75.00 47.30 81.00 25.00 19.42 43.75 15.51 25.00 12.60 11.25 48.40 43.63 UMA (w/o RL) 76.00 72.00 61.00 37.30 69.00 20.00 19.42 41.41 16.72 25.00 23.80 9.00 44.47 39.62 UMA (Global Group) 69.00 77.00 82.00 69.10 87.00 47.00 19.20 40.62 19.54 14.80 28.40 6.50 30.73 45.45 UMA (2 Stage) 84.00 84.00 69.00 44.30 77.00 43.00 19.20 43.75 13.75 24.40 28.00 11.00 37.62 44.54 
+
+UMA (Ours) 87.00 91.00 82.00 67.20 95.00 75.00 20.98 48.44 19.20 30.60 29.20 12.25 56.32 54.94 
+
+Table 5: Exact Match (EM) scores across all benchmarks. Values are percentages (%). 
+
+Method Test-Time Learning (TTL) Accurate Retrieval (AR) Bank77 Clinic NLU Pub T-C T-F Convo Hotpot LoCo LME MSC Perl SQuAD Avg. 
+
+Concat 70.00 79.00 71.00 57.80 70.00 18.00 8.65 49.27 25.89 27.84 48.21 18.00 53.57 45.94 RAG ( k = 20 ) 25.12 30.82 20.90 18.92 3.63 2.04 38.66 15.57 16.90 17.62 23.33 13.92 5.29 17.90 MemAgent 24.40 13.00 23.00 26.01 61.00 37.00 33.55 26.34 21.96 27.11 25.11 8.42 14.88 26.29 MemAgent-woq 27.00 41.00 34.00 0.82 69.67 42.04 12.13 2.71 2.96 5.62 8.77 2.22 3.38 19.41 Mem1 0.00 4.00 0.00 0.44 7.00 0.00 14.22 1.66 3.37 5.60 5.69 1.44 1.48 3.45 MemAlpha 0.00 0.00 2.61 0.53 0.02 0.00 16.18 8.51 5.50 9.33 9.58 4.37 5.18 4.75 UMA (w/o RL & Phase I) 26.00 27.50 22.00 40.20 12.00 7.00 40.94 52.73 36.70 28.82 28.36 26.01 62.08 31.56 UMA (w/o Phase I) 84.67 79.25 75.00 47.35 81.00 25.00 44.21 59.53 34.57 36.66 21.08 28.22 63.18 52.28 UMA (w/o RL) 78.12 72.00 61.67 39.64 69.00 20.00 43.38 56.81 32.96 36.32 46.73 24.01 60.38 49.31 UMA (Global Group) 69.01 77.00 82.01 69.11 87.01 47.03 44.01 56.67 40.18 27.25 52.04 30.12 50.82 56.33 UMA (2 Stage) 85.07 84.67 70.17 45.47 77.00 43.00 44.36 58.73 33.03 37.53 49.98 28.86 49.78 54.43 
+
+UMA (Ours) 87.00 91.00 82.00 67.20 95.00 75.00 46.33 65.42 40.96 41.73 52.59 32.88 71.37 65.27 
+
+Table 6: F1 scores across all benchmarks. Values are percentages (%). 
+
+16 Method Test-Time Learning (TTL) Accurate Retrieval (AR) Bank77 Clinic NLU Pub T-C T-F Convo Hotpot LoCo LME MSC Perl SQuAD Avg. 
+
+Concat 70.00 79.00 71.00 57.80 70.00 18.00 8.63 50.44 25.97 27.76 48.79 18.36 54.00 46.13 RAG ( k = 20 ) 25.13 30.82 20.90 18.92 3.63 2.04 36.55 15.47 16.55 16.30 23.17 13.92 5.40 17.60 MemAgent 24.40 13.00 23.00 26.04 61.00 37.00 32.31 25.71 21.51 26.59 25.17 8.35 15.15 26.10 MemAgent-woq 27.00 41.00 34.00 0.83 69.67 42.04 10.80 2.74 2.88 4.81 8.78 2.33 3.44 19.25 Mem1 0.00 4.00 0.00 0.45 7.00 0.00 11.63 1.77 3.28 4.70 5.36 1.54 1.54 3.17 MemAlpha 0.00 0.00 2.61 0.54 0.02 0.00 14.33 8.49 5.26 8.43 9.71 4.29 5.22 4.53 UMA (w/o RL & Phase I) 26.00 27.50 22.00 40.20 12.00 7.00 40.86 52.78 36.34 28.76 29.18 26.24 63.03 31.68 UMA (w/o Phase I) 84.67 79.25 75.00 47.35 81.00 25.00 44.16 59.34 34.15 36.51 21.29 28.57 64.20 52.34 UMA (w/o RL) 78.12 72.00 61.67 39.64 69.00 20.00 43.28 56.79 32.87 36.17 48.05 24.14 61.38 49.47 UMA (Global Group) 69.01 77.00 82.01 69.11 87.01 47.03 43.91 57.61 39.85 27.33 52.41 29.97 51.05 56.37 UMA (2 Stage) 85.07 84.67 70.17 45.47 77.00 43.00 44.40 59.47 32.72 37.40 50.89 29.36 50.59 54.63 
+
+UMA (Ours) 87.00 91.00 82.00 67.20 95.00 75.00 46.39 66.16 40.50 41.52 53.28 33.14 72.04 65.40 
+
+Table 7: ROUGE-L scores across all benchmarks. Values are percentages (%). 
+
+Method Number of Sessions 2 5 10 20 30 40 50 Avg. 
+
+Concat 51.92 26.32 35.56 13.33 11.36 20.00 26.67 26.45 RAG ( k = 20 ) 75.00 36.84 31.11 26.67 18.18 15.56 17.78 31.59 MemAgent 71.15 54.39 33.33 40.00 43.18 42.22 20.00 43.47 MemAgent-woq 86.54 40.35 17.78 11.11 25.00 17.78 13.33 30.27 Mem1 36.54 15.79 11.11 6.67 18.18 4.44 4.44 13.88 MemAlpha 55.77 36.84 28.89 15.56 6.82 22.22 22.22 26.90 
+
+UMA (Ours) 90.38 78.95 88.89 64.44 68.18 66.67 53.33 72.98 
+
+Table 8: Detailed accuracy scores (%) on Ledger-QA across varying session counts. Columns represent the number of sessions in the input stream. 
+
+17

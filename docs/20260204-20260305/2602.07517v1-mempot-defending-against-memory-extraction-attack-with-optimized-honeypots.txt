@@ -1,0 +1,1416 @@
+Title: MemPot: Defending Against Memory Extraction Attack with Optimized Honeypots
+
+URL Source: https://arxiv.org/pdf/2602.07517v1
+
+Published Time: Tue, 10 Feb 2026 01:44:14 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# MemPot : Defending Against Memory Extraction Attack with Optimized Honeypots 
+
+Yuhao Wang* 1 Shengfang Zhai* 1 Guanghao Jin 2 Yinpeng Dong 3 Linyi Yang 2 Jiaheng Zhang 1
+
+## Abstract 
+
+Large Language Model (LLM)-based agents em-ploy external and internal memory systems to han-dle complex, goal-oriented tasks, yet this exposes them to severe extraction attacks, and correspond-ing defenses are currently lacking. In this paper, we propose MemPot , the first theoretically verified defense framework against memory extraction at-tacks by injecting optimized honeypots into the memory. Through a two-stage optimization pro-cess, MemPot generates trap documents that max-imize the retrieval probability for attackers while remaining inconspicuous to benign users. We model the detection process as Wald’s Sequential Probability Ratio Test (SPRT) and theoretically prove that MemPot achieves a lower average num-ber of sampling rounds compared to optimal static detectors. Empirically, MemPot significantly out-performs state-of-the-art baselines, achieving a 50% improvement in detection AUROC and an 80% increase in True Positive Rate under low False Positive Rate constraints. Furthermore, our experiments confirm that MemPot incurs zero on-line inference latency and preserves the agent’s utility on standard tasks, verifying its superiority in safety, harmlessness and efficiency. 
+
+## 1. Introduction 
+
+Large language model (LLM) is now becoming one of the most important AI technologies in daily life with its im-pressive performance (OpenAI, 2023; Zhao et al., 2023). Building on recent advances in LLMs (Achiam et al., 2023; Liu et al., 2024; Grattafiori et al., 2024), LLM-based agents are equipped with additional functionalities to perform com-plex, goal-oriented tasks (Xi et al., 2023). A typical agent follows a structured pipeline that processes user instruc-
+
+> *
+
+Equal contribution 1National University of Singapore 
+
+> 2
+
+Southern University of Science and technology 3Tsinghua University. Correspondence to: Shengfang Zhai <sheng-fang.zhai@gmail.com >, Linyi Yang <yangly6@sustech.edu.cn >.
+
+Preprint. February 10, 2026. 
+
+Figure 1. Performance comparison of MemPot and existing meth-ods (AUROC vs. Delay). 
+
+tions, gathers environmental information, retrieves relevant knowledge and past experiences, formulates action plans, and executes them in the environment (Wang et al., 2024; Hu et al., 2025). This paradigm has enabled diverse real-world applications, including healthcare (Abbasian et al., 2023), autonomous driving (Mao et al., 2023), finance (Ding et al., 2024), code generation (Hong et al., 2024), business management (Salesforce, 2024) and web interaction (Yao et al., 2022; 2023), positioning LLM agents as a central AI technology today. Typically, an agent is equipped with an external memory, which usually contains domain-specific knowledge, and an internal memory, where past experiences and user-interaction histories are stored. Despite their rapidly increasing deployment, LLM-based agents pose serious risks of privacy and knowledge leak-age. Modern LLM-based agents frequently retrieve informa-tion from external memory that contains private and high-value domain data (Abbasian et al., 2023; Kulkarni et al., 2024; Salesforce, 2024). While such retrieval improves task performance, it also introduces significant security risks. For example, the ForcedLeak vulnerability in Salesforce Agentforce enabled large-scale exfiltration of Customer Re-lationship Management (CRM) data (Noma Security, 2024), underscoring the vulnerability of external memory to data leakage in real-world agent systems. In addition to exter-nal sources, agents also maintain internal memory modules that store long-term interaction histories, including past user 1
+
+> arXiv:2602.07517v1 [cs.CR] 7 Feb 2026
+
+instructions and agent-generated responses (Zhang et al., 2024b). Because these internal memories inherently con-tain sensitive user data, such as personal preferences and private records, their leakage can lead to serious privacy violations, such as exposure of medical information and purchase history (Wang et al., 2025a). Prior works has explored extraction attacks against external knowledge database (Wang et al., 2025b; Jiang et al., 2024; Cohen et al., 2024; Zeng et al., 2024a; Qi et al., 2025), which can be applied to Retrieval Augmented Generation (RAG) system (Fan et al., 2024) and agents’ external memory (Hu et al., 2025). Recent works also discovered privacy attack on agents’ internal memory, such as long-term interaction histories (Wang et al., 2025a). Despite recent progress in defending extraction at-tacks (Zhang et al., 2024a; Zeng et al., 2025; Agarwal et al., 2024; Jiang et al., 2024; Yao et al., 2025), existing defense methods still have limitations. Most current defenses fo-cus on per-query detection and rely on real-time inference with large language models or auxiliary detectors (Zhang et al., 2024a; Zeng et al., 2024b; Yao et al., 2025). As a result, they struggle to identify stealthy extraction attacks that employ benign-looking queries and gradual interaction patterns (Wang et al., 2025b;a; Jiang et al., 2024; Cohen et al., 2024), as they lack mechanisms to aggregate evidence across multiple retrieval steps. Moreover, their reliance on real-time inference introduces inference latency, which greatly undermines the interactive smoothness with users, limiting their practical applications. To address the limitations of prior defenses, we propose 
+
+MemPot , a zero-online-cost extraction defense framework with theoretical guarantees. MemPot inserts optimized hon-eypot documents into the memory, and these honeypot doc-uments are designed to attract attackers while remaining inconspicuous to benign users. The main challenge of Mem-Pot is to ensure the quality of service (QoS) for normal users while maximizing the detection performance against attackers. The challenges thus involve: (1) This requires the honeypot documents to be sufficiently attractive to at-tackers while remaining inconspicuous to normal users. (2) 
+
+The honeypot documents must be harmless and not mislead normal users, which necessitates careful design to avoid negative impacts on user experience. (3) To limit the impact of attackers, it is important to minimize the rounds of de-tection, as earlier detection can prevent further leakage of private information. Our approach addresses these challenges through a two-stage optimization strategy to balance detection efficiency with Quality of Service (QoS). In the first stage, we optimize honeypot embeddings using contrastive loss to maximize the statistical separability between attacker and normal user retrieval patterns. By formalizing this detection task as a sequential hypothesis testing problem using Wald’s Sequen-tial Probability Ratio Test (SPRT), we theoretically prove that this optimization objective leads to minimized average detection rounds, surpassing the efficiency limits of any op-timal static detector. In the second stage, we address safety requirements by inverting these optimized embeddings into concrete, benign documents, ensuring they remain harm-less and do not mislead normal users. Empirically, MemPot 
+
+validates these theoretical guarantees, achieving a 50% im-provement in detection AUROC and an 80% increase in TPR@1%FPR over state-of-the-art baselines. Furthermore, our results confirm that MemPot maintains near-zero de-tection delay and negligible impact on benign user utility, demonstrating its superiority in both defense efficiency and practical utility. In summary, our main contributions are: • We propose MemPot , the first general defense frame-work against memory extraction attacks. By employ-ing a novel two-stage optimization strategy, MemPot 
+
+inserts harmless honeypots into the memory, and per-forms sequential detection based on accumulated re-trieval evidence, achieving notable performance with-out affecting the Quality of Service (QoS). • We formulate detection as a sequential hypothesis test-ing problem and apply Wald’s SPRT to construct an optimal detector, theoretically minimizing the expected detection rounds and outperforming static detectors without honeypots. • Extensive experiments across two datasets and two agent settings show that MemPot consistently achieves near-perfect detection accuracy against state-of-the-art extraction attacks with zero-online latency, and Mem-Pot have negligible impact on agent utility. 
+
+## 2. Related Works 
+
+2.1. LLM Agents 
+
+Large Language Models (LLMs) have demonstrated revolu-tionary capabilities in language understanding, reasoning, and generation (Zhao et al., 2023). Building on these ad-vances, LLM agents use LLMs and supplement with addi-tional functionalities to perform more complex tasks (Xi et al., 2023). Its typical pipeline consists of the following key steps: taking user instruction, gathering environment information, retrieving relevant knowledge and past experi-ences, giving an action solution based on the above informa-tion, and finally executing the solution (Wang et al., 2024). This pipeline enables agents to support various real-world applications, such as healthcare (Abbasian et al., 2023), web applications (Yao et al., 2022), and autonomous driving (Mao et al., 2023). 2Table 1. Comparison of defense methods (details in Sec. 5.1).                  
+
+> MemPot achieves the best performance with zero online cost. Defense Method Distribution Change Detection Paradigm Detection Performance Online Cost ControlNet ×Single Turn Low Middle Agent ×Single Turn Low High Optimal Seq ×Sequential Middle Middle
+> MemPot ✓Sequential High Zero
+
+2.2. Privacy Risk in Memory System 
+
+The private information of an LLM agent mainly originates from two sources: (1) In external memory domain, agents usually employ RAG to retrieve high-value domain-specific records (e.g., patient prescriptions (Li et al., 2023)) to en-hance generation (Hu et al., 2025; Lewis et al., 2020; Kulka-rni et al., 2024). (2) In internal memory domain, the memory module emerges as a new risk source by archiving sensitive user-agent interactions, specifically pairs of private instruc-tions and agent solutions (Zhang et al., 2024b). While prior research has demonstrated data leakage risks in RAG sys-tems through various extraction attacks (Zeng et al., 2024a; Jiang et al., 2024; Di Maio et al., 2024; Cohen et al., 2024; Wang et al., 2025b), recent studies have further confirmed the tangible threat of extracting sensitive details directly from the agent’s internal memory (Wang et al., 2025a). Hence, it is urgent to explore effective and fundamental defense strategy to mitigate such attacks. 
+
+2.3. Defense against Extraction Attack on Memory System 
+
+Current defense strategies primarily fall into two categories: embedding-level detection and text-level detection. As a rep-resentative of embedding-level approaches, ControlNet (Yao et al., 2025) measure current query’s distributional shift be-tween benign query embeddings to identify potential ex-traction attacks. In contrast, text-level detection typically relies on Large Language Models (LLMs) to discern query intentions or employs multi-agent systems to analyze the potential impact of queries (Zhang et al., 2024a; Zeng et al., 2024b; Agarwal et al., 2024). While these works have made significant progress in defending extraction attacks, apply-ing them to agent memory protection presents limitations. Current methods exhibit two primary limitations: First, they impose heavy computational overhead relying on real-time inference with large language models or auxiliary detec-tors (Zhang et al., 2024a; Zeng et al., 2024b; Yao et al., 2025), limiting their practicality for long-running and inter-active agents. Second, their defensive capability is funda-mentally limited by a static, single-turn detection paradigm. By treating each query in isolation, these methods fail to aggregate evidence across interactions. Current methods also lack capability to proactively alter the memory distri-bution to trap adversaries, which is important when facing benign-looking attacks that closely mimic normal behavior. Consequently, these methods remain vulnerable to stealthy extraction strategies. We compare the key differences be-tween existing approaches and our method in Tab. 1. 
+
+## 3. Preliminary 
+
+3.1. Threat Model Defense Scenario. We consider a LLM-based agent service provider as the defender, who maintains a memory D and provides services to users. The defender aims to protect the privacy of the memory from potential attackers while ensuring high-quality service for normal users. We assume that attackers have the same access privileges as normal users and have no prior knowledge of the defense setting. 
+
+Defender’s Prior knowledge. The defender is assumed to has all knowledge about the agent system, including the retriever, LLM, the content and index embeddings of the memory. We assume the defender only have par-tial knowledge about the attacker, which means that the defender has access to a small set of attacker queries 
+
+Qa = {q(1) 1 , q (1) 2 , . . . , q (1)  
+
+> M
+
+}, which can be collected from historical attack logs. 
+
+Defender Goal. The defender aims to accurately detect attackers while minimizing the impact on normal users. The goal can be summarized as two parts: (1) Detection Accu-racy and Efficiency: The defender aims to maximize the detection accuracy while minimizing the average detection rounds, thereby reducing the potential leakage of private in-formation. (2) Quality of Service (QoS): The defender aims to ensure that the presence of honeypot documents does not significantly degrade the user experience for normal users, which can be measured by the false positive rate (FPR) of detection and empirical utility experiments. 
+
+3.2. Sequential Hypothesis Testing Model 
+
+In this part, we formalize attacker detection with opti-mized Honeypots as a sequential hypothesis testing prob-lem. Let d ∈ N. The fixed document embeddings are 
+
+Edoc = {ei}Ni=1 ⊂ Rd. Trainable honeypot embeddings are 
+
+Epot (θ) = {uj (θ)}Pj=1 ⊂ Rd, and the augmented database is: 
+
+Eaug (θ) = Edoc ∪ E pot (θ).
+
+Sequential Testing Model. There are two query sources: 
+
+q ∼ Q 1 (attacker, hypothesis H1),q ∼ Q 0 (normal, hypothesis H0). (1) At round t, we observe Ot = Φ( qt; θ), where Φ deter-ministically maps the query and the augmented index to the retrieval information (e.g., query, returned indices and similarity scores). Let f1,θ and f0,θ denote the laws of a 3Figure 2. Overview of MemPot Detection Framework. 
+
+single-round observation O under H1 and H0, respectively. Given type-I/II error budgets (α, β ) ∈ (0 , 1) 2, our objective 
+
+is to design a sequential test with minimum stopping rounds 
+
+N and terminal decision DN ∈ { H0, H 1} such that 
+
+min E1[N ], E 0[N ] ,
+
+s.t. P0(DN = H1) ≤ α, P1(DN = H0) ≤ β (2) where Ei[·] denotes expectation under hypothesis Hi.
+
+Wald’s approximated SPRT. We utilize Wald’s approxi-mated SPRT (Wald, 1992) to solve the optimization problem in 2. Define the per-round log likelihood ratio (LLR) and accumulated log likelihood ratio 
+
+ℓθ (O) = log f1,θ (O)
+
+f0,θ (O) , Sn =
+
+> n
+
+X
+
+> t=1
+
+ℓθ (Ot). (3) Define information drift under two hypothesis: 
+
+μ1(θ) = Ef1,θ [ℓθ (O)] = KL( f1,θ ∥f0,θ ),μ0(θ) = Ef0,θ [ℓθ (O)] = −KL( f0,θ ∥f1,θ ). (4) Wald (1992) shows that for SPRT with boundaries A = 1−βα
+
+and B = β 
+
+> 1−α
+
+stops at 
+
+N = inf {n : Sn ≥ log A or Sn ≤ log B}. (5) and at least one of the two errors will be controlled at the desired level: 
+
+P0(DN = H1) + P1(DN = H0) ≤ α + β. (6) More precisely, the expected average sampling number (ASN) 1 in two hypothesis with negligible overshoot can be 
+
+> 1In this paper, we assume the observations are with Markov property conditional on the hypothesis (Proofs of ASN approx-imation for SPRT with Markov observations are detailed in Ap-pendix. D, Lemma 6).
+
+approximated by: 
+
+E1[N ] ≈ | log B|
+
+μ1(θ) , E0[N ] ≈ | log A||μ0(θ)| . (7) Hence, for fixed (α, β ), increasing μ1(θ) and |μ0(θ)| de-creases the expected sample sizes that attain those error budgets. 
+
+## 4. MemPot : Optimization and Detection 
+
+Our methodology is grounded in the insight that memory retrieval is an iterative and sequential process. Unlike com-putationally expensive per-query detection, we leverage the retrieval mechanism itself as a zero-cost indicator. We aggre-gate evidence across the interaction trajectory to distinguish attackers from benign users. To amplify these discriminative signals, MemPot injects optimized honeypots designed to stimulate adversarial behavior without disrupting normal service. In this section, we detail our framework (Figure 2): We derive the optimization of vector-form honeypots based on SPRT theory and prove its optimality in minimizing de-tection rounds in Sec. 4.1. We then convert these vectors into harmless text-form documents via safety-constrained embedding inversion in Sec. 4.2. We finally present prac-tical Log-Likelihood Ratio (LLR) estimation methods to execute the sequential detection in Sec. 4.3. 
+
+4.1. Honeypot Vector in Semantic Embedding Space 
+
+The trainable honeypot parameters θ influence the observa-tion distributions (f1,θ , f 0,θ ) through retrieval mechanism, and thus determine both error probabilities and sampling efficiency. We will leverage this dependence to derive an optimization objective for vector-form honeypots that in-creases the statistical separability of f1,θ and f0,θ under the constraints of error budgets in Eq. (2). 4Theorem 1 (InfoNCE upper-bound by information drift, Proof in Appendix. E) . Draw index j ∼ Unif {1, . . . , K },then qj ∼ Q1 and (qi)i̸=j ∼ Q0 independently of j. For any score function h : O → R, define the InfoNCE loss 
+
+LNCE ,K (h; θ) := − E
+
+"
+
+log eh(Φ( qj ); θ)
+
+PKi=1 eh(Φ( qi); θ)
+
+#
+
+.
+
+Then, for every K ≥ 2,
+
+−L NCE ,K (h; θ) ≤ μ1(θ) − log (K). (8) Thm. 1 shows that decreasing LNCE ,K (h; θ) is equivalent to improve μ1(θ)’s lower bound and therefore decreasing upper bound of E1[N ] with Eq. (7). In real scenario, memory system usually only returns the top-k similar entries. We therefore define a top-k masked similarity score here for tighter bound. Let P be the set of honeypots Epot (θ)’s indices. Define a per-query score 
+
+gk(q; θ) := 1
+
+k
+
+X 
+
+> j∈T k(q)∩P
+
+s(q, E j ), (9) where cosine similarity function s(u, v) = u⊤v 
+
+> |u|·| v|
+
+, top-k
+
+index set for query Tk(q) returns the indices of the k largest elements of cosine similarity in Eaug (θ). Taking gk as h, we then get the final honeypot training loss 
+
+Lpot (θ) := LNCE ,K (gk; θ) + β · L div (θ), (10) where β is regularization parameter and Ldiv (θ) is honeypot diversity loss defined by 
+
+Ldiv (θ) := X 
+
+> 1≤i<j ≤Pui,u j∈E pot
+
+2
+
+P (P − 1) s(ui, u j ). (11) 
+
+Theorem 2 (Advantage over static test, Proof in Ap-pendix. F) . Define θ⋆ the parameter obtained by minimizing 
+
+LNCE , then for any possibly static fixed-length test achiev-ing (α, β ) (i.e., tests without honeypot augment), the stop-ping time N of static test and SPRT with θ⋆ satisfies: 
+
+Eb[N ]SPRT ,θ ⋆ ≤ Eb[N ]any ,static , (12) 
+
+with hypothesis index b ∈ { 0, 1}.
+
+We also prove honeypots-augmented SPRT’s comparative advantage over static testing in Thm. 2, which theoretically ensures shorter expected stopping time under fixed error control with proper optimized honeypots. 
+
+4.2. Generate Honeypot Documents from Vectors 
+
+To effectively defend against attackers who probe databases using semantical embeddings, honeypots’ embeddings must   
+
+> Figure 3. Two Stage Optimization Process of MemPot .
+
+align semantically with their text contents; otherwise, they are unlikely to be retrieved during such exploratory attacks. The honeypot texts must ❶ have sentence embeddings suffi-ciently close to pot vectors optimized in Sec. 4.1; ❷ main-tain factual integrity to minimize the risk of misleading or confusing users; ❸ reveal no private information origi-nally contained in the database. Inspired by (Zhang et al., 2025), we utilize scorer-guided LLM decoding to generate honeypot texts. We use Safety Embedding Inversion to sat-isfy demands above, which will iteratively search tokens to maximize defined scores with beam-search algorithm. We design three scorers corresponding to the three demands for honeypot texts and sum them up for overall performance. To encourage pot text y to match the given pot vector ep and be readable, the Inversion Scorer is defined as: 
+
+Rbase (y, ep) = λemb · s E(y), ep
+
+ + λread · readable( y),
+
+(13) where E(·) is a sentence embedder with e = E(y) ∈ Rd,
+
+s(·, ·) is the cosine similarity function and readable( y) is a readability score defined in (Zhang et al., 2025). To maintain the factuality of pot texts, we design the Factuality Scorer 
+
+which requires information in y to be entailed by safety content S (e.g., a topic abstract). Let Entail( yt | S) ∈
+
+[0 , 1] be the nature language inference entailment (NLI) 5probability (provided by a pretrained model), the factuality scorer is defined as: 
+
+Rfact (y; S) = λfact · Entail( y | S). (14) To preserve the privacy of the database, we also design a Privacy Scorer to constrain each pot text to have low similarity to the database. For text y and given document embeddings Edoc , the scorer is defined as: 
+
+Rpriv (y|E doc ) = −λpriv · max  
+
+> j
+
+s E(y), Edoc [j]. (15) For a single honeypot vector, the final optimization objective is 
+
+max  
+
+> y∈Y
+
+Rbase (y, ep) + Rfact (y|S) + Rpriv (y|E doc ). (16) We then use algorithm detailed in Algorithm 1 to attain the optimized pot texts. 
+
+4.3. Detection with Honeypots 
+
+To achieve the optimality of SPRT, we need to estimate the log likelihood ratio in Eq. (3). When accumulated log likelihood ratio excesses the SPRT boundaries in Eq. (5), the decision is made and agent system’s responses are blocked (e.g.“Unanswerable.”). Specifically, we designed three ways to approximate the log likelihood ratio. Let the retrieved document set at step t be Dt, where D+ 
+
+> t
+
+=
+
+{di ∈ D t | is pot (di) = 1 } denotes pot documents and 
+
+D− 
+
+> t
+
+= {di ∈ D t | is pot (di) = 0 } denotes non-pot docu-ments. Let s(di) denote the similarity score of document di.The approximation methods are shown as follows: 
+
+1. Pot-NonPot Counts Ratio. We use the ratio between the number of retrieved pot and non-pot documents: 
+
+brcnt  
+
+> t
+
+= |D + 
+
+> t
+
+| + εcnt 
+
+|D − 
+
+> t
+
+| + εcnt 
+
+. (17) 
+
+2. Pot-NonPot Similarity Ratio. We weight the ratio by similarity scores: 
+
+brsim  
+
+> t
+
+=
+
+P
+
+> di∈D +
+> t
+
+s(di) + εsim 
+
+P
+
+> di∈D −
+> t
+
+s(di) + εsim 
+
+. (18) 
+
+3. Pot-NonPot Global Similarity Ratio. We further focus on the most relevant evidence by only considering Top-K
+
+documents: 
+
+brg sim  
+
+> t
+
+=
+
+> 1
+> K
+
+P
+
+> di∈D +
+> t,K
+
+s(di) + εsim 
+
+> 1
+> K
+
+P
+
+> di∈D −
+> t,K
+
+s(di) + εsim 
+
+, (19) where D+ 
+
+> t,K
+
+means the most similar K honeypot documents, 
+
+D− 
+
+> t,K
+
+means the most similar K documents that are not honeypots. The approximated accumulated log likelihood ratio is St ≈
+
+Λt = Ptτ =1 log brτ . Same as Eq. (5), the decision is made once the accumulated statistic crosses SPRT boundaries. Notably, the block only happens when terminal decision 
+
+Dt = H1, which means block happens when Λt ≥ log A. 
+
+4.4. Implementation Details Attacker Proxy. To approximate the unknown attack dis-tribution Q1, we employ a neural proxy Aω that mimics the attacker’s behavior at the embedding level. Aω takes the interaction history {o1: t−1} to predict the next query embedding ˆet, optimizing a cosine similarity objective to reproduce observed retrieval rankings. This enables the training of defensive strategies against black-box threats without requiring access to their internal algorithms. 
+
+User Proxy. To approximate the diverse benign distribution 
+
+Q0 without extensive real-world data, we leverage LLMs as human simulators. By prompting the LLM with specific intents and retrieval contexts, we synthesize realistic, multi-turn information-seeking trajectories. These generated se-quences are then encoded to serve as a robust surrogate for the benign query space. Full description of the proxy building is detailed in Appendix. A. 
+
+## 5. Experiments 
+
+5.1. Setups Datasets and Evaluation Setting. We evaluate MemPot 
+
+on four benchmarks: HealthMagicCare (20k) (lavita AI) and Pok ´emon (9.46k) (asoria, 2024) for external memory (top-4 retrieval); and EHRAgent (Shi et al., 2024) and Web-Shop RAP (Yao et al., 2022; Kagaya et al., 2024) for inter-nal memory (300 records, top-3/4 retrieval). We employ DeepSeek-v3.2 (685B) (Liu et al., 2024) as the agent back-bone and all-mpnet-base-v2 (Song et al., 2020) for sentence embeddings. We use mDeBERTa-v3-base (He et al., 2021) as NLI model. Honeypots are injected at a fixed ratio of 2% for external and 4% for internal datasets (ablation in Appendix. C.2). The SPRT detector uses the count-based LLR estimation (Eq. 17) with both type-I/II error budgets 
+
+α, β set to 0.1. Scalability is tested by extending internal memory by 200 records (Appendix. C.1). All experiments run on a single NVIDIA RTX 5090 GPU. 
+
+Training Configuration. We train a transformer-based attacker proxy on 256 samples per attack, augmented via similarity top-k random walks to simulate exploratory trajec-tories. Honeypots are optimized to attract this proxy while maintaining contrastive separation from 500 generated be-nign queries. To ensure scalability, we employ balanced k-means clustering to partition the corpus, generating hon-eypot embeddings for each cluster via a shared network to minimize computational cost. 6Table 2. Performance of defense methods against external memory extraction attacks on HealthMagicCare and Pokemon datasets. Attack Defense HealthMagicCare Pok´ emon AUROC TPR@1%FPR TPR@10%FPR Delay AUROC TPR@1%FPR TPR@10%FPR Delay RAG-Thief ControlNet 1.00 1.00 1.00 0.06 1.00 1.00 1.00 0.05 Agent 1.00 1.00 1.00 0.97 0.94 0.16 1.00 0.91 MemPot 1.00 0.96 0.99 0 1.00 0.98 1.00 0                                                
+
+> DGEA ControlNet 1.00 0.95 1.00 0.06 1.00 1.00 1.00 0.05 Agent 1.00 1.00 1.00 0.97 0.94 0.16 1.00 0.93 MemPot 1.00 1.00 1.00 01.00 1.00 1.00 0
+> IKEA ControlNet 0.46 00.02 0.05 0.88 0.02 0.56 0.04 Agent 0.50 000.98 0.20 00.13 0.95 MemPot 0.96 0.42 0.91 00.99 0.67 0.98 0
+
+Table 3. Performance of defense methods against internal memory extraction attacks on EHRAgent and RAP web shopping agents. Attack Defense EHRAgent RAP WebShop AUROC TPR@1%FPR TPR@10%FPR Delay AUROC TPR@1%FPR TPR@10%FPR Delay MEXTRA Cosine                                                                                                 
+
+> ControlNet 0.59 00.14 0.08 0.45 00.10 0.08 Agent 0.56 00.04 0.96 0.51 0.02 0.02 0.97 MemPot 0.99 0.97 1.00 01.00 0.94 1.00 0
+> MEXTRA Edit
+> ControlNet 0.53 0.02 0.17 0.08 0.59 0.02 0.16 0.08 Agent 0.67 00.14 0.88 0.81 0.30 0.30 0.96 MemPot 0.97 0.86 0.99 01.00 1.00 1.00 0
+> MEXTRA General
+> ControlNet 0.63 0.02 0.08 0.08 0.73 00.36 0.08 Agent 0.58 00.06 0.91 0.72 0.12 0.12 0.91 MemPot 0.94 0.81 0.96 01.00 1.00 1.00 0
+> IKEA ControlNet 0.40 000.10 0.71 0.06 0.34 0.10 Agent 0.51 00.02 1.01 0.47 0.02 0.02 0.96 MemPot 1.00 0.98 1.00 01.00 1.00 1.00 0
+
+Attacks and Baselines. We evaluate against RAG-Thief (Jiang et al., 2024), DGEA (Cohen et al., 2024), and IKE (Wang et al., 2025b) for external memory; and MEX-TRA (Wang et al., 2025a) plus an adapted IKEA for internal memory. Baselines include ControlNet (Yao et al., 2025) (100 anchor queries) and LLM-based Agent Detectors (Ap-pendix. B.2) (Zhang et al., 2024a; Zeng et al., 2024b). Ad-ditionally, we implement a theoretical Optimal Sequential Detector (Optimal-Seq) to empirically validate Thm. 2. The details of all setups are shown in Appendix. B.1. 
+
+5.2. Evaluation Metrics 
+
+We assess the performance from two perspectives: 
+
+Detection Effectiveness. We measure the ability to distin-guish attackers from normal users using the Area Under the Receiver Operating Characteristics Curve (AUROC). To evaluate performance under strict service quality constraints, we specifically report the True Positive Rate at low False Positive thresholds (TPR@1%FPR and TPR@10%FPR). 
+
+Detection Efficiency. We evaluate the computational over-head and detection speed: (1) Delay (s): The average addi-tional online inference latency per turn introduced by the defense. (2) First Detection Time (FDT): The average num-ber of interaction turns (samples N in SPRT) required to make a detection decision. Lower FDT indicates earlier interception of leakage. 
+
+5.3. Performance Evaluation with Existing Baselines 
+
+We conducted 64-round attacks on both domains. As shown in Tab. 2, MemPot maintains > 0.96 AUROC on external memory, while baselines collapse against stealthy IKEA attacks ( ≈ 0.50 AUROC). This performance gap widens in internal settings (Tab. 3): against MEXTRA and the human-mimicking IKEA, baselines yield near-random results (e.g., 0.40 AUROC on EHRAgent), whereas MemPot achieves near-perfect accuracy with zero online latency by effectively aggregating sequential evidence. 
+
+5.4. Comparison with Optimal Static Detector 
+
+To empirically validate Thm. 2, we compare MemPot against the Optimal Sequential Detector (Optimal-Seq). As shown in Tab. 4 and Tab. 5, Optimal-Seq struggles against stealthy attacks due to the inherent indistinguishability of the origi-nal distribution (e.g., 0.70 AUROC, 22-round delay against MEXTRA-Cosine). In contrast, MemPot actively reshapes the retrieval landscape to amplify adversarial signals, achiev-ing near-perfect performance (0.99 AUROC) and reducing 7Table 4. Comparison between Optimal Sequential Detector and MemPot on external memory extraction attacks. Attack Defense HealthMagicCare Pok´ emon AUROC TPR@1%FPR TPR@10%FPR Delay FDT AUROC TPR@1%FPR TPR@10%FPR Delay FDT RAG-Thief Optimal-Seq 0.97 0.69 0.89 0.04 4 1.00 0.95 1.00 0.03 2MemPot 1.00 0.96 0.99 0 9 1.00 0.98 1.00 0 1                                          
+
+> DGEA Optimal-Seq 0.90 0.39 0.64 0.04 11 0.97 0.70 0.88 0.04 1
+> MemPot 1.00 1.00 1.00 011.00 1.00 1.00 01
+> IKEA Optimal-Seq 0.70 0.11 0.27 0.03 17 0.78 0.22 0.34 0.4 14 MemPot 0.96 0.42 0.91 090.99 0.67 0.98 07
+
+Table 5. Comparison between Optimal Sequential Detector and MemPot on internal memory extraction attacks. Attack Defense EHRAgent RAP WebShop AUROC TPR@1%FPR TPR@10%FPR Delay FDT AUROC TPR@1%FPR TPR@10%FPR Delay FDT MEXTRA Cosine                                                                                   
+
+> Optimal-Seq 0.70 0.16 0.27 0.03 22 0.68 0.06 0.22 0.04 38 MemPot 0.99 0.97 1.00 021.00 0.94 1.00 03
+> MEXTRA Edit
+> Optimal-Seq 0.71 0.14 0.32 0.04 33 0.75 0.20 0.36 0.04 27 MemPot 0.97 0.86 0.99 081.00 1.00 1.00 01
+> MEXTRA General Optimal-Seq 0.69 0.16 0.28 0.04 42 0.73 0.12 0.26 0.04 35 MemPot 0.94 0.81 0.96 071.00 1.00 1.00 01
+> IKEA Optimal-Seq 0.78 0.20 0.36 0.05 12 0.79 0.17 0.34 0.06 14 MemPot 1.00 0.98 1.00 021.00 1.00 1.00 02
+
+Table 6. Comparison of different LLR estimation methods (Sec. 4.3) on MEXTRA Cosine .Method EHRAgent RAP-web AUROC TPR@1%FPR TPR@10%FPR FDT AUROC TPR@1%FPR TPR@10%FPR FDT Count 0.99 0.97 1.00 2 1.00 0.94 1.00 3Similarity 0.74 0.65 0.75 4 1.00 0.92 1.00 3Global-Sim 1.00 0.98 1.00 1 1.00 0.90 1.00 1
+
+Table 7. Utility impact of the MemPot defense on standard task performance. 
+
+Setting RAP WebShop Pok´ emon QA & MCQ Score Success Rate Acc Rouge-L Sim w/o pots 67.1 44.6 0.98 0.67 0.75 
+
+w/ pots 65.4 43.8 0.98 0.66 0.75 
+
+detection time to just 2 rounds. This confirms that proactive distribution modification is essential to break the limits of static detection. 
+
+5.5. Utility Impact of MemPot 
+
+To verify utility preservation, we evaluate MemPot on stan-dard tasks on benign user traces. For internal memory de-pendent tasks, we evaluate Score and Success Rate (defined in RAP (Kagaya et al., 2024)) on WebShop benchmark (Yao et al., 2022). For external memory dependent tasks, we evaluate Accuracy (Acc), Similarity (Sim) and Rouge-L scores on QA and MCQ tasks, with the same setting of IKEA (Wang et al., 2025b). As shown in Tab. 7, MemPot 
+
+has negligible impact on standard agent capabilities, with the Success Rate on the WebShop dropping only marginally from 44.6 to 43.8 and Pok ´emon QA metrics remain almost unchanged, confirming that our optimized honeypots are non-disruptive to benign user interactions. We also pro-vide several examples of honeypot documents to show that they are harmless and cause no negative impact, even when retrieved by benign users (Appendix. H). 
+
+5.6. Analysis of Different LLR Estimation Methods 
+
+We compare three LLR estimation methods (Sec. 4.3) on MEXTRA Cosine (Tab. 6). The Count-based method offers the best trade-off ( > 0.99 AUROC, FDT ≈ 2) and is adopted as our default. While Global-similarity achieves the fastest detection at the cost of FPR stability, the Similarity-based method proves suboptimal on complex tasks (e.g., 0.74 AUROC on EHRAgent). 
+
+## 6. Conclusion 
+
+We propose MemPot , an active defense framework that safe-guards agent memory by reshaping retrieval distributions with honeypots to amplify adversarial signals. Overcoming the theoretical limits of passive detection, MemPot achieves near-perfect accuracy against advanced threats like IKEA and MEXTRA with zero online latency and preserving agent utility. 8Impact Statement 
+
+This paper presents work aimed at advancing the security and privacy of Large Language Model (LLM) agents. By mitigating the risks of knowledge extraction in Retrieval-Augmented Generation (RAG) and agentic memory systems, our framework contributes to the protection of proprietary intellectual property and sensitive user data, particularly in high-stakes domains such as healthcare and finance. We believe this work fosters the trustworthy deployment of au-tonomous agents by ensuring that memory capabilities do not become vulnerabilities. We do not foresee immediate negative societal consequences, as our active defense mech-anism is designed to distinguish malicious probing from legitimate usage, minimizing the risk of disrupting normal service. 
+
+## References 
+
+Abbasian, M., Azimi, I., Rahmani, A. M., and Jain, R. C. Conversational health agents: A personalized llm-powered agent framework. CoRR , abs/2310.02374, 2023. doi: 10.48550/ARXIV.2310.02374. URL https: //doi.org/10.48550/arXiv.2310.02374 .Achiam, J., Adler, S., Agarwal, S., Ahmad, L., Akkaya, I., Aleman, F. L., Almeida, D., Altenschmidt, J., Altman, S., Anadkat, S., et al. Gpt-4 technical report. arXiv preprint arXiv:2303.08774 , 2023. Agarwal, D., Fabbri, A. R., Risher, B., Laban, P., Joty, S., and Wu, C.-S. Prompt leakage effect and mitigation strategies for multi-turn llm applications. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: Industry Track , pp. 1255–1275, 2024. Anderson, M., Amit, G., and Goldsteen, A. Is my data in your retrieval database? membership inference attacks against retrieval augmented generation. arXiv preprint arXiv:2405.20446 , 2024. asoria. Pokemoninfo dataset, 2024. URL 
+
+https://huggingface.co/datasets/ asoria/pokemon_info .Cohen, S., Bitton, R., and Nassi, B. Unleashing worms and extracting data: Escalating the outcome of attacks against rag-based inference in scale and severity using jailbreaking. arXiv preprint arXiv:2409.08045 , 2024. Cover, T. and Thomas, J. Elements of Information Theory . Wiley, 2012. ISBN 9781118585771. URL 
+
+https://books.google.com.sg/books?id= VWq5GG6ycxMC .Cybenko, G. Approximation by superpositions of a sig-moidal function. Mathematics of control, signals and systems , 2(4):303–314, 1989. Di Maio, C., Cosci, C., Maggini, M., Poggioni, V., and Melacci, S. Pirates of the rag: Adaptively attack-ing llms to leak knowledge bases. arXiv preprint arXiv:2412.18295 , 2024. Ding, H., Li, Y., Wang, J., and Chen, H. Large language model agent in financial trading: A survey, 2024. URL 
+
+https://arxiv.org/abs/2408.06361 .Fan, W., Ding, Y., Ning, L., Wang, S., Li, H., Yin, D., Chua, T.-S., and Li, Q. A survey on rag meeting llms: Towards retrieval-augmented large language models. In 
+
+Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 6491–6501, 2024. Grattafiori, A., Dubey, A., Jauhri, A., Pandey, A., Kadian, A., Al-Dahle, A., Letman, A., Mathur, A., Schelten, A., Vaughan, A., et al. The llama 3 herd of models. arXiv e-prints , pp. arXiv–2407, 2024. He, P., Gao, J., and Chen, W. Debertav3: Im-proving deberta using electra-style pre-training with gradient-disentangled embedding sharing. arXiv preprint arXiv:2111.09543 , 2021. Hong, S., Zhuge, M., Chen, J., Zheng, X., Cheng, Y., Wang, J., Zhang, C., Wang, Z., Yau, S. K. S., Lin, Z., Zhou, L., Ran, C., Xiao, L., Wu, C., and Schmidhuber, J. MetaGPT: Meta programming for a multi-agent collabo-rative framework. In The Twelfth International Confer-ence on Learning Representations , 2024. URL https: //openreview.net/forum?id=VtmBAGCN7o .Hu, Y., Liu, S., Yue, Y., Zhang, G., Liu, B., Zhu, F., Lin, J., Guo, H., Dou, S., Xi, Z., et al. Memory in the age of ai agents. arXiv preprint arXiv:2512.13564 , 2025. Jiang, C., Pan, X., Hong, G., Bao, C., and Yang, M. Rag-thief: Scalable extraction of private data from retrieval-augmented generation applications with agent-based at-tacks. arXiv preprint arXiv:2411.14110 , 2024. Kagaya, T., Yuan, T. J., Lou, Y., Karlekar, J., Pranata, S., Kinose, A., Oguri, K., Wick, F., and You, Y. RAP: retrieval-augmented planning with contextual memory for multimodal LLM agents. CoRR , abs/2402.03610, 2024. doi: 10.48550/ARXIV.2402.03610. URL https: //doi.org/10.48550/arXiv.2402.03610 .Kulkarni, M., Tangarajan, P., Kim, K., and Trivedi, A. Reinforcement learning for optimizing RAG for do-main chatbots. CoRR , abs/2401.06800, 2024. doi: 10.48550/ARXIV.2401.06800. URL https://doi. org/10.48550/arXiv.2401.06800 .9lavita AI. lavita/chatdoctor-healthcaremagic-100k · datasets at hugging face. URL https: //huggingface.co/datasets/lavita/ ChatDoctor-HealthCareMagic-100k .Lewis, P. S. H., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., K ¨uttler, H., Lewis, M., Yih, W., Rockt ¨aschel, T., Riedel, S., and Kiela, D. Retrieval-augmented generation for knowledge-intensive NLP tasks. In Larochelle, H., Ranzato, M., Hadsell, R., Balcan, M., and Lin, H. (eds.), Advances in Neural Information Processing Systems 33: Annual Conference on Neural Information Processing Sys-tems 2020, NeurIPS 2020, December 6-12, 2020, virtual , 2020. URL https://proceedings. neurips.cc/paper/2020/hash/ 6b493230205f780e1bc26945df7481e5-Abstract. html .Li, Y., Li, Z., Zhang, K., Dan, R., and Zhang, Y. Chatdoc-tor: A medical chat model fine-tuned on llama model us-ing medical domain knowledge. CoRR , abs/2303.14070, 2023. doi: 10.48550/ARXIV.2303.14070. URL https: //doi.org/10.48550/arXiv.2303.14070 .Liu, A., Feng, B., Xue, B., Wang, B., Wu, B., Lu, C., Zhao, C., Deng, C., Zhang, C., Ruan, C., et al. Deepseek-v3 technical report. arXiv preprint arXiv:2412.19437 , 2024. Mao, J., Ye, J., Qian, Y., Pavone, M., and Wang, Y. A language agent for autonomous driving. 
+
+CoRR , abs/2311.10813, 2023. doi: 10.48550/ARXIV. 2311.10813. URL https://doi.org/10.48550/ arXiv.2311.10813 .Noma Security. ForcedLeak: Agent Risks Exposed in Salesforce Agentforce. 
+
+https://noma.security/blog/ forcedleak-agent-risks-exposed-in-salesforce-agentforce/ ,2024. Accessed: Jan 6, 2026. OpenAI. GPT-4 technical report. CoRR , abs/2303.08774, 2023. doi: 10.48550/arXiv.2303.08774. URL https: //doi.org/10.48550/arXiv.2303.08774 .Qi, Z., Zhang, H., Xing, E. P., Kakade, S. M., and Lakkaraju, H. Follow my instruction and spill the beans: Scalable data extraction from retrieval-augmented generation sys-tems. In International Conference on Learning Represen-tations (ICLR) , 2025. Salesforce. Agentforce: The AI Agent Platform. https: //www.salesforce.com/eu/agentforce/ ,2024. Accessed: Jan 6, 2026. Sason, I. and Verd ´u, S. Bounds among f-divergences. sub-mitted to the IEEE Trans. on Information Theory , 2015. Shi, W., Xu, R., Zhuang, Y., Yu, Y., Zhang, J., Wu, H., Zhu, Y., Ho, J. C., Yang, C., and Wang, M. D. Ehra-gent: Code empowers large language models for few-shot complex tabular reasoning on electronic health records. In Al-Onaizan, Y., Bansal, M., and Chen, Y. (eds.), Proceedings of the 2024 Conference on Empiri-cal Methods in Natural Language Processing, EMNLP 2024, Miami, FL, USA, November 12-16, 2024 , pp. 22315–22339. Association for Computational Linguistics, 2024. URL https://aclanthology.org/2024. emnlp-main.1245 .Song, K., Tan, X., Qin, T., Lu, J., and Liu, T.-Y. Mpnet: Masked and permuted pre-training for language under-standing. Advances in neural information processing systems , 33:16857–16867, 2020. Wald, A. Sequential tests of statistical hypotheses. In 
+
+Breakthroughs in statistics: Foundations and basic theory ,pp. 256–298. Springer, 1992. Wald, A. and Wolfowitz, J. Optimum character of the se-quential probability ratio test. The Annals of Mathemati-cal Statistics , pp. 326–339, 1948. Wang, B., He, W., Zeng, S., Xiang, Z., Xing, Y., Tang, J., and He, P. Unveiling privacy risks in llm agent memory. In Proceedings of the 63rd Annual Meeting of the Asso-ciation for Computational Linguistics (Volume 1: Long Papers) , pp. 25241–25260, 2025a. Wang, L., Ma, C., Feng, X., Zhang, Z., Yang, H., Zhang, J., Chen, Z., Tang, J., Chen, X., Lin, Y., et al. A survey on large language model based autonomous agents. Frontiers of Computer Science , 18(6):186345, 2024. Wang, Y., Qu, W., Zhai, S., Jiang, Y., Liu, Z., Liu, Y., Dong, Y., and Zhang, J. Silent leaks: Implicit knowledge extrac-tion attack on rag systems through benign queries, 2025b. URL https://arxiv.org/abs/2505.15420 .Xi, Z., Chen, W., Guo, X., He, W., Ding, Y., Hong, B., Zhang, M., Wang, J., Jin, S., Zhou, E., et al. The rise and potential of large language model based agents: A survey. 
+
+arXiv preprint arXiv:2309.07864 , 2023. Yao, H., Shi, H., Chen, Y., Jiang, Y., Wang, C., Qin, Z., Ren, K., and Chen, C. Controlnet: A firewall for rag-based llm system. arXiv preprint arXiv:2504.09593 , 2025. Yao, S., Chen, H., Yang, J., and Narasimhan, K. Web-shop: Towards scalable real-world web interaction with grounded language agents. In Koyejo, S., Mohamed, S., Agarwal, A., Belgrave, D., Cho, K., and Oh, A. (eds.), Advances in Neural Information Processing Systems 35: Annual Conference on Neu-ral Information Processing Systems 2022, NeurIPS 
+
+10 2022, New Orleans, LA, USA, November 28 - De-cember 9, 2022 , 2022. URL http://papers. nips.cc/paper_files/paper/2022/hash/ 82ad13ec01f9fe44c01cb91814fd7b8c-Abstract-Conference. html .Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K. R., and Cao, Y. React: Synergizing reasoning and acting in language models. In The Eleventh Interna-tional Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 . OpenReview.net, 2023. URL https://openreview.net/forum? id=WE_vluYUL-X .Zeng, S., Zhang, J., He, P., Liu, Y., Xing, Y., Xu, H., Ren, J., Chang, Y., Wang, S., Yin, D., and Tang, J. The good and the bad: Exploring privacy issues in retrieval-augmented generation (RAG). In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 4505–4524, 2024a. Zeng, S., Zhang, J., He, P., Ren, J., Zheng, T., Lu, H., Xu, H., Liu, H., Xing, Y., and Tang, J. Mitigating the privacy issues in retrieval-augmented generation (RAG) via pure synthetic data. arXiv preprint arXiv:2406.14773 , 2025. Zeng, Y., Wu, Y., Zhang, X., Wang, H., and Wu, Q. Autode-fense: Multi-agent llm defense against jailbreak attacks. 
+
+arXiv preprint arXiv:2403.04783 , 2024b. Zhang, C., Zhang, T., and Shmatikov, V. Adversarial de-coding: Generating readable documents for adversarial objectives, 2025. URL https://arxiv.org/abs/ 2410.02163 .Zhang, Y., Ding, L., Zhang, L., and Tao, D. Intention analysis makes llms a good jailbreak defender. arXiv preprint arXiv:2401.06561 , 2024a. Zhang, Z., Bo, X., Ma, C., Li, R., Chen, X., Dai, Q., Zhu, J., Dong, Z., and Wen, J. A survey on the mem-ory mechanism of large language model based agents. 
+
+CoRR , abs/2404.13501, 2024b. doi: 10.48550/ARXIV. 2404.13501. URL https://doi.org/10.48550/ arXiv.2404.13501 .Zhao, W. X., Zhou, K., Li, J., Tang, T., Wang, X., Hou, Y., Min, Y., Zhang, B., Zhang, J., Dong, Z., et al. A survey of large language models. arXiv preprint arXiv:2303.18223 ,2023. 11 A. Details of Honeypot optimization 
+
+Attacker Proxy. In practical settings, the detailed algorithms and objectives of attackers are often not accessible, making it difficult to obtain an exact attack query distribution Q1. To address this, we construct an attacker proxy that learns to reproduce the attacker’s behavior at the sentence embedding level. The proxy is realized as a neural network Aω that, given the historical interaction trajectory {o1: t−1}—including previous query embeddings, retrieved document indices, and similarity scores—iteratively outputs the embedding of the next query ˆet = Aω (o1: t−1). Instead of reconstructing the attacker’s internal algorithm, the goal of Aω is to mimic the observable embedding-level dynamics of the attacker. The training objective minimizes the discrepancy between the generated embeddings and the observed ones using cosine similarity regression, ensuring that the proxy reproduces similar retrieval rankings under the same retriever. This design allows the honeypot system to train defensive strategies without explicit access to the attacker’s model parameters. 
+
+User Proxy. For normal user modeling, we face a similar challenge: the real-world user query distribution is difficult to collect and often highly diverse. To approximate it, we leverage the large language model’s (LLM) human-simulator capability to synthesize realistic user behaviors. Specifically, we utilize a human-simulation pipeline that prompts the LLM with interaction intents and retrieval contexts, generating natural multi-turn query sequences that resemble genuine information-seeking behavior. These synthetic user queries are then encoded into embeddings to approximate the benign query distribution Q0.
+
+## B. Details of Experiment Setups 
+
+B.1. Setups Datasets and Evaluation Setting. We evaluate MemPot across four diverse benchmarks covering both external memory retrieval and internal memory interaction scenarios: For external memory, we utilize the HealthMagicCare (20k rows) (lavita AI) and Pok ´emon (9.46k rows) (asoria, 2024) datasets, representing privacy-intensive healthcare inquiries and entity-heavy gaming knowledge, respectively. We default retrieve 4 documents each turn in experiments. For internal memory, following the setting in MEXTRA (Wang et al., 2025a), we use the generated internal memory logs for EHRAgent (Shi et al., 2024) and RAP on WebShop (Yao et al., 2022; Kagaya et al., 2024). The standard setting contains 300 interaction records. We follow the same retrieval number setting (top-4 records for EHRAgent and top-3 for RAP WebShop) in origin paper (Shi et al., 2024; Kagaya et al., 2024). For scalability analysis (Appendix. C.1), we extend this by appending an additional 200 records. We employ DeepSeek-v3.2 (685B) as the backbone model of both agents and all-mpnet-base-v2 as the retrieval embedding model. We use mDeBERTa-v3-base (He et al., 2021) as NLI model. For each dataset/agent, we use the same honeypot set against different attacks. We inject honeypots at a ratio of 2% for external memory datasets and 4% for internal memory datasets by default (We evaluate the impact of honeypots ratio in Appendix. C.2). For the SPRT detector, we utilize the Pot-NonPot Counts Ratio (Eq. 17) as the default method for LLR estimation with both type-I/II error budgets α, β set to 0.1. All experiments are conducted on a single NVIDIA RTX 5090 GPU. 
+
+Training Set Configuration. We train a transformer-based attacker proxy using 256 samples for each attack type. To robustly capture the exploratory nature of extraction attacks, we augment the training data using a similarity top-k random walk, which simulates an attacker’s trajectory by iteratively sampling the next query from the semantic neighbors of the current retrieval. The honeypots are trained by interacting with this proxy, while simultaneously optimizing contrastive loss against 500 LLM-generated benign human queries for each target dataset. To support honeypots’ training on large-scale knowledge bases, we first apply balanced k-means clustering to partition the document corpus into equal-sized sets. The document embeddings within each set are fed into a shared network to generate a corresponding honeypot embedding, significantly reducing the computational burden of generation. 
+
+Attacks and Defense Baselines. We consider the following attacks: For external memory, we evaluate RAG-targeted adaptive attacks including RAG-Thief (Jiang et al., 2024), DGEA (Cohen et al., 2024), and IKEA (Wang et al., 2025b). For internal memory, we evaluate agent-targeted MEXTRA (Wang et al., 2025a). Additionally, we adapt IKEA for internal memory extraction to assess robustness against adaptive attacks. We broadly consider existing defense methods, including ControlNet (Yao et al., 2025) and Agent Detector (Zhang et al., 2024a; Zeng et al., 2024b; Agarwal et al., 2024). Specifically, we use 100 benign anchor queries for ControlNet initiation and DeepSeek-v3.2 (685B) as the Agent Detector backbone (see Appendix B.2). We additionally design a transformer-based theoretical optimal sequential detector (Optimal-Seq) for further comparison and validation of Thm. 2. 12 Table 8. Performance evaluation of stacked MemPot and end-to-end trained MemPot on EHRAgent and Web-Shopping RAP agent. Attack Defense EHRAgent RAP-web AUROC TP@ 1%FP TP@ 10%FP Delay FDT AUROC TP@ 1%FP TP@ 10%FP Delay FDT MEXTRA Cosine                                                                                           
+
+> Optimal-Seq 0.70 0.16 0.27 0.03 22 0.68 0.06 0.22 0.04 38 MemPot-E2E 0.99 0.67 0.74 020.98 1.00 1.00 01
+> MemPot-Stack 0.98 0.65 0.75 030.99 1.00 1.00 01
+> MEXTRA Edit
+> Optimal-Seq 0.71 0.14 0.32 0.04 33 0.75 0.20 0.36 0.04 27 MemPot-E2E 0.98 0.56 0.74 041.00 1.00 1.00 01
+> MemPot-Stack 0.97 0.58 0.72 091.00 1.00 1.00 01
+> MEXTRA General
+> Optimal-Seq 0.69 0.16 0.28 0.04 42 0.73 0.12 0.26 0.04 35 MemPot-E2E 0.94 0.81 0.85 071.00 1.00 1.00 01
+> MemPot-Stack 0.98 0.82 0.88 051.00 1.00 1.00 01
+
+B.2. Agent Detector Setting 
+
+Referring to mitigation suggestions in (Zeng et al., 2024a; Jiang et al., 2024; Anderson et al., 2024; Zhang et al., 2024a; Zeng et al., 2024b), We apply the agent detector with hybrid paradigms, including intention detection, keyword detection and defensive instruction. Specifically, we use DeepSeek-v3.2 (685B) as the agent detector backbone. The response generation process integrated with the detector is shown as follows: For an input query q, defense first occurs through intent detection (Zhang et al., 2024a) and keyword filtering (Zeng et al., 2024a): 
+
+qdefended =
+
+(
+
+∅, Dintent (q) ∨ Dkeyword (q) = 1 
+
+q, otherwise , (20) where ∅ enforces an “unanswerable” response, Dintent (·) and Dkeyword (·) are detection functions which return True when detecting malicious extraction intention or words. When qdefended ̸ = ∅, generation combines the retrieval context DKq is: 
+
+y = LLM  Concat (DKq ) ⊕ qdefended ⊕ pdefense 
+
+, (21) where defensive prompt pdefense (Agarwal et al., 2024) constrains output relevance by prompting LLM only answer with related part of retrievals, and enforces LLM not responding to malicious instruction with provided examples. 
+
+## C. Additional Experiments 
+
+C.1. Scalability of MemPot under Memory Updates 
+
+To address the dynamic nature of agent systems where memory is updated in real-time, we evaluate the scalability of 
+
+MemPot using a batch-based update strategy. Leveraging the localized nature of retrieval, we hypothesize that honeypots can be optimized independently for different memory batches and directly merged into a unified defense set. 
+
+Setup. We simulate a memory update scenario by appending 200 new interaction records (sourced from the MEXTRA dataset (Wang et al., 2025a)) to the standard 300-record internal memory, resulting in a total of 500 records. We compare two implementation strategies: (1) MemPot-E2E : The computationally expensive upper bound, where honeypots are re-optimized globally on the complete 500-record dataset from scratch. (2) MemPot-Stack : The scalable approach, where we retain the honeypots for the initial 300 records and simply append a new set of honeypots optimized specifically for the 200 update records. To ensure a fair comparison, we maintain the honeypot ratio at 4% for both strategies. 
+
+Results. As shown in Tab. 8, MemPot-Stack achieves detection performance nearly identical to the holistic MemPot-e2e 
+
+across all attack vectors. Notably, in challenging scenarios like MEXTRA-General on EHRAgent, the stacked approach maintains superior robustness (0.98 AUROC) compared to the end-to-end baseline (0.94 AUROC). These results confirm that MemPot supports efficient, modular updates: as the agent’s memory grows, new honeypots can be seamlessly integrated without the need for global retraining, ensuring continuous protection with minimal computational overhead. 13 Table 9. Ablation study on the number of pots (honeypots) and their impact on detection performance on MEXTRA cosine in RAP WebShop. Ratio AUROC TP@1%FP TP@10%FP FDT 0.6% 1.00 0.77 1.00 71.0% 1.00 0.79 1.00 42.0% 1.00 0.90 1.00 2
+
+4.0% 1.00 0.94 1.00 2
+
+C.2. Impact of Honeypots Number 
+
+We investigate the trade-off between ratio of injected honeypots and detection robustness. Tab. 9 reports the detection performance on the RAP WebShop with 300 memory records as the honeypots ratio increases from 0.6% to 4%. While the AUROC remains saturated at 1.00 even with minimal injection, increasing the honeypot count significantly enhances detection speed and sensitivity at strict thresholds. Specifically, increasing pots from 0.6% to 4% improves the TP@1%FP from 0.77 to 0.94 and reduces the First Detection Time (FDT) from 7 rounds to just 2 rounds. This trend validates that a denser honeypot distribution amplifies the adversarial signal, allowing for faster interception of attacks, though a small budget (e.g., 2%) already yields near-optimal performance. 
+
+## D. Theoretical Preliminary 
+
+Definition 1 (Fixed parametric partition) . Let Tϕ : O → Y be a fixed-form parametric partition (its form does not change during training; only parameters ϕ change). Define the push-forwards 
+
+P1,θ,ϕ = Tϕ#f1,θ , P0,θ,ϕ = Tϕ#f0,θ ,
+
+and the divergence ΦT (θ, ϕ ) = KL( P1,θ,ϕ ∥P0,θ,ϕ ).
+
+Lemma 1 (Data Processing Inequality (DPI)) . For any measurable Tϕ,
+
+KL( f1,θ ∥f0,θ ) ≥ KL( Tϕ#f1,θ ∥Tϕ#f0,θ ) = Φ T (θ, ϕ ).
+
+Likewise, KL( f0,θ ∥f1,θ ) ≥ KL( P0,θ,ϕ ∥P1,θ,ϕ ).
+
+Proof. Classic DPI; see Step 1 of Lemma 3’s proof .
+
+Lemma 2 (Conditional expectation over finite partition) . Let (Ω , F, g ) be a probability space, let P = {A1, . . . , A m} be a finite measurable partition of Ω, and write σ(P) for the σ-algebra it generates. For any X ∈ L1(g), define 
+
+Y (x) := 
+
+> m
+
+X
+
+> i=1
+
+1Ai (x)
+
+
+
+1
+
+g(Ai)
+
+Z
+
+> Ai
+
+X dg, g(Ai) > 0,
+
+0, g(Ai) = 0 .
+
+Then: 1. Y is σ(P)-measurable and, for every B ∈ σ(P),
+
+Z
+
+> B
+
+Y dg =
+
+Z
+
+> B
+
+X dg . Hence Y = Eg [X | σ(P)] almost surely. 2. In particular, writing Eg [X | P ] as shorthand for Eg [X | σ(P)] ,
+
+Z
+
+Eg [X | P ] dg =
+
+Z
+
+X dg. (22) 
+
+Proof. (1) By construction, Y is constant on each atom Ai, thus σ(P)-measurable. If B = S 
+
+> i∈I
+
+Ai ∈ σ(P), then 
+
+Z
+
+> B
+
+Y dg = X
+
+> i∈I
+
+1
+
+g(Ai)
+
+Z 
+
+> Ai
+
+X dg 
+
+
+
+g(Ai)= X
+
+> i∈I
+
+Z
+
+> Ai
+
+X dg =
+
+Z
+
+> B
+
+X dg, 
+
+14 which is precisely the defining property of the conditional expectation Eg [X | σ(P)] . Uniqueness up to g-null sets yields 
+
+Y = Eg [X | σ(P)] a.s. (2) Take B = Ω in the identity of part (1) to obtain (22). 
+
+Lemma 3 (Partition supremum) . For any pair of laws f, g on O,
+
+KL( f ∥g) = sup 
+
+> T
+
+KL( T#f ∥T#g),
+
+where the supremum is over all finite measurable partitions (equivalently, finite-range measurable maps T ); moreover, for any δ > 0 there exists a finite partition Tδ such that 
+
+KL( f ∥g) ≤ KL( Tδ#f ∥Tδ#g) + δ. 
+
+Proof. If f̸ ≪ g, there exists A ∈ F with g(A) = 0 and f (A) > 0; for the two-atom partition {A, A c} one has 
+
+KL( T#f ∥T#g) = + ∞ = KL( f ∥g), and the statement is trivial. Hence assume f ≪ g. Let L := df dg and ℓ := log L, which are well-defined with Radon-Nikodym theorem. Then KL( f ∥g) = R L log L dg = R ℓ df ∈ [0 , ∞].
+
+Step 1 (DPI Inequality). 
+
+Let P = {Ai}mi=1 be a finite partition and let T be its index map. Write pi = f (Ai) = R 
+
+> Ai
+
+L dg and qi = g(Ai) (with the convention 0 log 0 := 0 ). Then 
+
+KL( T#f ∥T#g) = 
+
+> m
+
+X
+
+> i=1
+
+pi log pi
+
+qi
+
+=
+
+> m
+
+X
+
+> i=1
+
+ Z
+
+> Ai
+
+L dg 
+
+
+
+log 
+
+R 
+
+> Ai
+
+L dg g(Ai)=
+
+Z
+
+Eg [L | P ] log Eg [L | P ] dg, 
+
+where Eg [· | P ] is conditional expectation under g onto the σ-algebra generated by P. Since φ(u) := u log u is convex on 
+
+(0 , ∞), Jensen yields φ(Eg [L | P ]) ≤ Eg [φ(L) | P ], and with Lemma 2 integrating gives 
+
+KL( T#f ∥T#g) = 
+
+Z
+
+φ(Eg [L | P ]) dg 
+
+≤
+
+Z
+
+Eg [φ(L) | P ] dg 
+
+=
+
+Z
+
+φ(L) dg = KL( f ∥g).
+
+Then taking the supremum over all finite P shows sup T KL( T#f ∥T#g) ≤ KL( f ∥g).
+
+Step 2 (Limitation of divergence gap with a finite partition). 
+
+Fix δ > 0 and assume KL( f ∥g) < ∞. We construct a finite partition Pδ for which KL( f ∥g) − KL( Tδ#f ∥Tδ#g) ≤ δ.
+
+(2.a) Tail control. 
+
+Choose M ≥ 1 so large that the “upper tail” contribution satisfies 
+
+Z 
+
+> {L≥eM}
+
+L log L dg ≤ δ/ 3,
+
+and additionally 2M e −M ≤ δ/ 3 (possible since M e −M → 0 as M → ∞ ). Define three regions 
+
+A− := {L < e −M }, B := {e−M ≤ L < e M }, A + := {L ≥ eM }.
+
+15 (2.b) Middle quantization. 
+
+Pick a mesh size η ∈ (0 , 1) to be specified (below we take η := δ/ 3). Partition the middle region B into finitely many level sets of L: for k = 0 , 1, . . . , K − 1 with K := ⌈2M/η ⌉, set 
+
+Bk :=  x ∈ O : e−M +kη ≤ L(x) < e −M +( k+1) η .
+
+Then on each Bk we have log L ∈ [ak, a k + η] with ak := −M + kη , and also 
+
+log Eg [L | Bk] = log 
+
+R 
+
+> Bk
+
+L dg g(Bk) ∈ [ak, a k + η]
+
+⇒ log L − log Eg [L | Bk] ≤ η on Bk.
+
+(2.c) The finite partition. 
+
+Let Pδ := {A−, B 0, . . . , B K−1, A +} and let Tδ be its index map. Using the identity from Step 1 and writing the gap as an 
+
+L dg -integral, we have 
+
+KL( f ∥g) − KL( Tδ#f ∥Tδ#g) = X
+
+> C∈P δ
+
+Z
+
+> C
+
+L
+
+
+
+log L − log Eg [L | C]
+
+
+
+dg =: ∆ − + ∆ B + ∆ +.
+
+(2.d) Bounding the middle gap. 
+
+On each Bk, the pointwise bound | log L − log Eg [L | Bk]| ≤ η yields 
+
+∆B =
+
+> K−1
+
+X
+
+> k=0
+
+Z
+
+> Bk
+
+L  log L − log Eg [L | Bk] dg ≤ η
+
+> K−1
+
+X
+
+> k=0
+
+Z
+
+> Bk
+
+L dg = η f (B) ≤ η. 
+
+(2.e) Bounding the lower-tail gap. 
+
+On A− one has L ≤ e−M . Using | log L − log Eg [L | A−]| ≤ | log L| + | log Eg [L | A−]| and Eg [L | A−] ≤ e−M ⇒| log Eg [L | A−]| ≤ − M , we obtain 
+
+∆− ≤
+
+Z
+
+> A−
+
+L| log L| dg + M
+
+Z
+
+> A−
+
+L dg ≤ M e −M + M e −M = 2 M e −M ≤ δ/ 3,
+
+by the choice of M .
+
+(2.f) Bounding the upper-tail gap. On A+ one has Eg [L | A+] ≥ eM , so log L − log Eg [L | A+] ≤ log L − M . Hence 
+
+0 ≤ ∆+ =
+
+Z
+
+> A+
+
+L  log L − log Eg [L | A+] dg ≤
+
+Z
+
+> A+
+
+L(log L − M ) dg ≤
+
+Z
+
+> A+
+
+L log L dg ≤ δ/ 3,
+
+by the choice of M .
+
+(2.g) Total control. 
+
+Set η := δ/ 3. Collecting the bounds from (2.d)–(2.f) gives 
+
+KL( f ∥g) − KL( Tδ#f ∥Tδ#g) ≤ δ/ 3 + δ/ 3 + δ/ 3 = δ. 
+
+Step 3 (Taking the supremum). 
+
+By Step 1, KL( T#f ∥T#g) ≤ KL( f ∥g) for every finite partition. By Step 2, for each δ > 0 there exists a finite partition 
+
+Tδ such that KL( f ∥g) ≤ KL( Tδ#f ∥Tδ#g) + δ. Therefore sup T KL( T#f ∥T#g) ≥ KL( f ∥g) − δ for all δ > 0, hence 
+
+sup T KL( T#f ∥T#g) = KL( f ∥g).16 Lemma 4 (Cross-entropy dominates the Bayes risk) . Let J ∈ { 1, . . . , K } and Y = ( Y1, . . . , Y K ) be generated as in the 
+
+1-positive (K−1) -negative scheme, and let π∗(j | Y) denote the true posterior of J given Y. For any measurable score 
+
+h : Y → R, define the model posterior πh(j | Y) := eh(Yj )  
+
+> PKi=1 eh(Yi)
+
+and the K-sample InfoNCE loss 
+
+LNCE ,K (h) := E[− log πh(J | Y)] .
+
+Then 
+
+LNCE ,K (h) ≥ EY
+
+H(π∗(· | Y))  ⇐⇒ −L NCE ,K (h) ≤ −L ∗, (23) 
+
+where H(p) := − P 
+
+> j
+
+p(j) log p(j) and L∗ := EY
+
+H(π∗(· | Y))  is the Bayes risk when taking logarithmic loss. Equality holds iff πh(· | Y) = π∗(· | Y) a.s. Proof. For fixed Y, by the standard decomposition H(p, q ) = H(p) + KL( p∥q), the cross-entropy between π∗ and πh is 
+
+H(π∗, π h) = EJ∼π∗(·| Y)[− log πh(J | Y)] = H(π∗) + KL  π∗(· | Y) ∥ πh(· | Y).
+
+Since KL( ·∥· ) ≥ 0 (Gibbs’ inequality (Cover & Thomas, 2012)), we have H(π∗, π h) ≥ H(π∗) with equality iff πh = π∗.Taking expectation over Y gives 
+
+LNCE ,K (h) = EY
+
+H(π∗, π h) ≥ EY
+
+H(π∗) = L∗,
+
+which is (23). 
+
+Lemma 5 (Conditional product density under a uniform index) . Let P, Q be probability laws on (Y, G) with P ≪ Q, and set r := dP dQ . Fix K ≥ 2. Draw J ∼ Unif {1, . . . , K } and, given J = j, sample Y = ( Y1, . . . , Y K ) with independent coordinates Yj ∼ P and Yi ∼ Q for i̸ = j. Then: 1. For each j, the conditional law P(Y | J = j) is absolutely continuous w.r.t. Q⊗K with Radon–Nikodym derivative 
+
+d P(Y | J = j)
+
+d Q ⊗K (y) = r(yj ) (Q⊗K -a.e. ).
+
+2. The marginal law of Y satisfies 
+
+d PY
+
+d Q ⊗K (y) = 1
+
+K
+
+> K
+
+X
+
+> i=1
+
+r(yi) (Q⊗K -a.e. ).
+
+Proof. We use the test-function characterization of Radon–Nikodym derivatives. 
+
+(1) Conditional law. Fix j ∈ { 1, . . . , K } and any bounded measurable φ : YK → R. By the construction of Y given J = j
+
+and independence of coordinates, 
+
+Z
+
+φ(y) dP(Y | J = j) = 
+
+Z
+
+φ(y) d Q⊗(j−1) ⊗ P ⊗ Q⊗(K−j)(y).
+
+Since P ≪ Q with density r = dP dQ and Q ≪ Q with density 1, we have for Q⊗K almost everywhere on y,
+
+d Q⊗(j−1) ⊗ P ⊗ Q⊗(K−j)
+
+d(Q⊗K ) (y) = r(yj ) · Y
+
+> i̸=j
+
+1 = r(yj ),
+
+and therefore Z
+
+φ(y) dP(Y | J = j) = 
+
+Z
+
+φ(y) r(yj ) d(Q⊗K )( y).
+
+By uniqueness in the Radon–Nikodym theorem, this identifies d P(Y|J=j) 
+
+> d Q ⊗K
+
+= r(yj ) almost everywhere. 17 (2) Marginal law. Averaging over the uniform J,
+
+Z
+
+φ(y) dPY =
+
+> K
+
+X
+
+> j=1
+
+1(J = j)
+
+Z
+
+φ(y) dP(Y | J = j) = 1
+
+K
+
+> K
+
+X
+
+> j=1
+
+Z
+
+φ(y) r(yj ) d(Q⊗K )( y).
+
+Hence, again by Radon–Nikodym uniqueness, d PY
+
+d Q ⊗K (y) = 1
+
+K
+
+PKj=1 r(yj ) Q⊗K .
+
+Lemma 6 (ASN Approximation for SPRT with Markov Observations) . Consider the SPRT with boundaries A < 0 < B 
+
+and error budgets (α, β ). Let the observation sequence {Ot}∞ 
+
+> t=1
+
+be a stationary and ergodic Markov chain under each hypothesis, with transition densities f1,θ and f0,θ . Let ℓθ (Ot|Ot−1) = log f1,θ (Ot|Ot−1)  
+
+> f0,θ (Ot|Ot−1)
+
+be the per -step log -likelihood ratio. Define the drift rates under H1 and H0 respectively as 
+
+μ1(θ) = E1,θ [ℓθ (Ot|Ot−1)] , μ0(θ) = E0,θ [ℓθ (Ot|Ot−1)] .
+
+If the overshoot at stopping is negligible, then the expected stopping times (ASN) are approximately 
+
+E1[N ] ≈ | log B|
+
+μ1(θ) , E0[N ] ≈ | log A||μ0(θ)| . (24) 
+
+Proof. We give a detailed proof under the assumption of stationary, ergodic Markov observations. Let {Ot}t≥0 be a Markov chain on a state space O. Under hypothesis Hi (i = 0 , 1), the chain has transition density 
+
+fi,θ (·| Ot−1) and a unique stationary distribution πi. We assume the chain starts from its stationary distribution (or an arbitrary initial distribution; by ergodicity the long-run behavior is the same). The per-step log-likelihood ratio is 
+
+Zt ≡ ℓθ (Ot|Ot−1) = log f1,θ (Ot|Ot−1)
+
+f0,θ (Ot|Ot−1) ,
+
+and the cumulative sum is Sn = Pnt=1 Zt. The stopping time is 
+
+N = inf {n ≥ 1 : Sn ≥ log B or Sn ≤ log A},
+
+where the boundaries satisfy A = β 
+
+> 1−α
+
+and B = 1−βα for given error probabilities α, β (Wald’s approximations). By stationarity, 
+
+μ1(θ) = E1,θ [Zt] = 
+
+Z Z 
+
+π1(dx )f1,θ (dy |x) log f1,θ (dy |x)
+
+f0,θ (dy |x) = KL  f1,θ (·| O)∥f0,θ (·| O),
+
+where the last equality denotes the average Kullback–Leibler divergence under the stationary distribution π1. Similarly, 
+
+μ0(θ) = E0,θ [Zt] = −KL  f0,θ (·| O)∥f1,θ (·| O) < 0.
+
+Since the chain is ergodic under each hypothesis, the strong law of large numbers for Markov chains gives 
+
+Sn
+
+n
+
+> a.s.
+
+−−−−→ 
+
+> n→∞
+
+μ1(θ) under H1,
+
+and Sn
+
+n
+
+> a.s.
+
+−−−−→ 
+
+> n→∞
+
+μ0(θ) under H0.
+
+Under H1, the process Sn grows approximately linearly with drift μ1(θ). Ignoring the overshoot when SN first crosses a boundary, the time to reach the upper boundary log B is roughly 
+
+N ≈ log Bμ1(θ) .
+
+18 Taking expectations on both sides yields E1[N ] ≈ | log B| 
+
+> μ1(θ)
+
+(note log B > 0). Under H0, the process drifts downward with slope μ0(θ) < 0. The time to hit the lower boundary log A (with log A < 0) is approximately 
+
+N ≈ log Aμ0(θ) = | log A||μ0(θ)| ,
+
+hence E0[N ] ≈ | log A||μ0(θ)| .Therefore, under the conditions of stationarity, ergodicity, and negligible overshoot, the expected sample numbers are well approximated by the expressions in (24). 
+
+Remark 1. The drift rates μ1(θ) and μ0(θ) are exactly the stationary Kullback–Leibler divergences between the transition laws. For i.i.d. observations, the Markov dependence vanishes and the lemma reduces to Wald’s classical ASN formulas. In practice, the approximation is accurate when the boundaries are sufficiently far from the starting point (i.e., when α and β
+
+are small). 
+
+## E. Proof of InfoNCE upper-bound 
+
+Theorem 3 (InfoNCE upper-bound by information drift) . Let P := Tϕ#f1,θ and Q := Tϕ#f0,θ on Y. Consider the sampling scheme: draw J ∼ Unif {1, . . . , K }, then YJ ∼ P and (Yi)i̸=J
+
+> i.i.d.
+
+∼ Q, independently of J. For any score 
+
+h : Y → R, define the InfoNCE loss 
+
+LNCE ,K (h) := − E
+
+"
+
+log eh(YJ )
+
+PKi=1 eh(Yi)
+
+#
+
+.
+
+Then, for every K ≥ 2,
+
+−L NCE ,K (h) ≤ KL( P ∥Q) − log( K). (25) 
+
+Proof. Let r(y) := dP dQ (y) and write Y := ( Y1, . . . , Y K ). By Bayes’ rule, the posterior distribution of J given Y is 
+
+π∗(j | Y) == P(J = j, Y)
+
+PKi=1 P(J = i, Y) = r(Yj )
+
+PKi=1 r(Yi) . (26) The Bayes-optimal multiclass log-loss is 
+
+L∗ := E[− log π∗(J | Y)] = E
+
+"
+
+log 
+
+> K
+
+X
+
+> i=1
+
+r(Yi)
+
+#
+
+− E[log r(YJ )] . (27) With Lemma 4, the cross-entropy with any model is no smaller than the Bayes risk, which means 
+
+LNCE ,K (h) ≥ L ∗ (28) holds for all h, and by using Bayes’ rule and the uniform prior P(J = j) = 1 /K , we have 
+
+I(J; Y ) = E
+
+
+
+log P(J | Y )
+
+P(J)
+
+
+
+= E[log π∗(J | Y )] − log(1 /K ) = log K − E[− log π∗(J | Y )] = log K − L ∗ . (29) We have the marginal with Lemma 5: 
+
+dPY
+
+dQ ⊗K (y) = 1
+
+K
+
+> K
+
+X
+
+> i=1
+
+r(yi). (30) With J uniform, 
+
+I(J; Y) = E
+
+
+
+log π∗(J | Y)1/K 
+
+
+
+= E[log r(YJ )] − E
+
+"
+
+log 
+
+> K
+
+X
+
+> i=1
+
+r(Yi)
+
+#
+
++ log K. (31) 19 The first term equals the KL divergence because YJ ∼ P marginally: 
+
+E[log r(YJ )] = EP [log dP dQ (y)] = KL( P ∥Q). (32) For the second term, non-negativity of KL yields 
+
+0 ≤ KL( PY ∥ Q⊗K ) = EY
+
+
+
+log dPY
+
+dQ ⊗K (Y)
+
+
+
+= E
+
+"
+
+log 1
+
+K
+
+> K
+
+X
+
+> i=1
+
+r(Yi)
+
+#
+
+= E
+
+"
+
+log 
+
+> K
+
+X
+
+> i=1
+
+r(Yi)
+
+#
+
+− log K, (33) which indicates log K − E[log P 
+
+> i
+
+r(Yi)] ≤ 0. Then substituting (32) and (33) into (31) gives I(J; Y) ≤ KL( P ∥Q).Finally, by (28) and (29), 
+
+−L NCE ,K (h) ≤ I(J; Y) − log K ≤ KL( P ∥Q) − log K. 
+
+Corollary 1 (Loss to projected KL) . For fixed-form Tϕ, decreasing LNCE (θ, ϕ ) increases a valid lower bound to ΦT (θ, ϕ ).
+
+## F. Proof of advantage over static test 
+
+Theorem 4 (Decreasing Loss leads to larger drifts and smaller expected samples) . Fix error budgets (α, β ). Consider the SPRT based on the true LLR increments ℓθ . Let (θ⋆, ϕ ⋆) minimize LNCE (θ, ϕ ) over an admissible set. Then: 1. ΦT (θ⋆, ϕ ⋆) ≥ ΦT (θ0, ϕ ⋆), hence by DPI 
+
+KL( f1,θ ⋆ ∥f0,θ ⋆ ) ≥ ΦT (θ⋆, ϕ ⋆) ≥ ΦT (θ0, ϕ ⋆).
+
+2. If, in addition, the statistic family Tϕ is rich enough that for every δ > 0 there exists ϕ = ϕ(δ) with ΦT (θ0, ϕ ) ≥
+
+KL( f1,θ 0 ∥f0,θ 0 ) − δ, then for the minimizer (θ⋆, ϕ ⋆) we have 
+
+μ1(θ⋆) ≥ μ1(θ0) − δ, 
+
+and analogously for |μ0|. In particular, for arbitrarily small δ, the drifts are (weakly) increased. 3. By Wald’s relations (7) and SPRT optimality, the expected sample sizes E1[N ] and E0[N ] (at the same (α, β )) are (weakly) decreased .Proof. (1) follows from Theorem 3 and Corollary 1. For (2) apply Lemma 3 at θ0: for any δ > 0 there exists a (finite) partition Tδ such that KL( f1,θ 0 ∥f0,θ 0 ) ≤ KL( Tδ#f1,θ 0 ∥Tδ#f0,θ 0 ) + δ. If the parametric family Tϕ is dense w.r.t. this partition topology (e.g. neural universal approximation in L1; see Remark 3), we can pick ϕ⋆ with ΦT (θ0, ϕ ⋆) ≥
+
+KL( Tδ#f1,θ 0 ∥Tδ#f0,θ 0 ) − ϵ, and let ϵ → 0. Then 
+
+μ1(θ⋆) ≥ ΦT (θ⋆, ϕ ⋆) ≥ ΦT (θ0, ϕ ⋆) ≥ KL( f1,θ 0 ∥f0,θ 0 ) − δ. 
+
+The statement for |μ0| is identical by swapping roles of H0, H 1. Finally (3) follows from (7) and the SPRT optimality of expected sample size at the given (α, β ) (Wald, 1992). 
+
+Remark 2 (On separating generator and statistic parameters) . It is often convenient to write Φ( θ, ϕ ) =KL( Tϕ#f1,θ ∥Tϕ#f0,θ ) with θ controlling the index (thus the observation laws) and ϕ controlling the statistic. In im-plementations one may tie them ( ϕ = θ); the proof above treats (θ, ϕ ) jointly and only requires the form of Tϕ to be fixed. 
+
+Remark 3 (Approximation richness) . Universal approximation (Cybenko, 1989) results imply that parametric families of measurable maps (neural networks, piecewise-constant partitions, histogram features) are dense in L1 on compact domains. Together with lower semicontinuity of f -divergences (Sason & Verd´ u, 2015), this justifies the δ-tightening in Theorem 3. 20 Lemma 7 (SPRT is optimal in expected length at same (α, β )). For any θ and any competing (possibly fixed-length) test achieving (α, β ), the SPRT (with the same (α, β )) satisfies 
+
+E1[N ]SPRT ,θ ≤ E1[N ]any ,θ , E 0[N ]SPRT ,θ ≤ E0[N ]any ,θ .
+
+In particular Eb[N ]SPRT ,θ ≤ n⋆
+
+> static
+
+(α, β ; θ) for b ∈ { 0, 1}.Proof. This is the classical optimality of the SPRT due to Wald and Wolfowitz (see (Wald & Wolfowitz, 1948)). 
+
+Lemma 8 (Existence of θ0 and a.s. equivalence to static) . Suppose the following assumptions hold and N ≥ K:1. Scoring uses scos and Φ is a deterministic top-K map. Any tie events have zero Qb-probability and are resolved by a fixed rule. 2. For b ∈ { 0, 1}, Pq∼Qb (cK (q) > 0) = 1 .3. Let ¯Qb be the law of ˆq under Hb, and ¯Q := 12 ( ¯Q0 + ¯Q1). The support supp( ¯Q) is contained in some closed hemisphere of Sd−1. Equivalently, the polar set is nonempty: 
+
+Ucos := 
+
+n
+
+ˆu ∈ Sd−1 : sup 
+
+> v∈supp( ¯Q)
+
+⟨ˆu, v ⟩ ≤ 0
+
+o
+
+Then there exists θ0 with Epot (θ0) = {uj }Pj=1 satisfying ˆuj ∈ U cos for all j, such that for b ∈ { 0, 1},
+
+Pq∼Qb
+
+
+
+max  
+
+> 1≤j≤P
+
+⟨ˆq, ˆuj ⟩ < c K (q)
+
+
+
+= 1 = ⇒ fb,θ 0 = f static  
+
+> b
+
+,
+
+i.e., under θ0 the honeypots almost surely never enter the top-K and the induced observation law equals the static 
+
+(documents-only) law. Proof. If ˆuj ∈ U cos then for any ˆq ∈ supp( ¯Q), ⟨ˆq, ˆuj ⟩ ≤ 0; by assumption, cK (q) > 0 almost surely. Hence max j ⟨ˆq, ˆuj ⟩ ≤ 
+
+0 < c K (q) almost surely, so top-K coincides with the documents-only top-K almost surely. Deterministic Φ implies equality of the induced laws. 
+
+Theorem 5 (Loss-minimizing training improves the operational goal over the static optimal) . There exist untrained parameter θ0 make vector database equivalent to vector database without honeypots and θ⋆ the post-training parameter obtained by minimizing LNCE . Under the assumptions of Theorem 4, for the same (α, β ), and b ∈ { 0, 1},
+
+Eb[N ]SPRT ,θ ⋆ ≤ min 
+
+n
+
+Eb[N ]SPRT ,θ 0 , E b[N ]any ,static },
+
+with strict inequality whenever the drifts increase strictly. Proof. By Lemma 8, there exists θ0 under assumptions such that fb,θ 0 = f static  
+
+> b
+
+for b ∈ { 0, 1}. Hence the SPRT at (α, β )
+
+under θ0 has expected sample size equal to the static optimal with Lemma 7. By Theorem 4, the drifts μ1(θ), |μ0(θ)|
+
+(weakly) increase after training, hence the Wald relations (7) imply (weakly) smaller Eb[N ] for the SPRT at (α, β ), and 
+
+μb(θ) ≥ μb(θ0) holds by letting δ → 0. Combine all have the inequality. 21 G. Algorithm of Scorer Guided embedding inversion 
+
+Scorer guided beam-search embedding inversion algorithm (Zhang et al., 2025) is shown below: 
+
+Algorithm 1 Embedding Inversion 
+
+Hyperparameters: beam width b, top-k
+
+Input: prefix prompt P , target embedding etarget 
+
+Output: best found sequence of length max length  
+
+> 1:
+
+Initialize: Beams B = {empty string } 
+
+> 2:
+
+for each time step t from 1 to max length do  
+
+> 3:
+
+Bnew ← {}  
+
+> 4:
+
+Snew ← {}  
+
+> 5:
+
+for each beam b ∈ B do  
+
+> 6:
+
+zt ← LLM logits (P ⊕ b) 
+
+> 7:
+
+topk tokens ← TopK (zt, k ) 
+
+> 8:
+
+for each token tk ∈ topk tokens do  
+
+> 9:
+
+b′ ← b ⊕ tk 
+
+> 10:
+
+Bnew .append (b′) 
+
+> 11:
+
+Snew ← Scorer (Bnew , etarget , S, Edoc ) 
+
+> 12:
+
+end for  
+
+> 13:
+
+end for  
+
+> 14:
+
+Sort Bnew by Snew  
+
+> 15:
+
+B ← B new [: b] 
+
+> 16:
+
+end for  
+
+> 17:
+
+return B[0] 
+
+## H. Examples of Honeypot Documents 
+
+We provide a few honeypot documents example here, corresponding to WebShop, Pok ´emon and Healthcare scenarioes respectively: Honeypot Documents Example 
+
+Pot 1: “Web Shopping: **1432**: With just six keywords like search term in ’search: [ ]’; there already comes together several possibilities within three of which all work or more (inclusu[.]m any other product to find them for sure without searching again from memory alone as this will get out” 
+
+Pot 2: “Alright, Nature offers an enchanting and unique array of creatures with incredible strength! A rare breed from Japan - Pok´ emon that has the physical properties described below: * Name – P.E” 
+
+Pot 3: “Creating concise passages from this resource while generating appropriate dialogue within my parameters where all data needs filtering every fourth point but those facts/assums or ”sugar-crate-loads The patient reports experiencing various physical discomforts and functional changes.” 22
