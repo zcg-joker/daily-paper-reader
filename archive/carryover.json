@@ -1,79 +1,8 @@
 {
-  "generated_at": "2026-03-05T09:29:12.548732+00:00",
-  "updated_date": "20260204-20260305",
+  "generated_at": "2026-03-05T19:48:17.669275+00:00",
+  "updated_date": "20260305",
   "carryover_days": 9,
   "items": [
-    {
-      "id": "2602.10479v1",
-      "title": "From Prompt-Response to Goal-Directed Systems: The Evolution of Agentic AI Software Architecture",
-      "abstract": "Agentic AI denotes an architectural transition from stateless, prompt-driven generative models toward goal-directed systems capable of autonomous perception, planning, action, and adaptation through iterative control loops. This paper examines this transition by connecting foundational intelligent agent theories, including reactive, deliberative, and Belief-Desire-Intention models, with contemporary LLM-centric approaches such as tool invocation, memory-augmented reasoning, and multi-agent coordination. The paper presents three primary contributions: (i) a reference architecture for production-grade LLM agents that separates cognitive reasoning from execution using typed tool interfaces; (ii) a taxonomy of multi-agent topologies, together with their associated failure modes and mitigation approaches; and (iii) an enterprise hardening checklist that incorporates governance, observability, and reproducibility considerations. Through an analysis of emerging industry platforms, including Kore.ai, Salesforce Agentforce, TrueFoundry, ZenML, and LangChain, the study identifies a convergence toward standardized agent loops, registries, and auditable control mechanisms. It is argued that the subsequent phase of agentic AI development will parallel the maturation of web services, relying on shared protocols, typed contracts, and layered governance structures to support scalable and composable autonomy. The persistent challenges related to verifiability, interoperability, and safe autonomy remain key areas for future research and practical deployment.",
-      "authors": [
-        "Mamdouh Alenezi"
-      ],
-      "primary_category": "cs.SE",
-      "categories": [
-        "cs.SE"
-      ],
-      "published": "2026-02-11T03:34:48+00:00",
-      "link": "https://arxiv.org/pdf/2602.10479v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "reference architecture separating cognitive reasoning from execution with memory-augmented reasoning",
-      "llm_evidence_cn": "将认知推理与执行分离的参考架构，包含记忆增强推理",
-      "llm_evidence": "将认知推理与执行分离的参考架构，包含记忆增强推理",
-      "canonical_evidence": "将认知推理与执行分离的参考架构，包含记忆增强推理",
-      "llm_tldr_en": "Discusses the architectural evolution of AI agents, focusing on goal-directed systems and memory-augmented reasoning.",
-      "llm_tldr_cn": "探讨AI智能体的架构演进，重点关注目标导向系统和记忆增强推理。",
-      "llm_tldr": "探讨AI智能体的架构演进，重点关注目标导向系统和记忆增强推理。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "architectures for long term and short term memory in AI agents",
-      "matched_requirement_id": "req-7",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.10479v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.02788v1",
-      "title": "Agentified Assessment of Logical Reasoning Agents",
-      "abstract": "We present a framework for evaluating and benchmarking logical reasoning agents when assessment itself must be reproducible, auditable, and robust to execution failures. Building on agentified assessment, we use an assessor agent to issue tasks, enforce execution budgets, parse outputs, and record structured failure types, while the agent under test only needs to expose a standardized agent-to-agent interface. As a case study, we benchmark an auto-formalization agent for first-order logic (FOL) reasoning on a solver-verified and repaired split of FOLIO. The agent translates natural language premises and conclusions into executable Z3Py programs and employs satisfiability modulo theories (SMT) solving to determine logical entailment. On the cleaned FOLIO validation set, the auto-formalization agent achieves 86.70% accuracy under the assessor protocol, outperforming a chain-of-thought baseline (73.89%).",
-      "authors": [
-        "Zhiyu Ni",
-        "Yifeng Xiao",
-        "Zheng Liang"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI"
-      ],
-      "published": "2026-03-03T09:26:08+00:00",
-      "link": "https://arxiv.org/pdf/2603.02788v1",
-      "tags": [
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "framework for evaluating and benchmarking reasoning agents",
-      "llm_evidence_cn": "推理智能体的评估与基准测试框架",
-      "llm_evidence": "推理智能体的评估与基准测试框架",
-      "canonical_evidence": "推理智能体的评估与基准测试框架",
-      "llm_tldr_en": "Presents an agentified assessment framework for robust and reproducible evaluation of reasoning agents.",
-      "llm_tldr_cn": "提出一种代理化评估框架，用于对推理智能体进行稳健且可重复的基准测试。",
-      "llm_tldr": "提出一种代理化评估框架，用于对推理智能体进行稳健且可重复的基准测试。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
-      "matched_requirement_id": "req-6",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.02788v1",
-      "carry_days": 1
-    },
     {
       "id": "2602.20502v1",
       "title": "ActionEngine: From Reactive to Programmatic GUI Agents via State Machine Memory",
@@ -192,42 +121,6 @@
       "carry_days": 1
     },
     {
-      "id": "2602.17931v1",
-      "title": "Memory-Based Advantage Shaping for LLM-Guided Reinforcement Learning",
-      "abstract": "In environments with sparse or delayed rewards, reinforcement learning (RL) incurs high sample complexity due to the large number of interactions needed for learning. This limitation has motivated the use of large language models (LLMs) for subgoal discovery and trajectory guidance. While LLMs can support exploration, frequent reliance on LLM calls raises concerns about scalability and reliability. We address these challenges by constructing a memory graph that encodes subgoals and trajectories from both LLM guidance and the agent's own successful rollouts. From this graph, we derive a utility function that evaluates how closely the agent's trajectories align with prior successful strategies. This utility shapes the advantage function, providing the critic with additional guidance without altering the reward. Our method relies primarily on offline input and only occasional online queries, avoiding dependence on continuous LLM supervision. Preliminary experiments in benchmark environments show improved sample efficiency and faster early learning compared to baseline RL methods, with final returns comparable to methods that require frequent LLM interaction.",
-      "authors": [
-        "Narjes Nourzad",
-        "Carlee Joe-Wong"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.AI"
-      ],
-      "published": "2026-02-20T01:44:35+00:00",
-      "link": "https://arxiv.org/pdf/2602.17931v1",
-      "tags": [
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "memory graph for encoding subgoals and trajectories in LLM-guided RL",
-      "llm_evidence_cn": "LLM引导强化学习中编码子目标和轨迹的记忆图",
-      "llm_evidence": "LLM引导强化学习中编码子目标和轨迹的记忆图",
-      "canonical_evidence": "LLM引导强化学习中编码子目标和轨迹的记忆图",
-      "llm_tldr_en": "Uses a memory graph to store and reuse successful strategies for LLM-guided reinforcement learning.",
-      "llm_tldr_cn": "利用记忆图存储和重用LLM引导强化学习中的成功策略。",
-      "llm_tldr": "利用记忆图存储和重用LLM引导强化学习中的成功策略。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory consolidation and update strategies in LLM agents",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.17931v1",
-      "carry_days": 1
-    },
-    {
       "id": "2603.00495v1",
       "title": "AI Runtime Infrastructure",
       "abstract": "We introduce AI Runtime Infrastructure, a distinct execution-time layer that operates above the model and below the application, actively observing, reasoning over, and intervening in agent behavior to optimize task success, latency, token efficiency, reliability, and safety while the agent is running. Unlike model-level optimizations or passive logging systems, runtime infrastructure treats execution itself as an optimization surface, enabling adaptive memory management, failure detection, recovery, and policy enforcement over long-horizon agent workflows.",
@@ -245,13 +138,13 @@
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "adaptive memory management in agent runtime",
-      "llm_evidence_cn": "智能体运行时的自适应记忆管理",
-      "llm_evidence": "智能体运行时的自适应记忆管理",
-      "canonical_evidence": "智能体运行时的自适应记忆管理",
-      "llm_tldr_en": "Introduces an AI Runtime layer for active observation and adaptive memory management in long-horizon agent workflows.",
-      "llm_tldr_cn": "引入AI运行时层，在长程智能体工作流中进行主动观察和自适应记忆管理。",
-      "llm_tldr": "引入AI运行时层，在长程智能体工作流中进行主动观察和自适应记忆管理。",
+      "llm_evidence_en": "Adaptive memory management in AI runtime infrastructure",
+      "llm_evidence_cn": "AI运行期基础设施中的自适应记忆管理",
+      "llm_evidence": "AI运行期基础设施中的自适应记忆管理",
+      "canonical_evidence": "AI运行期基础设施中的自适应记忆管理",
+      "llm_tldr_en": "Proposes a runtime layer for active observation and adaptive memory management to optimize agent behavior.",
+      "llm_tldr_cn": "提出一种运行期架构，通过主动观测和自适应记忆管理来优化智能体行为。",
+      "llm_tldr": "提出一种运行期架构，通过主动观测和自适应记忆管理来优化智能体行为。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -319,16 +212,17 @@
       "published": "2026-02-25T22:02:00+00:00",
       "link": "https://arxiv.org/pdf/2602.22442v1",
       "tags": [
+        "keyword:AGIMEM",
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "metrics for decision quality and reasoning in AutoML agents",
-      "llm_evidence_cn": "AutoML智能体决策质量与推理的指标",
-      "llm_evidence": "AutoML智能体决策质量与推理的指标",
-      "canonical_evidence": "AutoML智能体决策质量与推理的指标",
-      "llm_tldr_en": "Proposes an Evaluation Agent to assess intermediate decision quality and reasoning in agentic AutoML pipelines.",
-      "llm_tldr_cn": "提出一种评估智能体，用于衡量AutoML流水线中的中间决策质量和推理能力。",
-      "llm_tldr": "提出一种评估智能体，用于衡量AutoML流水线中的中间决策质量和推理能力。",
+      "llm_evidence_en": "Framework for assessing intermediate decision quality and reasoning in agentic pipelines",
+      "llm_evidence_cn": "评估智能体流水线中中间决策质量和推理的框架",
+      "llm_evidence": "评估智能体流水线中中间决策质量和推理的框架",
+      "canonical_evidence": "评估智能体流水线中中间决策质量和推理的框架",
+      "llm_tldr_en": "Proposes an Evaluation Agent to assess decision validity and reasoning quality in autonomous AutoML agents.",
+      "llm_tldr_cn": "提出了一个评估智能体，用于评估自主 AutoML 智能体的决策有效性和推理质量。",
+      "llm_tldr": "提出了一个评估智能体，用于评估自主 AutoML 智能体的决策有效性和推理质量。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -354,16 +248,17 @@
       "published": "2026-03-03T04:59:25+00:00",
       "link": "https://arxiv.org/pdf/2603.02601v1",
       "tags": [
+        "keyword:AGIMEM",
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "five-dimensional agent coverage metrics and regression testing framework",
-      "llm_evidence_cn": "五维智能体覆盖率指标与回归测试框架",
-      "llm_evidence": "五维智能体覆盖率指标与回归测试框架",
-      "canonical_evidence": "五维智能体覆盖率指标与回归测试框架",
-      "llm_tldr_en": "AgentAssay provides a token-efficient framework and metrics for testing non-deterministic agent workflows.",
-      "llm_tldr_cn": "AgentAssay为非确定性智能体工作流提供高效的回归测试框架与评估指标。",
-      "llm_tldr": "AgentAssay为非确定性智能体工作流提供高效的回归测试框架与评估指标。",
+      "llm_evidence_en": "regression testing and metrics for agent workflows",
+      "llm_evidence_cn": "代理工作流的回归测试与指标",
+      "llm_evidence": "代理工作流的回归测试与指标",
+      "canonical_evidence": "代理工作流的回归测试与指标",
+      "llm_tldr_en": "Provides a token-efficient framework for regression testing and coverage metrics in autonomous agent workflows.",
+      "llm_tldr_cn": "为自主代理工作流提供了一个高效的回归测试框架和多维覆盖指标。",
+      "llm_tldr": "为自主代理工作流提供了一个高效的回归测试框架和多维覆盖指标。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -372,122 +267,6 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.02601v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.16666v2",
-      "title": "Towards a Science of AI Agent Reliability",
-      "abstract": "AI agents are increasingly deployed to execute important tasks. While rising accuracy scores on standard benchmarks suggest rapid progress, many agents still continue to fail in practice. This discrepancy highlights a fundamental limitation of current evaluations: compressing agent behavior into a single success metric obscures critical operational flaws. Notably, it ignores whether agents behave consistently across runs, withstand perturbations, fail predictably, or have bounded error severity. Grounded in safety-critical engineering, we provide a holistic performance profile by proposing twelve concrete metrics that decompose agent reliability along four key dimensions: consistency, robustness, predictability, and safety. Evaluating 14 models across two complementary benchmarks, we find that recent capability gains have only yielded small improvements in reliability. By exposing these persistent limitations, our metrics complement traditional evaluations while offering tools for reasoning about how agents perform, degrade, and fail.",
-      "authors": [
-        "Stephan Rabanser",
-        "Sayash Kapoor",
-        "Peter Kirgis",
-        "Kangheng Liu",
-        "Saiteja Utpala",
-        "Arvind Narayanan"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI",
-        "cs.CY",
-        "cs.LG"
-      ],
-      "published": "2026-02-18T18:05:44+00:00",
-      "link": "https://arxiv.org/pdf/2602.16666v2",
-      "tags": [
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "twelve concrete metrics for agent reliability and performance profiling",
-      "llm_evidence_cn": "十二个用于智能体可靠性与性能分析的具体指标",
-      "llm_evidence": "十二个用于智能体可靠性与性能分析的具体指标",
-      "canonical_evidence": "十二个用于智能体可靠性与性能分析的具体指标",
-      "llm_tldr_en": "Proposes a holistic reliability evaluation framework with twelve metrics for autonomous agents.",
-      "llm_tldr_cn": "为自主智能体提出了一套包含十二个指标的全面可靠性评估框架。",
-      "llm_tldr": "为自主智能体提出了一套包含十二个指标的全面可靠性评估框架。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "performance metrics for agent memory and reasoning",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.16666v2",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.23201v2",
-      "title": "Tell Me What To Learn: Generalizing Neural Memory to be Controllable in Natural Language",
-      "abstract": "Modern machine learning models are deployed in diverse, non-stationary environments where they must continually adapt to new tasks and evolving knowledge. Continual fine-tuning and in-context learning are costly and brittle, whereas neural memory methods promise lightweight updates with minimal forgetting. However, existing neural memory models typically assume a single fixed objective and homogeneous information streams, leaving users with no control over what the model remembers or ignores over time. To address this challenge, we propose a generalized neural memory system that performs flexible updates based on learning instructions specified in natural language. Our approach enables adaptive agents to learn selectively from heterogeneous information sources, supporting settings, such as healthcare and customer service, where fixed-objective memory updates are insufficient.",
-      "authors": [
-        "Max S. Bennett",
-        "Thomas P. Zollo",
-        "Richard Zemel"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-02-26T16:50:52+00:00",
-      "link": "https://arxiv.org/pdf/2602.23201v2",
-      "tags": [
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "neural memory system with controllable updates via natural language instructions",
-      "llm_evidence_cn": "通过自然语言指令进行可控更新的神经记忆系统",
-      "llm_evidence": "通过自然语言指令进行可控更新的神经记忆系统",
-      "canonical_evidence": "通过自然语言指令进行可控更新的神经记忆系统",
-      "llm_tldr_en": "Enables selective and controllable memory updates for agents using natural language instructions.",
-      "llm_tldr_cn": "使智能体能够使用自然语言指令进行选择性和可控的记忆更新。",
-      "llm_tldr": "使智能体能够使用自然语言指令进行选择性和可控的记忆更新。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory consolidation and update strategies in LLM agents",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.23201v2",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.15344v1",
-      "title": "ER-MIA: Black-Box Adversarial Memory Injection Attacks on Long-Term Memory-Augmented Large Language Models",
-      "abstract": "Large language models (LLMs) are increasingly augmented with long-term memory systems to overcome finite context windows and enable persistent reasoning across interactions. However, recent research finds that LLMs become more vulnerable because memory provides extra attack surfaces. In this paper, we present the first systematic study of black-box adversarial memory injection attacks that target the similarity-based retrieval mechanism in long-term memory-augmented LLMs. We introduce ER-MIA, a unified framework that exposes this vulnerability and formalizes two realistic attack settings: content-based attacks and question-targeted attacks. In these settings, ER-MIA includes an arsenal of composable attack primitives and ensemble attacks that achieve high success rates under minimal attacker assumptions. Extensive experiments across multiple LLMs and long-term memory systems demonstrate that similarity-based retrieval constitutes a fundamental and system-level vulnerability, revealing security risks that persist across memory designs and application scenarios.",
-      "authors": [
-        "Mitchell Piehl",
-        "Zhaohan Xi",
-        "Zuobin Xiong",
-        "Pan He",
-        "Muchao Ye"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-02-17T04:19:45+00:00",
-      "link": "https://arxiv.org/pdf/2602.15344v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "attacks on long-term memory-augmented large language models",
-      "llm_evidence_cn": "针对长短期记忆增强大语言模型的攻击研究",
-      "llm_evidence": "针对长短期记忆增强大语言模型的攻击研究",
-      "canonical_evidence": "针对长短期记忆增强大语言模型的攻击研究",
-      "llm_tldr_en": "Analyzes security vulnerabilities in the retrieval mechanisms of long-term memory systems for LLMs.",
-      "llm_tldr_cn": "分析了大语言模型长期记忆系统检索机制中的安全漏洞及对抗性攻击。",
-      "llm_tldr": "分析了大语言模型长期记忆系统检索机制中的安全漏洞及对抗性攻击。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "long-term memory architectures for large language models",
-      "matched_requirement_id": "req-2",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.15344v1",
       "carry_days": 1
     },
     {
@@ -518,16 +297,17 @@
       "published": "2026-03-02T18:58:54+00:00",
       "link": "https://arxiv.org/pdf/2603.02206v2",
       "tags": [
+        "keyword:AGIMEM",
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
       "llm_evidence_en": "dual-agent memory router with semantic cache",
-      "llm_evidence_cn": "带有语义缓存的双智能体记忆路由架构",
-      "llm_evidence": "带有语义缓存的双智能体记忆路由架构",
-      "canonical_evidence": "带有语义缓存的双智能体记忆路由架构",
-      "llm_tldr_en": "Proposes a dual-agent architecture to optimize memory retrieval and reduce latency in voice agents.",
-      "llm_tldr_cn": "提出一种双智能体架构，通过语义缓存优化记忆检索并降低语音智能体的延迟。",
-      "llm_tldr": "提出一种双智能体架构，通过语义缓存优化记忆检索并降低语音智能体的延迟。",
+      "llm_evidence_cn": "具有语义缓存的双代理记忆路由",
+      "llm_evidence": "具有语义缓存的双代理记忆路由",
+      "canonical_evidence": "具有语义缓存的双代理记忆路由",
+      "llm_tldr_en": "Decouples retrieval from generation using a dual-agent architecture to reduce latency in voice agents.",
+      "llm_tldr_cn": "采用双代理架构将检索与生成解耦，显著降低语音代理的延迟。",
+      "llm_tldr": "采用双代理架构将检索与生成解耦，显著降低语音代理的延迟。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -539,45 +319,44 @@
       "carry_days": 1
     },
     {
-      "id": "2602.13680v1",
-      "title": "AllMem: A Memory-centric Recipe for Efficient Long-context Modeling",
-      "abstract": "Large Language Models (LLMs) encounter significant performance bottlenecks in long-sequence tasks due to the computational complexity and memory overhead inherent in the self-attention mechanism. To address these challenges, we introduce \\textsc{AllMem}, a novel and efficient hybrid architecture that integrates Sliding Window Attention (SWA) with non-linear Test-Time Training (TTT) memory networks. \\textsc{AllMem} enables models to effectively scale to ultra-long contexts while mitigating catastrophic forgetting. This approach not only overcomes the representation constraints typical of linear memory models but also significantly reduces the computational and memory footprint during long-sequence inference. Furthermore, we implement a Memory-Efficient Fine-Tuning strategy to replace standard attention layers in pre-trained models with memory-augmented sliding window layers. This framework facilitates the efficient transformation of any off-the-shelf pre-trained LLM into an \\textsc{AllMem}-based architecture. Empirical evaluations confirm that our 4k window model achieves near-lossless performance on 37k LongBench with a marginal 0.83 drop compared to full attention. Furthermore, on InfiniteBench at a 128k context, our 8k window variant outperforms full attention, which validates the effectiveness of our parameterized memory in mitigating noise and maintaining robust long-range modeling without the prohibitive costs of global attention.",
+      "id": "2602.22523v1",
+      "title": "Cognitive Models and AI Algorithms Provide Templates for Designing Language Agents",
+      "abstract": "While contemporary large language models (LLMs) are increasingly capable in isolation, there are still many difficult problems that lie beyond the abilities of a single LLM. For such tasks, there is still uncertainty about how best to take many LLMs as parts and combine them into a greater whole. This position paper argues that potential blueprints for designing such modular language agents can be found in the existing literature on cognitive models and artificial intelligence (AI) algorithms. To make this point clear, we formalize the idea of an agent template that specifies roles for individual LLMs and how their functionalities should be composed. We then survey a variety of existing language agents in the literature and highlight their underlying templates derived directly from cognitive models or AI algorithms. By highlighting these designs, we aim to call attention to agent templates inspired by cognitive science and AI as a powerful tool for developing effective, interpretable language agents.",
       "authors": [
-        "Ziming Wang",
-        "Xiang Wang",
-        "Kailong Peng",
-        "Lang Qin",
-        "Juan Gabriel Kostelec",
-        "Christos Sourmpis",
-        "Axel Laborieux",
-        "Qinghai Guo"
+        "Ryan Liu",
+        "Dilip Arumugam",
+        "Cedegao E. Zhang",
+        "Sean Escola",
+        "Xaq Pitkow",
+        "Thomas L. Griffiths"
       ],
       "primary_category": "cs.AI",
       "categories": [
         "cs.AI",
-        "cs.CL"
+        "cs.CL",
+        "q-bio.NC"
       ],
-      "published": "2026-02-14T09:04:28+00:00",
-      "link": "https://arxiv.org/pdf/2602.13680v1",
+      "published": "2026-02-26T01:35:32+00:00",
+      "link": "https://arxiv.org/pdf/2602.22523v1",
       "tags": [
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "hybrid architecture for long-context modeling and memory",
-      "llm_evidence_cn": "用于长上下文建模和记忆的混合架构",
-      "llm_evidence": "用于长上下文建模和记忆的混合架构",
-      "canonical_evidence": "用于长上下文建模和记忆的混合架构",
-      "llm_tldr_en": "Combines sliding window attention with TTT memory networks to handle ultra-long contexts efficiently.",
-      "llm_tldr_cn": "结合滑动窗口注意力和 TTT 记忆网络，以高效处理超长上下文并减少遗忘。",
-      "llm_tldr": "结合滑动窗口注意力和 TTT 记忆网络，以高效处理超长上下文并减少遗忘。",
+      "llm_evidence_en": "Blueprints for modular language agents based on cognitive models",
+      "llm_evidence_cn": "基于认知模型的模块化语言智能体蓝图",
+      "llm_evidence": "基于认知模型的模块化语言智能体蓝图",
+      "canonical_evidence": "基于认知模型的模块化语言智能体蓝图",
+      "llm_tldr_en": "Proposes agent templates using cognitive models to compose functionalities for complex multi-LLM tasks.",
+      "llm_tldr_cn": "提出基于认知模型的智能体模板，通过组合多个LLM功能来解决复杂任务。",
+      "llm_tldr": "提出基于认知模型的智能体模板，通过组合多个LLM功能来解决复杂任务。",
       "llm_tags": [
         "query:agimem"
       ],
       "matched_query_tag": "query:agimem",
-      "matched_query_text": "long-term memory architectures for large language models",
-      "matched_requirement_id": "req-2",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
       "selection_source": "carryover_cache",
-      "paper_id": "2602.13680v1",
+      "paper_id": "2602.22523v1",
       "carry_days": 1
     }
   ]

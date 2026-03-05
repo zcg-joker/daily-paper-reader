@@ -1,0 +1,493 @@
+Title: MemPO: Self-Memory Policy Optimization for Long-Horizon Agents
+
+URL Source: https://arxiv.org/pdf/2603.00680v1
+
+Published Time: Tue, 03 Mar 2026 01:50:32 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# MemPO: Self-Memory Policy Optimization for Long-Horizon Agents 
+
+Ruoran Li 1, Xinghua Zhang 2, Haiyang Yu 2, Shitong Duan 2, Xiang Li 2,Wenxin Xiang 1, Chonghua Liao 1, Xudong Guo 2, Yongbin Li 2* , Jinli Suo 1* ,
+
+> 1
+
+Tsinghua University 
+
+> 2
+
+Tongyi Lab, Alibaba Group, 
+
+> lrr24@mails.tsinghua.edu.cn, zhangxinghua.zxh@alibaba-inc.com, shuide.lyb@alibaba-inc.com, jlsuo@tsinghua.edu.cn
+
+Abstract 
+
+Long-horizon agents face the challenge of growing context size during interaction with environment, which degrades the performance and stability. Existing methods typically intro-duce the external memory module and look up the relevant information from the stored memory, which prevents the model itself from proactively managing its memory content and aligning with the agent’s overarching task ob-jectives. To address these limitations, we pro-pose the self-memory policy optimization al-gorithm ( MemPO ), which enables the agent (policy model) to autonomously summarize and manage their memory during interaction with environment. By improving the credit assignment mechanism based on memory ef-fectiveness, the policy model can selectively retain crucial information, significantly reduc-ing token consumption while preserving task performance. Extensive experiments and anal-yses confirm that MemPO achieves absolute F1 score gains of 25.98% over the base model and 7.1% over the previous SOTA baseline, while reducing token usage by 67.58% and 73.12%. 
+
+1 Introduction 
+
+As large language models (LLMs) continue to evolve, LLM agents are becoming increasingly pro-ficient in addressing more complex problems. In areas such as deep research (Zhang et al., 2025; Zheng et al., 2025), data analysis (Hong et al., 2025), and vibe coding (Zhang et al., 2024; Islam et al., 2024; Ho et al., 2025), they have showcased remarkable performance. Long-horizon decision-making has always been one of the core capabilities for agents to solve complex user queries. Currently, the dominant method for the agent-environment interaction is ReAct paradigm (Yao et al., 2022). The feedback from the environment is attached to the previous interaction history and is used as a prompt, which then determines the next course of action. However, this approach causes the context to grow linearly with each round of inter-action, resulting in longer contexts when tackling more complex problems, and presenting several challenges. Firstly, current LLMs have relatively limited context window sizes, which impose an ex-plicit upper bound on the number of interactions. Secondly, long contexts lead to excessively high to-ken costs, which impedes the widespread adoption of agent systems in practical scenarios. Further-more, excessively long contexts can lead to the “lost in the middle” phenomenon (Liu et al., 2023), which degrades the model’s ability, thereby reduc-ing the overall performance of the agent. To address this challenge, a growing body of research is focusing on agent memory, with the aim of providing LLMs with historical interaction records to reduce the need for the entire context. Currently, the mainstream solution involves design-ing a memory module as an external knowledge database to maintain the agent’s interaction history. When the memory module is accessed, relevant historical information is retrieved and integrated into the prompt (Borgeaud et al., 2022; Gao et al., 2024; Lewis et al., 2020) based on the retrieval-augmented generation technique (RAG). However, the offline memory context compression method lacks the capacity for joint optimization oriented toward the agent task execution, making it difficult to effectively align with the agent’s overarching task objectives. As a result, the model’s memory retrieval remains passive, rather than leveraging its own capabilities to proactively select and organize information, and the latter would facilitate more effective task completion. To this end, we formalize the agent interac-tion paradigm as autonomously refining and or-ganizing historical information, while simultane-ously reasoning and invoking tools with three ac-tions <mem> , <think> , and <tool_call> . In this paradigm, the agent itself proactively compresses and reorganizes long -horizon historical informa-1            
+
+> arXiv:2603.00680v1 [cs.AI] 28 Feb 2026 𝑰 𝟏 𝑴 𝟏 𝑻 𝟏 𝑪 𝟏
+> Agent
+> 𝑸
+> 𝑴 Memory: 𝑻 Think: 𝑪 Tool Call: 𝑰 Information:
+> Tool Call Tool Response
+> Environment
+> 𝑰 𝒕 𝑴 𝒕 𝑻 𝒕 𝑪 𝒕
+> 𝑰 𝒕 −𝟏 𝑴 𝒕 −𝟏 𝑻 𝒕 −𝟏 𝑪 𝒕 −𝟏
+> … …
+> Question: 𝑸
+> Step 1Step t
+
+Figure 1: The self-memory inference process of our method, which only uses the previous step interaction for next step input with <mem> action. 
+
+tion for the next step of interaction, making mem-ory management an intrinsic part of its capabilities, as shown in Figure 1. To further enhance this abil-ity, we propose self-memory policy optimization (MemPO ), which incorporates the trajectory-level and memory-level information into advantage esti-mation to optimize the <mem> action for agent with task-objective awareness. Concretely, the tokens output by the agent are assigned trajectory-level advantages, and in each step of the interaction, the tokens of the <mem> action additionally take into account memory-level advantages, effectively al-leviating the credit assignment problem in long-horizon, multi-turn interactions. In terms of dense rewards for <mem> action in each step, the condi-tional probability of the answer given <mem> con-tent is designed to measure the quality of the <mem> 
+
+action. Our contributions are as follows: • We render memory management an intrinsic part of the agent’s own capabilities that differs from external memory modules, achieving joint optimization of long-horizon memory, reasoning, and tool invocation. • We propose MemPO , a self-memory policy optimization algorithm, which effectively ad-dresses credit assignment and steers the <mem> 
+
+action toward retaining the most relevant in-formation for solving the task. • Extensive experiments on five long-horizon benchmarks confirm the efficacy of MemPO with 25.98% and 7.1% absolute F1 gains over the base model and previous SOTA, 67.58% and 73.12% reductions in token usage. 
+
+2 Related Works 
+
+2.1 Memory for LLM agents 
+
+In recent years, researchers have introduced exter-nal memory systems to address the limitations of LLM context windows (Xu et al., 2025; Chhikara et al., 2025; Zheng et al., 2024; Packer et al., 2024; Zhong et al., 2023). MemGPT (Packer et al., 2024) proposes an operating-system-inspired vir-tual memory management framework that employs multiple memory hierarchies to manage contex-tual information. Mem0 (Chhikara et al., 2025) enhances memory capacity through dynamic ex-traction, consolidation, and retrieval of conversa-tional information. Despite their effectiveness in specific domains, most of these approaches rely on fixed workflows and limited optimization flexibility. They typically fail to support flexible cross-stage joint optimization, which constrains the adaptabil-ity and scalability of the overall system. 
+
+2.2 RAG in Memory System 
+
+RAG has emerged as a powerful approach for en-hancing LLM by incorporating external knowledge sources to improve model performance (Borgeaud et al., 2022; Gao et al., 2024; Lewis et al., 2020). In existing memory systems, the retrieval of relevant memory fragments is predominantly implemented based on RAG. While this approach can efficiently surface relevant information in certain scenarios, its major limitation lies in the lack of flexibility and end-to-end joint optimization. Specifically, retrieval relies solely on embedding similarity be-tween the query and chunks, which does not nec-essarily yield information that is most useful for solving the target problem. 
+
+2.3 RL for LLM Agents 
+
+The recent success of reinforcement learning meth-ods in LLMs has established RL as a central tool to enhance LLM-based agents to solve increasingly complex tasks (Jin et al., 2025; Chen et al., 2025; Zheng et al., 2025). However, relatively few stud-ies have explored applying RL to the optimization of agent memory. Existing approaches exhibit no-table limitations. For example, MEM1 (Zhou et al., 2025) integrates memory into the reasoning pro-cess and applies RL optimization for policy model. However, it does not explicitly design objectives for memory optimization, which can lead to sub-optimal memory representations. In contrast, our method introduces a dedicated credit assignment mechanism for memory rewards, encouraging the model to retain information that is most relevant for solving the target task. 2𝑺 <𝒕 −𝟏  𝑺 𝒕 −𝟏     
+
+> 𝒎𝒆𝒎 𝑺 𝒕 −𝟏
+> 𝒕𝒉𝒊𝒏𝒌 𝑺 𝒕 −𝟏
+> 𝒄𝒂𝒍𝒍 𝑺 𝒕 −𝟏
+> 𝒓𝒆𝒔𝒑
+> 𝑸
+
+⋯ 𝝐 = 𝑷 𝐒 𝐚𝐧𝐬 𝑺 <𝒕 −𝟏 )         
+
+> 𝑹 𝑴 =𝑷 𝒎𝒆𝒎 −𝝐
+> 𝑺 <𝒕 𝑺 𝒕
+> 𝒎𝒆𝒎 𝑺 𝒕
+> 𝒕𝒉𝒊𝒏𝒌 𝑺 𝒕
+> 𝒄𝒂𝒍𝒍 𝑺 𝒕
+> 𝒓𝒆𝒔𝒑
+> 𝑸
+
+⋯ 𝑷 𝒎𝒆𝒎 = 𝑷 𝐒 𝐚𝐧𝐬 𝑺 𝒕                
+
+> 𝒎𝒆𝒎 )
+> Rollout
+> Trajectory
+> 𝝉 𝑁
+> 𝝉 𝑖
+> 𝝉 1
+> Rewards
+> 𝑹 𝑇
+> 𝑀
+> 𝑹 𝑡
+> 𝑀
+> 𝑹 𝟏
+> 𝑀
+> Advantages
+> 𝑨 1=𝑨 1
+> 𝑇 +𝑨 1
+> 𝑀
+> 𝑨 𝑇 =𝑨 𝑇
+> 𝑇 +𝑨 𝑇
+> 𝑀
+> 𝑨 𝑡 =𝑨 𝑡
+> 𝑇 +𝑨 𝑡
+> 𝑀
+> Self -Memory Policy Optimization
+> Tools Agent
+> Response
+> Invocation
+> Agent -Environment
+> Interaction
+
+Figure 2: Overview of MemPO. At step t of any trajectory τi, the context is represented as 
+
+{smem t , s think t , s call t , s resp t }. The memory reward RM is calculated using conditional probabilities and contributes to the advantage AM . The final advantage is the sum of AM and the trajectory-level advantage AT . During inference, only the previous step’s content is used as context, discarding earlier information. 
+
+3 Preliminaries 
+
+3.1 Task Formulation 
+
+Given a question-answer pair (q, a gt ), when an LLM-based agent is tasked with solving the ques-tion q, it interacts with the external environment through multiple rounds of reasoning and tool in-vocation to acquire the information required for problem solving. If the agent completes the task after T steps, a full trajectory can be denoted as 
+
+τ = {s1, s 2, . . . , s T }.Each state st is further decomposed into {smem t ,sthink t , s call t , s resp t }. Specifically, smem t represents the model-generated summary of effective infor-mation from previous outputs s<t , which is en-closed by <mem> </mem> . sthink t corresponds to the model’s reasoning process and is wrapped by 
+
+<think> </think> . scall t denotes the invocation of external tools by the model, which is represented as <tool_call> </tool_call> . sresp t captures the information returned by the tool and is enclosed by <information> </information> . Once the agent has gathered sufficient information to answer the question q, it produces a predicted answer apred ,wrapped by <answer> </answer> .
+
+3.2 Group Relative RL 
+
+In reinforcement learning for LLM, a class of group-based methods, exemplified by Group Rel-ative Policy Optimization (GRPO) (Shao et al., 2024), abandon per-trajectory value function mod-eling and instead performs relative comparison within a batch of candidate trajectories. Concretely, for a given task input q, the policy πθold generates 
+
+N complete trajectories {τ1, τ 2, . . . , τ N } in one shot, and each trajectory is assigned a scalar return 
+
+R(τi) that measures the overall quality of the gener-ated outcome. The algorithm then relies solely on statistics within this group to construct advantages, without explicitly learning a value network: 
+
+A(τi) = GroupAgg 
+
+
+
+{R(τj )}Nj=1 , i 
+
+
+
+, (1) where GroupAgg( ·) is the aggregation operator based on normalization, or pairwise comparison. The design bypasses the instabilities of value function estimation and reduces it to modeling rel-ative preferences among a set of candidate answers. In large-scale LLM training, group-based methods can reduce the memory overhead of extra networks, making them an efficient alternative for RL train-ing. 
+
+3.3 Behavior Cloning 
+
+To enable the model to better follow the action for-mat, we first adopt GPT-4.1 (OpenAI et al., 2024) to perform inference on the publicly available train-ing dataset from the work of (Tang et al., 2025), filter out trajectory with incorrect answers, and finally generate approximately 10K trajectories fol-lowing the predefined action format in § 3.1. Based on these trajectory data, we fine-tune the LLM and provide a promising starting point for self-memory policy optimization. 
+
+4 Self-Memory Policy Optimization 
+
+As mentioned above, memory is introduced to ad-dress long contexts of agents by removing irrele-vant information and retaining key details. Vanilla GRPO computes rewards based on answer correct-ness and uses trajectory-level advantages, where tokens within the same trajectory share the same reward. It provides the sparse rewards and limited guidance for memory generation, as the correct-ness of the final answer can not directly reflect the quality of each <mem> action during the interaction. To address this, we propose MemPO , a self-memory policy optimization algorithm. We de-3sign a novel advantage computation method that, in addition to trajectory-level advantages, evalu-ates the information content of memory within 
+
+<mem> </mem> at each step and computes an ad-ditional advantage, ensuring memory remains con-cise while preserving important information. 
+
+4.1 Advantages of Global Trajectory 
+
+We first evaluate the trajectory format and the accu-racy of the final answer to provide a coarse-grained assessment of the overall trajectory quality. Sup-pose that for a single training sample, we perform 
+
+N rollout and assign an overall score to each result-ing trajectory, denoted as a group: 
+
+GT = {(τ1, R T (τ1)) , (τ2, R T (τ2)) ,. . . , (τN , R T (τN )) }. (2) where τi denotes a trajectory, and RT (τi) repre-sents the trajectory-level reward. In our method, the reward consists of evaluations of both the out-put format and the correctness of predicted answer. Concretely, the reward is set to 1 if and only if the predicted answer is correct and output format is proper; otherwise, it is set to 0. To assess the global relative quality of each tra-jectory within the group, we adopt the advantage calculation strategy from GRPO (Shao et al., 2024), which normalizes the total reward using the mean and standard deviation computed over the group: 
+
+AT (τi) = 
+
+RT (τi) − mean 
+
+
+
+{RT (τj )}Nj=1 
+
+
+
+std 
+
+
+
+{RT (τj )}Nj=1 
+
+ . (3) 
+
+4.2 Advantages of Informative Memory 
+
+According to the probabilistic formulation of LLMs, the output of model is characterized as conditional probabilities given the preceding con-text, i.e., πθ(st | q, s <t ) (Vaswani et al., 2017). As demonstrated and exploited in previous work (Wang et al., 2025; Kim and Lee, 2024; Lewis et al., 2020), if the context s<t contains sufficient infor-mation to solve the problem, the probability that st
+
+is sampled as the answer-generation step sans will be relatively high. Similarly, this insight suggests that for an arbitrary context sany , a higher value of 
+
+πθ(sans | q, s any ) indicates that sany contains more key information relevant to solving the question q,thereby increasing the model’s confidence in gener-ating the correct answer. Consequently, conditional probability can be used as a quantitative measure of the effective information content contained in a given context. Based on this intuition, we design a step-level reward for the memory ( <mem> action) generated at each interaction step, which reflects the quality of effective information retained in memory: 
+
+RM  τi(smem t ) =P [sans | τi(smem t )] − ϵ, 
+
+1 ≤ i ≤ N, 1 ≤ t ≤ T. (4) where τi(smem t ) denotes the memory content within <mem> action in step t of trajectory τi, and 
+
+sans = {a1, a 2, . . . , a L} represents the correct an-swer string, where al denotes the l-th token of the answer. The ϵ represents P [sans | τi(s<t )] , which serves as a bias term. The term τi(s<t ) corresponds to the trajectory of the first t-1 steps of τi. The op-erator P (·) denotes a posterior-probability-based measure. Specifically, P [sans | τi(smem t )] can be represented as: 
+
+> L
+
+vuut LY
+
+> l=1
+
+πθ(al | q, τ i(smem t ), a <l ). (5) where πθ(al | q, τ i(smem t ), a <l ) denotes the proba-bility of generating token al given the user query, the trajectory prefix up to step t − 1, and the pre-ceding answer tokens a<l .Under this formulation, a larger value of 
+
+RM (τi(smem t )) indicates that the memory gener-ated at step t provides a more effective summary of the trajectory up to the first t-1 steps, and better preserves contextual information that is relevant to generating the correct answer. Based on the reward formulation above, the re-sulting memory group can be expressed as: 
+
+GM =    τi(smem t ), R M (τi(smem t )) 
+
+|1 ≤ i ≤ N, 1 ≤ t ≤ T . (6) We then normalize the rewards using the group-wise mean and standard deviation to obtain the corresponding advantages AM (τi(smem t )) :
+
+AM (τi(smem t )) = RM (τi(smem t )) − M( τi(smem t )) std ( {RM (τi(smem t )) }) .
+
+(7) where M( τi(smem t )) denotes the mean reward within the same group, defined as: 
+
+M( τi(smem t )) = mean   RM (τi(smem t )) 
+
+|  τi(smem t ), R M (τi(smem t ))  ∈ GM . (8) 4The advantage AM (τi(smem t )) provides a quan-titative assessment of memory quality, enabling finer-grained supervision over the model-generated memory content. 
+
+4.3 Combination of Advantages 
+
+The final token-level advantage is obtained by com-bining the two types of advantages in § 4.1 and § 4.2. Let the k-th token of the i-th trajectory τi in a group be denoted as τi,k . The advantage assigned to this token Ai,k is defined as: 
+
+Ai,k =
+
+(
+
+AT (τi)+ AM (τi(smem t )) , τ i,k ∈ τi(smem t )
+
+AT (τi), otherwise .
+
+(9) That is, when τi,k corresponds to a token within the memory segment ( <mem> action), its advan-tage is given by the sum of the trajectory-level advantage and the memory-level advantage; oth-erwise, only the trajectory-level advantage AT is used. In this way, tokens belonging to memory receive richer and more explicit feedback signals, which more effectively guide the rollout process for memory generation. 
+
+4.4 Policy Optimization and Inference Optimization. The policy optimization objective is to maximize J (θ), written as: 
+
+J (θ) = E
+
+"
+
+1
+
+N
+
+> N
+
+X
+
+> i=1
+
+1
+
+|τi|
+
+> |τi|
+
+X
+
+> k=1
+
+min 
+
+
+
+γi,k Ai,k , clip( γi,k 
+
+, 1 − ϵ, 1 + ϵ)Ai,k 
+
+
+
+− β DKL (πθ ∥ πref )
+
+#
+
+.
+
+(10) where γi,k is the importance sampling ratio: 
+
+πθ(τi,k | q, τ i,<k )
+
+πθold (τi,k | q, τ i,<k ) . (11) where q ∼ p(Q), {τi}Ni=1 ∼ πθold . p(Q) denotes the distribution of queries in the training set, and β
+
+controls the weight of the KL-divergence regular-ization term. 
+
+Inference. In vanilla ReAct framework, the t-th step inference is denoted as πθ(st | q, s <t ). In our method, since smem t−1 contains the effective infor-mation of s<t −2, we replace s<t with smem t−1 as the inference context, represented as πθ(st | q, s mem t−1 ).
+
+5 Experiments 
+
+5.1 Benchmarks 
+
+To evaluate the effectiveness of our approach, fol-lowing the method of MEM1 (Zhou et al., 2025), we test on multi-objective tasks, where the num-ber of interaction rounds required for the agent to solve a problem is significantly higher compared to single-objective tasks. This allows us to better assess the performance of our method in scenarios with long contexts. Additionally, we can observe the changes in agent performance by progressively increasing the number of objectives. We created a 2-objective task test set by combining queries from the validation sets of the HotpotQA (Yang et al., 2018) and NQ (Kwiatkowski et al., 2019) QA datasets, and synthesized test sets with more objectives using the HotpotQA validation set. We conducted tests under both local wiki search en-gine and web search engine scenarios to enhance the credibility of the experiments. Following previous work (Zhou et al., 2025), we use the F1 score as a criterion for word-level match-ing, and Exact Match ( EM ) for exact matching. Furthermore, to evaluate the token consumption of the agent when solving a problem, we use the total number of tokens consumed to solve a question (TT ), as well as the maximum number of tokens (peak tokens) consumed in a single step ( PT ). 
+
+5.2 Baselines 
+
+We compare our method with various baselines. For prompt-based baselines, we use ReAct (Yao et al., 2022). For agentic RL-based baselines, we adopt DeepResearcher (Zheng et al., 2025) and ReSearch (Chen et al., 2025). For agent memory-related baselines, we use RL-based method MEM1 (Zhou et al., 2025) and RAG-based method A-MEM (Xu et al., 2025). Additionally, we also trained a model without memory using GRPO in the exact same environment as a baseline. To en-sure fairness, all methods use the 7B model from the Qwen2.5 series as the base model. 
+
+5.3 Implementation Details 
+
+We first performed inference using GPT-4.1 (Ope-nAI et al., 2024) on the dataset from the work of (Tang et al., 2025), and obtained approximately 10k trajectories containing memory. We then fine-tuned the model for one epoch using these data to en-hance its ability to follow instructions related to the memory component. Simultaneously, we removed 5Table 1: The accuracy and token consumption for multi-objective tasks of baselines. Text with bold means SOTA.                                                                                                                                                                                   
+
+> Local Wiki Search
+> Model 2-objective 4-objective 6-objective 8-objective 10-objective Avg
+> F1 EM F1 EM F1 EM F1 EM F1 EM F1 ↑EM ↑TT ↓PT ↓
+> Qwen2.5 (ReAct) 33.73 25.60 10.59 7.00 5.37 4.00 5.92 4.25 2.63 1.96 11.65 8.56 3.64 0.61 ReSearch 47.40 36.00 24.13 16.70 20.84 15.93 10.80 7.70 5.08 3.56 21.65 15.98 3.29 0.71 DeepResearcher 30.94 24.70 24.52 18.10 13.88 10.73 9.12 6.85 5.07 3.52 16.71 12.78 4.29 0.77 A-MEM 33.24 25.20 13.71 10.10 9.80 7.07 6.86 5.10 5.56 3.60 13.83 10.21 2.62 0.38 MEM1 47.74 37.10 26.51 18.90 18.81 14.07 19.04 13.55 19.61 13.36 26.34 19.40 1.38 0.20 GRPO (w/o <mem> )54.57 42.95 38.31 28.60 29.78 22.60 18.97 13.65 11.01 7.84 30.53 23.13 4.39 0.81
+> MemPO (Ours) 56.47 46.15 42.75 31.90 34.32 26.93 30.48 23.70 24.15 18.16 37.63 29.37 1.18 0.18 Online Web Search
+> Qwen2.5 (ReAct) 45.71 33.60 16.83 11.80 12.12 9.07 9.66 6.80 7.25 4.68 18.31 13.19 3.14 0.34 ReSearch 51.17 39.20 29.92 21.10 25.21 18.73 17.09 12.50 10.37 7.44 26.75 19.79 2.17 0.40 MEM1 50.56 39.60 30.43 22.00 21.67 16.20 19.48 14.30 18.06 12.12 28.04 20.84 0.96 0.14
+> MemPO (Ours) 57.40 45.20 41.42 30.20 37.92 28.60 34.30 25.80 22.92 16.32 38.79 29.22 0.86 0.12
+
+the memory component from the trajectories to use them for fine-tuning the baseline model, which was trained using GRPO and does not include memory, ensuring fairness in the comparison. In the RL phase, we followed MEM1 and used the 2-objective task synthesized from HotpotQA and NQ as part of the training set. And we ran-domly sampled a subset from both datasets as an-other part of training set. The rollout group size 
+
+N for group-based RL methods is set to 16, with a batch size of 128 and a learning rate of 1e-6. The maximum number of interaction rounds is set to 16. During training, we use the local wiki search engine as the search tool. 
+
+5.4 Experimental Results Multi-objective task. The results of each baseline on the multi-objective task are shown in Table 1. We selected tasks with 4, 6, 8, and 10 objectives as progressively harder task groups and recorded F1 and EM for the answers from each baseline as precision metrics. Among the baselines, MEM1, A-MEM, and our method use truncated contexts, meaning the model only has access to the previ-ous step of interactions, while the other baselines use the complete context. Additionally, we also recorded the total number of tokens required to solve a single problem (TT) and the peak token consumption per step (PT) during the model’s exe-cution. The more detailed results are presented in Appendix Table 2. 
+
+Conditional probability analysis. To investi-gate the impact of our reward design on the model, we performed a statistical analysis of the true val-ues of P [sans | smem ] during inference on the 10-objective task. We compared the results of models trained with vanilla GRPO and our method. Specif-ically, let the dataset size be M , and denote the memory component at step t of the m-th trajec-tory as τm(smem t ), with the corresponding ground truth answer string being τm(sans ). Figure 5 shows the grouped results of P [τm(sans ) | τm(smem t )] ,where the x-axis represents the group values of the conditional probability, and the y-axis shows the proportion of memory samples in that range rela-tive to the total memory samples. This distribution illustrates the conditional probability distribution of the memory produced by the model. The line graph’s y-axis represents the average accuracy of trajectories whose memory falls within each group, providing insight into the relationship between ac-curacy and the conditional probability. Figure 4 displays the aggregated results of 
+
+P [τm(sans ) | τm(smem t )] by step. The x-axis repre-sents the step t of the memory, and the y-axis of the line graph shows the average conditional probabil-ity of the memory at step t across all M trajectories. This provides insight into how conditional proba-bility evolves with the step. The histogram shows the proportion of memories at each step relative to the total number of trajectories. 
+
+Ablation study. To validate the effectiveness of our design, we compared the performance of the memory-enabled model trained with vanilla GRPO and our model, keeping all other conditions identical. The only difference between the two models is the inclusion of a reward specifically for memory. The results are shown in the left panel of Figure 3. Additionally, we evaluated our method under different context retention settings: full con-text, retaining 1 or 3 interaction rounds. The results 62 4 6 8 10     
+
+> Objective Number
+> 20
+> 30
+> 40
+> 50
+> 60
+> F1 Score
+> Ablation for Advantages of Information Content
+> GRPO
+> Ours 246810
+> Objective Number
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> F1 Score
+> Ablation for Context Strategy
+> 1 Step Context
+> 3 Step Context
+> Full Context
+
+Figure 3: The results of ablation study. 0.0               
+
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> Step Ratio
+> 12345678910 11 12 13 14 15
+> Step
+> 0.050
+> 0.055
+> 0.060
+> 0.065
+> 0.070
+> 0.075
+> 0.080
+> 0.085
+> 0.090
+> Probability
+> Step Conditional Probability Analysis
+> GRPO Probability
+> Ours Probability
+> GRPO Step Ratio
+> Ours Step Ratio
+
+Figure 4: The result of step conditional probability analysis. 
+
+of these experiments are shown in the right panel of Figure 3. 
+
+5.5 Experimental Analyses Our method demonstrates remarkable perfor-mance and generalization. As shown in Table 1, we achieve SOTA performance on tasks that are much more difficult than those in the training set, and our model continues to maintain leading perfor-mance when switched to a real-world web search environment that differs from the training setup. Additionally, as presented in Table 1, our model achieves SOTA performance while minimizing to-ken consumption, thereby achieving the highest performance with the least resource usage. Fur-thermore, as seen in Figure 3, whether using full context, retaining 1 or 3 interaction rounds for in-ference, our method’s performance remains con-sistently stable, showcasing strong generalization capabilities. 
+
+The memory mechanism significantly reduces token consumption. As shown in Appendix Ta-ble 2, token consumption for tasks solved by MEM1, A-MEM, and our method, which all in-corporate the memory mechanism, is noticeably lower than that of other baselines. Taking Re-Search as an example and comparing it with our method, when the task is relatively simple, such as a 2-objective task, the token consumption is only slightly higher than ours. However, as the com-plexity of the task increases, the gap between the two methods becomes more pronounced. By the time the task reaches 10 objectives, the number of tokens required by our method to solve a problem is approximately 1/3 of ReSearch’s, with the token peak being 1/5. This is comparable to ReSearch’s token consumption on a 4-objective task. More-over, our method not only uses truncated contexts but also provides effective guidance on the memory content, resulting in even more compact contexts compared to other memory-related methods. As a result, token consumption in our method is the lowest among all baselines. 
+
+The ability of memory to provide strongly rel-evant information is crucial for task success. In the baseline methods, A-MEM generates memory based on a RAG approach. As mentioned in the introduction, the memory obtained by this method is not necessarily the most relevant for solving the task and contains a significant amount of redun-70.00 
+
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> Group Ratio
+> 0.008
+> 0.024
+> 0.040
+> 0.056
+> 0.072
+> 0.088
+> 0.104
+> 0.120
+> 0.136
+> 0.152
+> Grouped Probability
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> 0.35
+> 0.40
+> ACC Score
+> Grouped Conditional Probability Analysis
+> GRPO ACC
+> Ours ACC
+> GRPO Group Ratio
+> Ours Group Ratio
+
+Figure 5: The result of grouped conditional probability analysis. 
+
+dancy. As a result, while A-MEM reduces token consumption compared to ReAct, its performance does not show a significant improvement. On the other hand, MEM1 generates memory by combin-ing the model’s summary with reasoning, creating a stronger link between memory generation and the task-solving process. This allows MEM1 to show a considerable improvement on long-horizon tasks. Furthermore, our method explicitly guides the model to retain the context that most strongly contributes to solving the problem, outperforming other memory-related baselines in all datasets. 
+
+The number of context steps impacts perfor-mance on long-horizon tasks. As shown in the right panel of Figure 3, we present the results of inference using complete context, truncated in 1 step and in 3 steps. Overall, the performance dif-ferences between these methods fluctuate within an acceptable range, with the trend showing that the more context steps used, the better the perfor-mance on short-horizon tasks, but the weaker the performance on long-horizon tasks. This effect is particularly noticeable on long-horizon tasks. We believe that this aligns with the phenomenon of attention dilution caused by long contexts, which leads to performance degradation. 
+
+Our reward design positively contributes to improving the effective information content. Fig-ure 3 presents a performance comparison between vanilla GRPO and our method. The results show that our reward design leads to an improvement in the model’s performance. We also quantitatively analyzed the information content of the memory in the trajectories of both vanilla GRPO and our method. The bar graph in Figure 5 indicates that, compared to the baseline, our method’s probability distribution is more skewed toward higher values, which contributes to greater precision of responses, as confirmed by the line graph. Additionally, the line graph in Figure 4 shows that, for the first 10 steps of 10-objective task, the mean probability of our method increases as the steps progress, whereas the baseline shows a de-creasing trend. We believe this reflects the more ef-fective organization of memory by our method com-pared to the baseline. After 10 steps, our method’s probability starts to decrease, which is reasonable given that the typical number of search steps in a 10-objective task is around 10. If the task is not completed by this point, it suggests that some infor-mation is difficult to find and is still being searched for. In contrast, the baseline experiences more dif-ficulty in the first 10 steps, and as seen in the bar chart, only 20% of the search examples continue after the 10th step. We hypothesize that the few re-maining examples that did not abandon exploration likely achieved relatively higher accuracy, which explains the continued increase in probability after the 10th step. Overall, both the final performance and the prob-ability analysis validate that our reward design is effective and aligns with expectations. 
+
+6 Conclusion 
+
+Our method optimizes memory management for agents by introducing a novel reward design that retains only relevant information, improving task performance and reducing computational costs. By integrating memory, reasoning, and tool invoca-tion via reinforcement learning, we achieve supe-rior performance, especially on long-horizon tasks, with efficient token consumption. Future work will focus on optimizing memory reward design and enhancing the scalability of self-memory method in more applications. 8Limitations 
+
+Although our method shows promising perfor-mance, one potential limitation is that, due to vary-ing tool invocation at different steps, the informa-tion content in memory naturally differs and the states are not completely equivalent across all steps in all rollout trajectories, which may introduce bias when calculating group-based advantages. While we alleviate this issue by introducing ϵ in Equa-tion 4, more refined solutions may reduce this bias in more complex environments, and understand-ing the generalization to diverse real -world settings needs further investigation. 
+
+References 
+
+Sebastian Borgeaud, Arthur Mensch, Jordan Hoffmann, Trevor Cai, Eliza Rutherford, Katie Millican, George Bm Van Den Driessche, Jean-Baptiste Lespiau, Bog-dan Damoc, Aidan Clark, Diego De Las Casas, Aure-lia Guy, Jacob Menick, Roman Ring, Tom Hennigan, Saffron Huang, Loren Maggiore, Chris Jones, Albin Cassirer, and 9 others. 2022. Improving Language Models by Retrieving from Trillions of Tokens. In 
+
+Proceedings of the 39th International Conference on Machine Learning , pages 2206–2240. PMLR. ISSN: 2640-3498. Mingyang Chen, Linzhuang Sun, Tianpeng Li, Haoze Sun, Yijie Zhou, Chenzheng Zhu, Haofen Wang, Jeff Z. Pan, Wen Zhang, Huajun Chen, Fan Yang, Zenan Zhou, and Weipeng Chen. 2025. ReSearch: Learning to Reason with Search for LLMs via Rein-forcement Learning. Preprint , arXiv:2503.19470. Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, and Deshraj Yadav. 2025. Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory. Preprint , arXiv:2504.19413. Yunfan Gao, Yun Xiong, Xinyu Gao, Kangxiang Jia, Jinliu Pan, Yuxi Bi, Yi Dai, Jiawei Sun, Meng Wang, and Haofen Wang. 2024. Retrieval-Augmented Gen-eration for Large Language Models: A Survey. arXiv preprint . ArXiv:2312.10997 [cs]. Chia-Tung Ho, Haoxing Ren, and Brucek Khailany. 2025. Verilogcoder: Autonomous verilog coding agents with graph-based planning and abstract syntax tree (ast)-based waveform tracing tool. In Proceed-ings of the AAAI Conference on Artificial Intelligence ,volume 39, pages 300–307. Issue: 1. Xanh Ho, Anh-Khoa Duong Nguyen, Saku Sugawara, and Akiko Aizawa. 2020. Constructing A Multi-hop QA Dataset for Comprehensive Evaluation of Reasoning Steps. arXiv preprint . ArXiv:2011.01060 [cs]. Sirui Hong, Yizhang Lin, Bang Liu, Bangbang Liu, Bin-hao Wu, Ceyao Zhang, Danyang Li, Jiaqi Chen, Jiayi Zhang, and Jinlin Wang. 2025. Data interpreter: An llm agent for data science. In Findings of the Asso-ciation for Computational Linguistics: ACL 2025 ,pages 19796–19821. Md Ashraful Islam, Mohammed Eunus Ali, and Md Rizwan Parvez. 2024. MapCoder: Multi-Agent Code Generation for Competitive Problem Solving. 
+
+arXiv preprint . ArXiv:2405.11403 [cs]. Bowen Jin, Hansi Zeng, Zhenrui Yue, Jinsung Yoon, Sercan Arik, Dong Wang, Hamed Zamani, and Jiawei Han. 2025. Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning. Preprint , arXiv:2503.09516. Mandar Joshi, Eunsol Choi, Daniel S. Weld, and Luke Zettlemoyer. 2017. TriviaQA: A Large Scale Dis-tantly Supervised Challenge Dataset for Reading Comprehension. arXiv preprint . ArXiv:1705.03551 [cs]. Kiseung Kim and Jay-Yoon Lee. 2024. RE-RAG: Im-proving Open-Domain QA Performance and Inter-pretability with Relevance Estimator in Retrieval-Augmented Generation. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , pages 22149–22161, Miami, Florida, USA. Association for Computational Lin-guistics. Satyapriya Krishna, Kalpesh Krishna, Anhad Mo-hananey, Steven Schwarcz, Adam Stambler, Shyam Upadhyay, and Manaal Faruqui. 2025. Fact, Fetch, and Reason: A Unified Evaluation of Retrieval-Augmented Generation. arXiv preprint .ArXiv:2409.12941 [cs] version: 3. Tom Kwiatkowski, Jennimaria Palomaki, Olivia Red-field, Michael Collins, Ankur Parikh, Chris Alberti, Danielle Epstein, Illia Polosukhin, Jacob Devlin, Ken-ton Lee, Kristina Toutanova, Llion Jones, Matthew Kelcey, Ming-Wei Chang, Andrew M. Dai, Jakob Uszkoreit, Quoc Le, and Slav Petrov. 2019. Natural Questions: A Benchmark for Question Answering Research. Transactions of the Association for Com-putational Linguistics , 7:453–466. Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Hein-rich Küttler, Mike Lewis, Wen-tau Yih, Tim Rock-täschel, Sebastian Riedel, and Douwe Kiela. 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. In Advances in Neural Infor-mation Processing Systems , volume 33, pages 9459– 9474. Curran Associates, Inc. Nelson F. Liu, Kevin Lin, John Hewitt, Ashwin Paran-jape, Michele Bevilacqua, Fabio Petroni, and Percy Liang. 2023. Lost in the Middle: How Lan-guage Models Use Long Contexts. arXiv preprint .ArXiv:2307.03172 [cs]. Alex Mallen, Akari Asai, Victor Zhong, Rajarshi Das, Daniel Khashabi, and Hannaneh Hajishirzi. 2023. 
+
+9When Not to Trust Language Models: Investigat-ing Effectiveness of Parametric and Non-Parametric Memories. arXiv preprint . ArXiv:2212.10511 [cs]. Grégoire Mialon, Clémentine Fourrier, Craig Swift, Thomas Wolf, Yann LeCun, and Thomas Scialom. 2023. GAIA: a benchmark for General AI Assistants. 
+
+arXiv preprint . ArXiv:2311.12983 [cs]. OpenAI, Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Ale-man, Diogo Almeida, Janko Altenschmidt, Sam Alt-man, Shyamal Anadkat, Red Avila, Igor Babuschkin, Suchir Balaji, Valerie Balcom, Paul Baltescu, Haim-ing Bao, Mohammad Bavarian, Jeff Belgum, and 262 others. 2024. GPT-4 Technical Report. arXiv preprint . ArXiv:2303.08774 [cs]. Charles Packer, Sarah Wooders, Kevin Lin, Vivian Fang, Shishir G. Patil, Ion Stoica, and Joseph E. Gonzalez. 2024. MemGPT: Towards LLMs as Operating Sys-tems. Preprint , arXiv:2310.08560. Ofir Press, Muru Zhang, Sewon Min, Ludwig Schmidt, Noah Smith, and Mike Lewis. 2023. Measuring and Narrowing the Compositionality Gap in Language Models. In Findings of the Association for Computa-tional Linguistics: EMNLP 2023 , pages 5687–5711, Singapore. Association for Computational Linguis-tics. Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, Y. K. Li, Y. Wu, and Daya Guo. 2024. DeepSeekMath: Pushing the Limits of Mathemat-ical Reasoning in Open Language Models. Preprint ,arXiv:2402.03300. Qiaoyu Tang, Hao Xiang, Le Yu, Bowen Yu, Yaojie Lu, Xianpei Han, Le Sun, WenJuan Zhang, Pengbo Wang, Shixuan Liu, Zhenru Zhang, Jianhong Tu, Hongyu Lin, and Junyang Lin. 2025. Beyond Turn Limits: Training Deep Search Agents with Dynamic Context Window. arXiv preprint . ArXiv:2510.08276 [cs]. Harsh Trivedi, Niranjan Balasubramanian, Tushar Khot, and Ashish Sabharwal. 2022. MuSiQue: Multi-hop Questions via Single-hop Question Composition. 
+
+arXiv preprint . ArXiv:2108.00573 [cs]. Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Ł ukasz Kaiser, and Illia Polosukhin. 2017. Attention is All you Need. In Advances in Neural Information Pro-cessing Systems , volume 30. Curran Associates, Inc. Guoqing Wang, Sunhao Dai, Guangze Ye, Zeyu Gan, Wei Yao, Yong Deng, Xiaofeng Wu, and Zhen-zhe Ying. 2025. Information Gain-based Pol-icy Optimization: A Simple and Effective Ap-proach for Multi-Turn LLM Agents. arXiv preprint .ArXiv:2510.14967 [cs]. Jialong Wu, Wenbiao Yin, Yong Jiang, Zhenglin Wang, Zekun Xi, Runnan Fang, Linhai Zhang, Yulan He, Deyu Zhou, Pengjun Xie, and Fei Huang. 2025. WebWalker: Benchmarking LLMs in Web Traver-sal. arXiv preprint . ArXiv:2501.07572 [cs]. Wujiang Xu, Kai Mei, Hang Gao, Juntao Tan, Zu-jie Liang, and Yongfeng Zhang. 2025. A-MEM: Agentic Memory for LLM Agents. Preprint ,arXiv:2502.12110. Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William Cohen, Ruslan Salakhutdinov, and Christo-pher D. Manning. 2018. HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering. In Proceedings of the 2018 Conference on Empiri-cal Methods in Natural Language Processing , pages 2369–2380, Brussels, Belgium. Association for Com-putational Linguistics. Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R. Narasimhan, and Yuan Cao. 2022. React: Synergizing reasoning and acting in language models. In The eleventh international conference on learning representations .Kechi Zhang, Jia Li, Ge Li, Xianjie Shi, and Zhi Jin. 2024. CodeAgent: Enhancing Code Genera-tion with Tool-Integrated Agent Systems for Real-World Repo-level Coding Challenges. arXiv preprint .ArXiv:2401.07339 [cs]. Wenlin Zhang, Xiaopeng Li, Yingyi Zhang, Pengyue Jia, Yichao Wang, Huifeng Guo, Yong Liu, and Xiangyu Zhao. 2025. Deep Research: A Survey of Autonomous Research Agents. arXiv preprint .ArXiv:2508.12752 [cs]. Longtao Zheng, Rundong Wang, Xinrun Wang, and Bo An. 2024. Synapse: Trajectory-as-Exemplar Prompting with Memory for Computer Control. 
+
+Preprint , arXiv:2306.07863. Yuxiang Zheng, Dayuan Fu, Xiangkun Hu, Xiaojie Cai, Lyumanshan Ye, Pengrui Lu, and Pengfei Liu. 2025. DeepResearcher: Scaling Deep Research via Re-inforcement Learning in Real-world Environments. 
+
+arXiv preprint . ArXiv:2504.03160 [cs]. Wanjun Zhong, Lianghong Guo, Qiqi Gao, He Ye, and Yanlin Wang. 2023. MemoryBank: Enhancing Large Language Models with Long-Term Memory. 
+
+Preprint , arXiv:2305.10250. Zijian Zhou, Ao Qu, Zhaoxuan Wu, Sunghwan Kim, Alok Prakash, Daniela Rus, Jinhua Zhao, Bryan Kian Hsiang Low, and Paul Pu Liang. 2025. MEM1: Learning to Synergize Memory and Rea-soning for Efficient Long-Horizon Agents. Preprint ,arXiv:2506.15841. 
+
+A Appendix 
+
+A.1 Single-Objective Tasks 
+
+To assess the effectiveness of our approach on single-objective settings, we conduct experiments on seven question answering benchmarks: 2Wiki-MultiHopQA, HotpotQA, Bamboogle, Musique, 10 Natural Questions (NQ), TriviaQA, and PopQA (Ho et al., 2020; Yang et al., 2018; Press et al., 2023; Trivedi et al., 2022; Kwiatkowski et al., 2019; Joshi et al., 2017; Mallen et al., 2023). These datasets span diverse domains and are widely used in prior agent-oriented research. For datasets with more than 1k samples, we randomly sample 1k samples for evaluation. 
+
+Datasets. The following are details of these datasets: • Natural Questions (NQ) : a QA dataset whose questions are derived from real anonymized and aggregated queries issued to the Google Search engine. • TriviaQA : a large-scale dataset with composi-tional questions that often require non-trivial reasoning. • PopQA : 14K questions focusing on long-tail factual knowledge. • Bamboogle : a manually constructed multi-hop QA benchmark in which questions are designed to be difficult to answer with a single search engine call. • Musique : a 25K-question multi-hop QA dataset requiring evidence composition across multiple facts. • HotpotQA : a Wikipedia-based multi-hop dataset where answering requires retrieving and reasoning over multiple supporting docu-ments. • 2WikiMultiHopQA : a multi-hop QA dataset combining structured and unstructured evi-dence, explicitly constructed to necessitate multi-hop reasoning. 
+
+Results. As shown in Table 3 and Table 4, our method achieves strong performance across all benchmarks. On several datasets (e.g., TriviaQA), it surpasses all baselines and reaches SOTA per-formance, while substantially reducing token con-sumption. These results suggest that our method can significantly improve performance on long-horizon tasks while maintaining competitiveness on short-horizon tasks, matching or even exceed-ing agent models trained specifically for single-objective settings. 
+
+A.2 Deep Research Tasks 
+
+We further evaluate our approach on three deep research benchmarks: GAIA (Mialon et al., 2023), Frames (Krishna et al., 2025), and WebWalkerQA (Wu et al., 2025). In contrast to the above datasets, deep research questions are often constructed from real web search results, and thus are fully out-of-domain (OOD) relative to our training setting. This evaluation tests whether our method generalizes to complex OOD tasks. To reduce evaluation cost, for the larger benchmarks (Frames and WebWalk-erQA), we randomly sample 250 instances. 
+
+Datasets. 
+
+• GAIA : a collection of 165 tasks spanning three difficulty levels (53 Level-1, 86 Level-2, and 26 Level-3), designed to measure tool use and multi-step reasoning. • Frames : measures multi-perspective reason-ing and role-conditioned information synthe-sis, requiring consistent integration of evi-dence across different contextual frames. • WebWalkerQA : evaluates complex, multi-turn web interaction, consisting of 680 real-world queries across four domains and over 1,373 webpages. 
+
+Results. As reported in Table 5, in terms of av-erage accuracy, our method achieves performance comparable to DeepResearcher while significantly reducing token usage. Notably, DeepResearcher is trained specifically in real web search environ-ments. Moreover, on longer-horizon tasks with higher token demands (e.g., GAIA), our method de-livers relatively strong performance. Overall, these findings indicate that our approach generalizes well to out-of-domain settings while still demonstrating solid capability on long-horizon reasoning tasks. 11 Table 2: The token consumption for multi-objective tasks of baselines. Text with bold means SOTA. 
+
+Local Wiki Search 
+
+Model 2-objective 4-objective 6-objective 8-objective 10-objective Avg 
+
+TT PT TT PT TT PT TT PT TT PT TT PT Qwen2.5 (ReAct) 1.90 0.38 2.80 0.51 3.97 0.63 4.89 0.76 4.66 0.77 3.64 0.61 Research 0.45 0.26 1.58 0.52 3.18 0.76 4.63 0.91 6.62 1.11 3.29 0.71 DeepResearcher 0.96 0.31 2.60 0.61 4.13 0.79 5.48 0.93 8.26 1.19 4.29 0.77 A-MEM 1.14 0.34 2.16 0.38 2.61 0.38 3.49 0.41 3.69 0.40 2.62 0.38 MEM1 0.50 0.16 0.88 0.18 1.31 0.20 1.81 0.22 2.40 0.24 1.38 0.20 GRPO (no mem) 0.45 0.26 2.29 0.62 3.91 0.84 6.32 1.07 8.96 1.28 4.39 0.81 Ours 0.32 0.14 0.80 0.17 1.22 0.19 1.61 0.20 1.94 0.21 1.18 0.18 Online Web Search 
+
+Qwen2.5 (ReAct) 0.24 0.13 4.53 0.36 2.63 0.34 3.21 0.40 5.08 0.48 3.14 0.34 Research 0.27 0.14 1.04 0.29 1.94 0.41 3.13 0.52 4.48 0.62 2.17 0.40 MEM1 0.31 0.10 0.57 0.12 0.89 0.14 1.30 0.16 1.74 0.19 0.96 0.14 Ours 0.19 0.08 0.56 0.11 0.85 0.12 1.17 0.14 1.53 0.15 0.86 0.12 
+
+Table 3: The results of multi-hop QA datasets.They are the first part of single-objective QA datasets.                             
+
+> Multi-hop QA
+> Model 2WikiMultihopQA Bamboogle HotpotQA Musique Avg F1 EM TT PT F1 EM TT PT F1 EM TT PT F1 EM TT PT F1 EM TT PT qwen2.5 (ReAct) 45.21 35.90 1.12 0.29 43.70 32.80 0.95 0.24 47.12 34.30 1.07 0.26 23.86 14.40 2.06 0.37 39.97 29.35 1.30 0.29 ReSearch 50.07 41.90 0.55 0.28 53.61 40.80 0.41 0.24 50.26 33.90 0.40 0.23 29.63 17.80 0.58 0.29 45.89 33.60 0.48 0.26 DeepResearcher 51.44 43.90 1.24 0.34 48.48 37.60 1.22 0.30 51.96 38.40 1.01 0.29 26.55 17.00 2.54 0.44 44.61 34.23 1.50 0.34 GRPO (no mem) 62.35 53.80 0.93 0.32 53.18 40.80 0.79 0.28 57.29 42.30 0.62 0.27 33.78 21.50 0.86 0.33 51.65 39.60 0.80 0.30 Ours 59.17 50.20 0.37 0.15 52.90 36.80 0.29 0.14 57.64 42.90 0.34 0.15 33.48 22.10 0.39 0.15 50.80 38.00 0.35 0.15
+
+Table 4: The results of single-hop QA datasets.They are the second part of single-objective QA datasets. 
+
+Single-hop QA 
+
+Model NQ PopQA TriviaQA Avg F1 EM TT PT F1 EM TT PT F1 EM TT PT F1 EM TT PT qwen2.5 (ReAct) 49.18 36.30 1.87 0.30 47.77 40.50 1.43 0.26 62.73 52.60 1.02 0.22 53.23 43.13 1.44 0.26 ReSearch 52.49 38.00 0.23 0.16 52.41 43.80 0.23 0.16 62.04 50.10 0.24 0.17 55.65 43.97 0.23 0.16 DeepResearcher 50.15 39.50 1.19 0.25 47.90 40.80 0.60 0.22 61.89 52.30 0.95 0.23 53.32 44.20 0.91 0.23 GRPO (no mem) 56.04 43.90 0.63 0.23 53.77 46.50 1.00 0.26 64.57 54.50 0.52 0.23 58.13 48.30 0.72 0.24 Ours 57.46 46.10 0.22 0.14 53.53 46.70 0.25 0.14 67.83 57.10 0.25 0.14 59.61 49.97 0.24 0.14 
+
+Table 5: The results of deep research datasets. 
+
+Deep Research 
+
+Model GAIA Frames WebWalker Avg F1 EM TT PT F1 EM TT PT F1 EM TT PT F1 EM TT PT qwen2.5 (ReAct) 14.28 8.74 1.54 0.22 29.37 20.00 0.61 0.15 29.93 8.50 0.42 0.14 24.52 12.41 0.86 0.17 ReSearch 16.00 8.74 0.41 0.17 35.04 22.40 0.37 0.16 33.02 7.29 0.25 0.13 28.02 12.81 0.34 0.15 DeepResearcher 22.44 16.50 4.94 0.33 37.69 24.40 0.44 0.17 32.10 9.31 1.16 0.19 30.75 16.74 2.18 0.23 Ours 25.07 17.48 0.62 0.12 37.56 24.00 0.33 0.10 31.85 8.91 0.29 0.09 31.49 16.79 0.41 0.10 
+
+12 Table 6: Training prompt text. 
+
+Prompt: 
+
+You will answer multiple complex questions using iterative reasoning and web search. Your task is to: 1. Perform reasoning within <think> ... </think>. 2. Then choose one of the following actions: - If any question remains unanswered, issue a single query for one question inside <search> ... </search>. - If all questions are answered, provide the final answers separated by semicolons within <answer> answer1; answer2; ... </answer>. The answers must be concise, usually short phrases or words, and avoid any explanations. Important: - Must strictly follow one of these two structures: <think>\n...\n</think>\n<search>\n...\n</search> or <think>\n...\n</think>\n<answer>\n...\n</answer>. - Do not search multiple queries or questions simultaneously. Don’t give up searching for information until you find clear information that provides the answer. 13
