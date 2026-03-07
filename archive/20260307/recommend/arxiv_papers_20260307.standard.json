@@ -1,0 +1,175 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-03-07T19:00:01.005342+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2603.01421v1",
+      "title": "SciDER: Scientific Data-centric End-to-end Researcher",
+      "abstract": "Automated scientific discovery with large language models is transforming the research lifecycle from ideation to experimentation, yet existing agents struggle to autonomously process raw data collected from scientific experiments. We introduce SciDER, a data-centric end-to-end system that automates the research lifecycle. Unlike traditional frameworks, our specialized agents collaboratively parse and analyze raw scientific data, generate hypotheses and experimental designs grounded in specific data characteristics, and write and execute corresponding code. Evaluation on three benchmarks shows SciDER excels in specialized data-driven scientific discovery and outperforms general-purpose agents and state-of-the-art models through its self-evolving memory and critic-led feedback loop. Distributed as a modular Python package, we also provide easy-to-use PyPI packages with a lightweight web interface to accelerate autonomous, data-driven research and aim to be accessible to all researchers and developers.",
+      "authors": [
+        "Ke Lin",
+        "Yilin Lu",
+        "Shreyas Bhat",
+        "Xuehang Guo",
+        "Junier Oliva",
+        "Qingyun Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-03-02T03:53:20+00:00",
+      "link": "https://arxiv.org/pdf/2603.01421v1",
+      "tags": [
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "self-evolving memory in specialized scientific agents",
+      "llm_evidence_cn": "专业科学智能体中的自我进化记忆",
+      "llm_evidence": "专业科学智能体中的自我进化记忆",
+      "canonical_evidence": "专业科学智能体中的自我进化记忆",
+      "llm_tldr_en": "SciDER uses self-evolving memory to automate the scientific research lifecycle from data analysis to hypothesis generation.",
+      "llm_tldr_cn": "SciDER 利用自我进化记忆自动执行从数据分析到假设生成的科学研究全生命周期。",
+      "llm_tldr": "SciDER 利用自我进化记忆自动执行从数据分析到假设生成的科学研究全生命周期。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory consolidation and update strategies in LLM agents",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2603.01209v1",
+      "title": "Agents Learn Their Runtime: Interpreter Persistence as Training-Time Semantics",
+      "abstract": "Tool-augmented LLMs are increasingly deployed as agents that interleave natural-language reasoning with executable Python actions, as in CodeAct-style frameworks. In deployment, these agents rely on runtime state that persists across steps. By contrast, common training pipelines treat agent traces as token sequences, with execution semantics left implicit. This raises a data-centric question: Is state persistence merely an inference-time scaffold, or can models learn to exploit it when training data exposes the corresponding execution semantics?   We isolate state persistence as a training-time variable. We introduce Opaque Knapsack, a procedurally generated family of partially observable optimization tasks designed to prevent one-shot solutions. Item attributes and constraints are hidden behind budgeted tool calls, forcing multi-turn control flow and iterative state revision. Holding task instances, prompts, tools, model, and supervision fixed, we generate paired trajectories differing only in whether interpreter state persists across steps or resets after each action. We then fine-tune identical base models (Qwen3-8B) on each trace variant and evaluate all four train-runtime combinations.   Our 2x2 cross-evaluation shows that execution semantics primarily affect how agents reach solutions, not whether they do: solution quality is statistically indistinguishable across conditions, but token cost and stability differ substantially. A persistent-trained model in a stateless runtime triggers missing-variable errors in roughly 80% of episodes; a stateless-trained model in a persistent runtime redundantly re-derives retained state, using roughly 3.5x more tokens.   Interpreter persistence should be treated as a first-class semantic of agent traces. Aligning fine-tuning data with deployment runtimes improves efficiency and reduces brittle train-runtime mismatches.",
+      "authors": [
+        "Victor May",
+        "Aaditya Salgarkar",
+        "Yishan Wang",
+        "Diganta Misra",
+        "Huu Nguyen"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-03-01T18:08:02+00:00",
+      "link": "https://arxiv.org/pdf/2603.01209v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "interpreter state persistence as a form of short and long term memory",
+      "llm_evidence_cn": "解释器状态持久化作为一种长短期记忆形式",
+      "llm_evidence": "解释器状态持久化作为一种长短期记忆形式",
+      "canonical_evidence": "解释器状态持久化作为一种长短期记忆形式",
+      "llm_tldr_en": "Explores how state persistence in code-based agents affects learning and task execution in partially observable tasks.",
+      "llm_tldr_cn": "探讨了代码智能体中的状态持久化如何影响部分可观测任务中的学习和执行。",
+      "llm_tldr": "探讨了代码智能体中的状态持久化如何影响部分可观测任务中的学习和执行。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.03456v1",
+      "title": "Asymmetric Goal Drift in Coding Agents Under Value Conflict",
+      "abstract": "Agentic coding agents are increasingly deployed autonomously, at scale, and over long-context horizons. Throughout an agent's lifetime, it must navigate tensions between explicit instructions, learned values, and environmental pressures, often in contexts unseen during training. Prior work on model preferences, agent behavior under value tensions, and goal drift has relied on static, synthetic settings that do not capture the complexity of real-world environments. To this end, we introduce a framework built on OpenCode to orchestrate realistic, multi-step coding tasks to measure how agents violate explicit constraints in their system prompt over time with and without environmental pressure toward competing values. Using this framework, we demonstrate that GPT-5 mini, Haiku 4.5, and Grok Code Fast 1 exhibit asymmetric drift: they are more likely to violate their system prompt when its constraint opposes strongly-held values like security and privacy. We find for the models and values tested that goal drift correlates with three compounding factors: value alignment, adversarial pressure, and accumulated context. However, even strongly-held values like privacy show non-zero violation rates under sustained environmental pressure. These findings reveal that shallow compliance checks are insufficient and that comment-based pressure can exploit model value hierarchies to override system prompt instructions. More broadly, our findings highlight a gap in current alignment approaches in ensuring that agentic systems appropriately balance explicit user constraints against broadly beneficial learned preferences under sustained environmental pressure.",
+      "authors": [
+        "Magnus Saebo",
+        "Spencer Gibson",
+        "Tyler Crosse",
+        "Achyutha Menon",
+        "Eyon Jang",
+        "Diogo Cruz"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.SE"
+      ],
+      "published": "2026-03-03T19:13:12+00:00",
+      "link": "https://arxiv.org/pdf/2603.03456v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "measuring agent violations and goal drift over long-context horizons",
+      "llm_evidence_cn": "在长上下文范围内衡量智能体违规和目标漂移",
+      "llm_evidence": "在长上下文范围内衡量智能体违规和目标漂移",
+      "canonical_evidence": "在长上下文范围内衡量智能体违规和目标漂移",
+      "llm_tldr_en": "A framework to measure how autonomous coding agents navigate value conflicts and maintain goals over time.",
+      "llm_tldr_cn": "一个衡量自主编码智能体如何处理价值冲突并在长时间内维持目标的框架。",
+      "llm_tldr": "一个衡量自主编码智能体如何处理价值冲突并在长时间内维持目标的框架。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "performance metrics for agent memory and reasoning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.01209v2",
+      "title": "Agents Learn Their Runtime: Interpreter Persistence as Training-Time Semantics",
+      "abstract": "Tool-augmented LLMs are increasingly deployed as agents that interleave natural-language reasoning with executable Python actions, as in CodeAct-style frameworks. In deployment, these agents rely on runtime state that persists across steps. By contrast, the traces used to post-train these models rarely encode how interpreter state is managed. We ask whether interpreter persistence is merely a runtime scaffold, or a property of the training data that shapes how agents learn to use the interpreter.   We isolate state persistence as a training-time variable. We introduce Opaque Knapsack, a procedurally generated family of partially observable optimization tasks designed to prevent one-shot solutions. Item attributes and constraints are hidden behind budgeted tool calls, forcing multi-turn control flow and iterative state revision. Holding task instances, prompts, tools, model, and supervision fixed, we generate matched trajectories differing only in whether interpreter state persists across steps or resets after each action. We then fine-tune identical base models (Qwen3-8B) on each trace variant and evaluate all four train-runtime combinations.   Our 2x2 cross-evaluation shows that interpreter persistence shapes how agents reach solutions, not whether they do: solution quality is statistically indistinguishable across conditions, but token cost and stability differ substantially. A persistent-trained model in a stateless runtime triggers missing-variable errors in roughly 80% of episodes; a stateless-trained model in a persistent runtime redundantly re-derives retained state, using roughly 3.5x more tokens.   Interpreter persistence should be treated as a first-class semantic of agent traces. Aligning fine-tuning data with deployment runtimes improves efficiency and reduces brittle train-runtime mismatches.",
+      "authors": [
+        "Victor May",
+        "Aaditya Salgarkar",
+        "Yishan Wang",
+        "Diganta Misra",
+        "Huu Nguyen"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-03-01T18:08:02+00:00",
+      "link": "https://arxiv.org/pdf/2603.01209v2",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "state persistence and memory management in tool-augmented agents",
+      "llm_evidence_cn": "工具增强型智能体中的状态持久化和记忆管理",
+      "llm_evidence": "工具增强型智能体中的状态持久化和记忆管理",
+      "canonical_evidence": "工具增强型智能体中的状态持久化和记忆管理",
+      "llm_tldr_en": "Investigates how training data encoding interpreter state affects agent learning and memory persistence.",
+      "llm_tldr_cn": "研究了编码解释器状态的训练数据如何影响智能体的学习和记忆持久性。",
+      "llm_tldr": "研究了编码解释器状态的训练数据如何影响智能体的学习和记忆持久性。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

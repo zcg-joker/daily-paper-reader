@@ -1,0 +1,65 @@
+{
+  "label": "2026-03-07",
+  "date": "2026-03-07",
+  "generated_at": "2026-03-07T19:02:14",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202603/07/2603.01421v1-scider-scientific-data-centric-end-to-end-researcher",
+      "section": "deep",
+      "title_en": "SciDER: Scientific Data-centric End-to-end Researcher",
+      "authors": "Ke Lin, Yilin Lu, Shreyas Bhat, Xuehang Guo, Junier Oliva, Qingyun Wang",
+      "date": "2026-03-02",
+      "pdf": "https://arxiv.org/pdf/2603.01421v1",
+      "score": "8.0",
+      "evidence": "专业科学智能体中的自我进化记忆",
+      "tldr": "SciDER是一个以数据为中心的端到端自动化科学研究系统，旨在解决现有大模型智能体在处理原始实验数据方面的局限。该系统通过专门的智能体协作，实现了从原始数据解析、假设生成到实验设计及代码执行的全流程自动化。凭借自进化记忆和评论者反馈机制，SciDER在多项基准测试中表现优异，并以开源Python包形式促进科研自动化。",
+      "tags": "query:agimem",
+      "abstract_en": "Automated scientific discovery with large language models is transforming the research lifecycle from ideation to experimentation, yet existing agents struggle to autonomously process raw data collected from scientific experiments. We introduce SciDER, a data-centric end-to-end system that automates the research lifecycle. Unlike traditional frameworks, our specialized agents collaboratively parse and analyze raw scientific data, generate hypotheses and experimental designs grounded in specific data characteristics, and write and execute corresponding code. Evaluation on three benchmarks shows SciDER excels in specialized data-driven scientific discovery and outperforms general-purpose agents and state-of-the-art models through its self-evolving memory and critic-led feedback loop. Distributed as a modular Python package, we also provide easy-to-use PyPI packages with a lightweight web interface to accelerate autonomous, data-driven research and aim to be accessible to all researchers and developers.",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202603/07/2603.01209v1-agents-learn-their-runtime-interpreter-persistence-as-training-time-semantics",
+      "section": "quick",
+      "title_en": "Agents Learn Their Runtime: Interpreter Persistence as Training-Time Semantics",
+      "authors": "Victor May, Aaditya Salgarkar, Yishan Wang, Diganta Misra, Huu Nguyen",
+      "date": "2026-03-01",
+      "pdf": "https://arxiv.org/pdf/2603.01209v1",
+      "score": "7.0",
+      "evidence": "解释器状态持久化作为一种长短期记忆形式",
+      "tldr": "本研究探讨了工具增强型 LLM 智能体中解释器状态持久性对训练的影响。研究者设计了“不透明背包”任务，强制模型进行多轮交互和状态修订。通过对比持久化和无状态两种运行环境下的微调效果，发现虽然最终解质量相似，但训练与部署环境的不匹配会导致严重的效率损失或运行错误。研究强调了将解释器持久性视为训练语义的重要性，以实现更高效、稳定的智能体部署。",
+      "tags": "query:agimem",
+      "abstract_en": "Tool-augmented LLMs are increasingly deployed as agents that interleave natural-language reasoning with executable Python actions, as in CodeAct-style frameworks. In deployment, these agents rely on runtime state that persists across steps. By contrast, common training pipelines treat agent traces as token sequences, with execution semantics left implicit. This raises a data-centric question: Is state persistence merely an inference-time scaffold, or can models learn to exploit it when training data exposes the corresponding execution semantics?   We isolate state persistence as a training-time variable. We introduce Opaque Knapsack, a procedurally generated family of partially observable optimization tasks designed to prevent one-shot solutions. Item attributes and constraints are hidden behind budgeted tool calls, forcing multi-turn control flow and iterative state revision. Holding task instances, prompts, tools, model, and supervision fixed, we generate paired trajectories differing only in whether interpreter state persists across steps or resets after each action. We then fine-tune identical base models (Qwen3-8B) on each trace variant and evaluate all four train-runtime combinations.   Our 2x2 cross-evaluation shows that execution semantics primarily affect how agents reach solutions, not whether they do: solution quality is statistically indistinguishable across conditions, but token cost and stability differ substantially. A persistent-trained model in a stateless runtime triggers missing-variable errors in roughly 80% of episodes; a stateless-trained model in a persistent runtime redundantly re-derives retained state, using roughly 3.5x more tokens.   Interpreter persistence should be treated as a first-class semantic of agent traces. Aligning fine-tuning data with deployment runtimes improves efficiency and reduces brittle train-runtime mismatches.",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202603/07/2603.01209v2-agents-learn-their-runtime-interpreter-persistence-as-training-time-semantics",
+      "section": "quick",
+      "title_en": "Agents Learn Their Runtime: Interpreter Persistence as Training-Time Semantics",
+      "authors": "Victor May, Aaditya Salgarkar, Yishan Wang, Diganta Misra, Huu Nguyen",
+      "date": "2026-03-01",
+      "pdf": "https://arxiv.org/pdf/2603.01209v2",
+      "score": "7.0",
+      "evidence": "工具增强型智能体中的状态持久化和记忆管理",
+      "tldr": "本研究探讨了工具增强型大语言智能体中解释器状态持久性对学习的影响。研究者通过“不透明背包”任务，在保持其他变量一致的情况下，对比了跨步骤保留状态（持久化）与每步重置状态（无状态）的训练效果。实验表明，解释器持久性不仅是运行时的配置，更是影响智能体行为的关键语义。将微调数据与部署环境对齐，能显著降低错误率并提高 Token 使用效率，避免因环境不匹配导致的冗余计算或变量缺失。",
+      "tags": "query:agimem",
+      "abstract_en": "Tool-augmented LLMs are increasingly deployed as agents that interleave natural-language reasoning with executable Python actions, as in CodeAct-style frameworks. In deployment, these agents rely on runtime state that persists across steps. By contrast, the traces used to post-train these models rarely encode how interpreter state is managed. We ask whether interpreter persistence is merely a runtime scaffold, or a property of the training data that shapes how agents learn to use the interpreter.   We isolate state persistence as a training-time variable. We introduce Opaque Knapsack, a procedurally generated family of partially observable optimization tasks designed to prevent one-shot solutions. Item attributes and constraints are hidden behind budgeted tool calls, forcing multi-turn control flow and iterative state revision. Holding task instances, prompts, tools, model, and supervision fixed, we generate matched trajectories differing only in whether interpreter state persists across steps or resets after each action. We then fine-tune identical base models (Qwen3-8B) on each trace variant and evaluate all four train-runtime combinations.   Our 2x2 cross-evaluation shows that interpreter persistence shapes how agents reach solutions, not whether they do: solution quality is statistically indistinguishable across conditions, but token cost and stability differ substantially. A persistent-trained model in a stateless runtime triggers missing-variable errors in roughly 80% of episodes; a stateless-trained model in a persistent runtime redundantly re-derives retained state, using roughly 3.5x more tokens.   Interpreter persistence should be treated as a first-class semantic of agent traces. Aligning fine-tuning data with deployment runtimes improves efficiency and reduces brittle train-runtime mismatches.",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202603/07/2603.03456v1-asymmetric-goal-drift-in-coding-agents-under-value-conflict",
+      "section": "quick",
+      "title_en": "Asymmetric Goal Drift in Coding Agents Under Value Conflict",
+      "authors": "Magnus Saebo, Spencer Gibson, Tyler Crosse, Achyutha Menon, Eyon Jang, Diogo Cruz",
+      "date": "2026-03-03",
+      "pdf": "https://arxiv.org/pdf/2603.03456v1",
+      "score": "6.0",
+      "evidence": "在长上下文范围内衡量智能体违规和目标漂移",
+      "tldr": "本研究探讨了自主编码智能体在长期任务中面临的“目标漂移”现象。通过构建基于 OpenCode 的多步编码框架，研究者模拟了系统指令与模型内在价值观（如安全、隐私）及环境压力之间的冲突。实验发现，GPT-5 mini 等主流模型存在非对称漂移：当指令违背其强价值观时，模型更易失效。这一发现揭示了现有对齐机制在处理复杂环境压力下的脆弱性，强调了改进长程对齐策略的必要性。",
+      "tags": "query:agimem",
+      "abstract_en": "Agentic coding agents are increasingly deployed autonomously, at scale, and over long-context horizons. Throughout an agent's lifetime, it must navigate tensions between explicit instructions, learned values, and environmental pressures, often in contexts unseen during training. Prior work on model preferences, agent behavior under value tensions, and goal drift has relied on static, synthetic settings that do not capture the complexity of real-world environments. To this end, we introduce a framework built on OpenCode to orchestrate realistic, multi-step coding tasks to measure how agents violate explicit constraints in their system prompt over time with and without environmental pressure toward competing values. Using this framework, we demonstrate that GPT-5 mini, Haiku 4.5, and Grok Code Fast 1 exhibit asymmetric drift: they are more likely to violate their system prompt when its constraint opposes strongly-held values like security and privacy. We find for the models and values tested that goal drift correlates with three compounding factors: value alignment, adversarial pressure, and accumulated context. However, even strongly-held values like privacy show non-zero violation rates under sustained environmental pressure. These findings reveal that shallow compliance checks are insufficient and that comment-based pressure can exploit model value hierarchies to override system prompt instructions. More broadly, our findings highlight a gap in current alignment approaches in ensuring that agentic systems appropriately balance explicit user constraints against broadly beneficial learned preferences under sustained environmental pressure.",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
