@@ -1,5 +1,8 @@
 * [首页](/)
 * Daily Papers
+  * 2026-03-09 <!--dpr-date:20260309-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202603/09/2603.02765v1-next-embedding-prediction-makes-world-models-stronger" data-sidebar-item="{&quot;title&quot;: &quot;Next Embedding Prediction Makes World Models Stronger&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2603.02765v1-next-embedding-prediction-makes-world-models-stronger&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;agimem&quot;}], &quot;evidence&quot;: &quot;基于模型强化学习智能体中的记忆与空间推理&quot;}">Next Embedding Prediction Makes World Models Stronger</a>
   * 2026-03-07 <!--dpr-date:20260307-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202603/07/2603.01421v1-scider-scientific-data-centric-end-to-end-researcher" data-sidebar-item="{&quot;title&quot;: &quot;SciDER: Scientific Data-centric End-to-end Researcher&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2603.01421v1-scider-scientific-data-centric-end-to-end-researcher&quot;, &quot;score&quot;: &quot;8.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;agimem&quot;}], &quot;evidence&quot;: &quot;专业科学智能体中的自我进化记忆&quot;}">SciDER: Scientific Data-centric End-to-end Researcher</a>

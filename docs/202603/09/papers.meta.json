@@ -1,0 +1,23 @@
+{
+  "label": "2026-03-09",
+  "date": "2026-03-09",
+  "generated_at": "2026-03-09T19:25:56",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202603/09/2603.02765v1-next-embedding-prediction-makes-world-models-stronger",
+      "section": "quick",
+      "title_en": "Next Embedding Prediction Makes World Models Stronger",
+      "authors": "George Bredis, Nikita Balagansky, Daniil Gavrilov, Ruslan Rakhimov",
+      "date": "2026-03-03",
+      "pdf": "https://arxiv.org/pdf/2603.02765v1",
+      "score": "7.0",
+      "evidence": "基于模型强化学习智能体中的记忆与空间推理",
+      "tldr": "本研究针对部分可观测高维环境中的模型强化学习，提出了 NE-Dreamer 框架。该方法摒弃了传统的解码器结构，利用时间 Transformer 直接在表示空间中预测下一时刻的编码器嵌入，从而优化时间预测一致性。NE-Dreamer 无需重构损失或辅助监督即可学习到连贯的预测性状态表示。实验表明，该方法在 DeepMind Control Suite 和 DMLab 任务中表现优异，尤其在处理记忆和空间推理方面具有显著优势。",
+      "tags": "query:agimem",
+      "abstract_en": "Capturing temporal dependencies is critical for model-based reinforcement learning (MBRL) in partially observable, high-dimensional domains. We introduce NE-Dreamer, a decoder-free MBRL agent that leverages a temporal transformer to predict next-step encoder embeddings from latent state sequences, directly optimizing temporal predictive alignment in representation space. This approach enables NE-Dreamer to learn coherent, predictive state representations without reconstruction losses or auxiliary supervision. On the DeepMind Control Suite, NE-Dreamer matches or exceeds the performance of DreamerV3 and leading decoder-free agents. On a challenging subset of DMLab tasks involving memory and spatial reasoning, NE-Dreamer achieves substantial gains. These results establish next-embedding prediction with temporal transformers as an effective, scalable framework for MBRL in complex, partially observable environments.",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
