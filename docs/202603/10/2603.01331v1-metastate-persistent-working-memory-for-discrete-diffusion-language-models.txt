@@ -1,0 +1,578 @@
+Title: MetaState: Persistent Working Memory for Discrete Diffusion Language Models
+
+URL Source: https://arxiv.org/pdf/2603.01331v1
+
+Published Time: Tue, 03 Mar 2026 02:46:09 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# MetaState: Persistent Working Memory for Discrete Diffusion Language Models 
+
+Kejing Xia 1, Mingzhe Li 2, Lixuan Wei 3,Zhenbang Du 1, Xiangchi Yuan 1, Qirui Jin 1, Wenke Lee 11Georgia Institute of Technology 
+
+> 2
+
+University of Massachusetts Amherst 3Harvard University 
+
+Abstract 
+
+Discrete diffusion language models (dLLMs) generate text by iteratively denoising a masked sequence. Compared with autoregressive mod-els, this paradigm naturally supports paral-lel decoding, bidirectional context, and flex-ible generation patterns. However, standard dLLMs condition each denoising step only on the current hard-masked sequence, while in-termediate continuous representations are dis-carded after sampling and remasking. We refer to this bottleneck as the Information Island 
+
+problem. It leads to redundant recomputation across steps and can degrade cross-step consis-tency. We address this limitation with MetaS-tate , a lightweight recurrent augmentation that equips a frozen dLLM backbone with a persis-tent, fixed-size working memory that remains independent of sequence length. MetaState 
+
+consists of three trainable modules: a cross-attention Mixer that reads backbone activations into memory slots, a GRU-style Updater that integrates information across denoising steps, and a cross-attention Injector that feeds the updated memory back into backbone activa-tions. We train these modules with K-step un-rolling to expose them to multi-step denoising dynamics during fine-tuning. On LLaDA-8B and Dream-7B, MetaState introduces negli-gible trainable parameters while keeping the backbone frozen, and it consistently improves accuracy over frozen baselines. These results demonstrate that persistent cross-step memory is an effective mechanism for bridging denois-ing steps and improving generation quality in discrete diffusion language models. 
+
+1 Introduction 
+
+Autoregressive (AR) language models factorize the joint distribution over sequences into a product of conditional probabilities, producing one token per forward pass (Radford et al., 2018, 2019; Brown et al., 2020). Although this paradigm has driven many recent foundation models, its left-to-right dLLM Backbone        
+
+> Dense Context ( )
+> [M] [M]
+> Next Step
+> (t-1)
+> [M]
+> Sparse Tokens ( )
+> Selective
+> Retention
+> Cross-step
+> Working Memory
+> MetaState ( )
+> Information
+> Island
+> Continuous State
+> Persistent Information
+> (a) MetaState pipeline
+> T-1 times
+> Lossy Sampling
+> &Remasking
+
+Figure 1: The Information Island problem in discrete diffusion: sampling and remasking compress continu-ous hidden activations into discrete tokens, creating a lossy bottleneck between denoising steps. MetaState mitigates this by maintaining a persistent state across steps. 
+
+causal bias prevents parallel decoding and limits the use of bidirectional context. Discrete diffusion language models (dLLMs) have recently emerged as a non-autoregressive alternative (Li et al., 2025; Sahoo et al., 2024; Gong et al., 2024). Starting from a fully corrupted sequence, dLLMs iteratively denoise to recover clean text and can update arbi-trary positions in parallel using bidirectional atten-tion (Austin et al., 2021a). With scaling to billions of parameters, dLLMs have begun to approach autoregressive quality while retaining advantages in decoding parallelism and generation flexibility. Representative systems include LLaDA (Nie et al., 2025), LLaDA1.5 (Zhu et al., 2025a), LLaDA2 (Bie et al., 2025), Dream (Ye et al., 2025). Current dLLMs nevertheless share a structural limitation that we refer to as the Information Island problem. The standard reverse diffusion procedure is Markovian at the token interface: each transi-tion depends only on the current noisy sequence produced by sampling and remasking. The reverse 1               
+
+> arXiv:2603.01331v1 [cs.CL] 2 Mar 2026 GSM8K MATH-500 HumanEval MBPP
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> Accuracy (%)
+> +2.0
+> +3.3
+> +8.4 +1.8
+> +6.1
+> +1.2
+> +1.2 +3.2
+> Dream-7B
+> GSM8K MATH-500 HumanEval MBPP
+> 20
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> Accuracy (%)
+> +9.0
+> +1.5
+> +9.6 +2.4 +6.1 +2.4
+> +4.0 +2.6
+> LLaDA-8B
+> Base Base + MetaState Instruct Instruct + MetaState
+
+Figure 2: Performance of MetaState-augmented models compared with frozen baselines on reasoning and coding benchmarks for LLaDA-8B and Dream-7B. 
+
+trajectory is commonly factorized as 
+
+pθ(x0: T ) = p(xT )
+
+> T
+
+Y
+
+> t=1
+
+pθ(xt−1 | xt),
+
+xt−1 = S(ht) .
+
+(1) At each denoising step t, the network computes a high-dimensional intermediate representation ht
+
+that captures long-range dependencies, token-level predictive semantics, and uncertainty-related sig-nals. The subsequent sampling and remasking operator S creates a lossy bottleneck: only dis-crete token identities and remasked mask indicators are retained in xt−1. The dense continuous con-text encoded in ht, spanning both token-level and sequence-level structure, is discarded. As a result, each denoising step becomes an isolated island of computation that must reconstruct global context from the sparse and noisy token sequence produced by S.This bottleneck can degrade generation quality, as illustrated in Fig. 1. In discrete diffusion, the de-noising trajectory often proceeds in stages: earlier, high-noise steps establish global structure, while later, low-noise steps refine local details and en-force fine-grained constraints. Without a mecha-nism to preserve continuous representations across steps, commitments formed at step t can drift by the time step t−k is reached because the model repeat-edly rebuilds context from scratch. This behavior can lead to entity mismatches, contradictions with earlier content, and a loss of long-horizon structure. The issue is amplified early in the trajectory, when most tokens are masked and the interface reduces 
+
+ht to sampled token identities, discarding much of the information that would otherwise guide later refinements. To address this limitation, we propose MetaState, a lightweight augmentation that equips a frozen dLLM with a persistent working memory across denoising steps. Instead of relying exclusively on the sampling and remasking interface, MetaState maintains a compact persistent state that accumu-lates and selectively retains cross-step informa-tion. Concretely, MetaState forms a recurrent loop around the backbone using three trainable modules and a shared time conditioner. At each step, the Mixer reads relevant signals from the backbone hid-den activations into fixed memory slots via cross-attention (Vaswani et al., 2017); a time-conditioned GRU (the Updater) integrates these signals into the persistent state using learned gates that adapt across noise levels (Dey and Salem, 2017); and the Injector writes the updated memory back into the backbone computation through a second cross-attention. A shared time conditioner provides a consistent timestep representation to all three mod-ules. MetaState represents its memory as M latent slots s ∈ RM ×Ds , which decouples memory ca-pacity from the sequence length N . This design adds a modest O(N M ) attention cost per step. The fixed slot count encourages compressed represen-tations. Training the recurrent loop requires op-timizing multi-step behavior rather than isolated transitions, so we train with K-step unrolling. Start-ing from a fully masked input, the model runs K
+
+forward passes, accumulates training loss at each 2step, and propagates the state through the unrolled steps. This exposes the recurrent modules to the multi-step dynamics of denoising, including what to retain and how to adjust the gates as the noise level decreases. As shown in Fig. 2, MetaState consistently im-proves over frozen baselines across reasoning and coding benchmarks, demonstrating that cross-step state persistence meaningfully improves discrete diffusion language modeling. In summary, our contributions are as follows: 1. We formally characterize the Information Is-land problem in discrete diffusion language models and identify the representational bot-tleneck, in which rich hidden activations are compressed into lossy discrete sequences. 2. We propose MetaState , a backbone-agnostic recurrent augmentation with three lightweight modules that provide a constant-size persis-tent working memory throughout the denois-ing process. 3. We develop a K-step iterative unrolling proce-dure that enables gradient flow through multi-step state updates. 4. We validate MetaState on different dLLM backbones, including LLaDA-8B (Nie et al., 2025) and Dream-7B (Ye et al., 2025), and obtain consistent performance gains with neg-ligible parameter overhead. 
+
+2 Related Works 
+
+2.1 Discrete Diffusion LLMs 
+
+Discrete diffusion language models (dLLMs) for-mulate text generation as a non-autoregressive process by adapting diffusion dynamics to dis-crete token spaces. D3PM (Austin et al., 2021a) initially formalized this approach using discrete transition matrices. Recent models largely adopt the masked diffusion paradigm. For instance, MDLM (Sahoo et al., 2024) derives a variational lower bound and SEDD (Lou et al., 2023) intro-duces a score entropy objective, allowing masked dLLMs to reach likelihood and perplexity lev-els comparable to autoregressive (AR) models. At the billion-parameter scale, models such as LLaDA (Nie et al., 2025) and Dream-7B (Ye et al., 2025) show that dLLMs match AR contextual qual-ity while enabling parallel decoding. Further op-timizations target alignment and deployment ef-ficiency, with LLaDA 1.5 (Zhu et al., 2025a) ap-plying variance-reduced preference optimization, LLaDA-MoE (Zhu et al., 2025b) using sparse ex-perts. Semi-AR methods like BD3-LMs (Arriola et al., 2025) and SDAR (Cheng et al., 2025) pre-serving AR-level performance while enabling par-allel generation. For KV cache integration, dLLM-Cache (Liu et al., 2025) proposes a training-free adaptive caching framework targeting dual com-putational redundancy in prompts and responses, while Fast-dLLM (Wu et al., 2025) exploits activa-tion similarity in bidirectional attention for block-wise KV cache reuse combined with confidence-aware dynamic parallel decoding. Despite this progress, the standard dLLM formu-lation introduces a structural bottleneck, which we refer to as the Information Island problem. Specif-ically, the Markovian remasking and sampling in-terface projects dense continuous representations 
+
+ht into sparse discrete tokens at every denoising step. This projection discards intermediate state information, forcing the model to repeatedly re-build global context from scratch and degrading long-range generation consistency. 
+
+2.2 Continuous Diffusion and Latent Reasoning 
+
+To address this loss of continuous context, previ-ous work propose modifying either the diffusion kernels or the decoding interface. For example, CADD and CANDI (Aguila et al., 2025; Pynadath et al., 2025) alter the underlying training process by coupling discrete masking with continuous latent variables. Alternatively, decoding interface opti-mization methods like LRD and RCD (Zhu et al., 2025c; Hu et al., 2026) replace hard token sampling with continuous probability mixtures. However, these substitutions operate strictly at the shallow in-put level. Hidden activations ht are still projected into token-level distributions without cross-token and cross-step communication. In continuous im-age diffusion, Recurrent Interface Networks (Jabri et al., 2022) maintain persistent latent tokens across denoising steps, and Diffusion Forcing (Chen et al., 2024) couples an RNN with the diffusion process. However, these approaches were designed for con-tinuous domains and do not address the discrete remasking and sampling interface that creates the Information Island bottleneck in dLLMs. In autoregressive modeling, latent reasoning ap-proaches have also been widely explored. Methods such as Coconut, CODI, and Soft Thinking (Hao 3et al., 2022; Shen et al.; Zhang et al., 2025), propa-gate continuous states to bypass discrete decoding bottlenecks. Building on this, LaDiR and STAR-LDM (Kang et al., 2025; Lovelace et al., 2026) use latent diffusion for trajectory planning. However, these techniques fundamentally rely on sequential generation and cannot be directly applied to the parallel, global updates of dLLMs. As a result, dLLMs still lack a mechanism to maintain a per-sistent, sequence-length-independent continuous memory across diffusion steps. 
+
+3 Preliminaries 
+
+3.1 Masked Diffusion Language Models 
+
+We consider the masked diffusion paradigm (Austin et al., 2021a; Ou et al., 2024), which de-fines a forward masking process that progressively replaces tokens with a special [MASK ] token M
+
+and a reverse unmasking process that recovers the original sequence. 
+
+Forward process. Given a clean sequence x0 =(x(1) 0 , . . . , x (N )0 ) ∈ V N over vocabulary V, the for-ward process produces a noisy sequence xt by in-dependently masking each token with probability 
+
+1 − αt, where αt denotes the token retention prob-ability following the discrete diffusion convention (Shi et al., 2024; Nie et al., 2025). In continuous time t ∈ (0 , 1] , the schedule decreases monotoni-cally from α0 = 1 (fully clean) to α1 ≈ 0 (fully masked). At each position i,
+
+x(i) 
+
+> t
+
+=
+
+(
+
+x(i)0 with probability αt.
+
+M with probability 1 − αt.
+
+Reverse process. For any noise level t ∈ (0 , 1] , the model pθ predicts the clean token at each masked position, conditioned on the noisy sequence, 
+
+pθ(x(i)0 | xt, t ), for each i such that x(i) 
+
+> t
+
+= M.
+
+Training objective. The training loss is the ex-pected cross-entropy over masked positions: 
+
+LMDLM =Et∼U (0 ,1] , x0, xt∼q(xt|x0)
+
+ 1
+
+t
+
+X  
+
+> i:x(i)
+> t=M
+
+− log pθ(x(i)0 | xt)
+
+ .
+
+Inference. Generation starts from a fully masked sequence. The continuous time interval is dis-cretized into T steps, typically indexed backwards as tdiscretized = T, T − 1, . . . , 0. At each discrete step t, the model predicts clean tokens through pθ
+
+and selectively remasks a subset of positions based on prediction confidence or heuristics, producing a progressively cleaner sequence xt−1.
+
+3.2 The Information Island Problem 
+
+At each discrete denoising step t, the backbone computes intermediate activations ht = fθ(xt, t ),which are high-dimensional continuous representa-tions that encode semantic information. However, the subsequent sampling and remasking operation imposes a lossy bottleneck for the dense continu-ous representation ht. Only discrete token identi-ties and remasked mask indicators are passed into 
+
+xt−1. Other latent semantic context information is discarded. As a result, the reverse generation tra-jectory operates as a Markov chain at the discrete token interface as illustrated in Equation 1. Because each step lacks a mechanism to access continuous representations from previous steps, it becomes an isolated information island that must reconstruct context from a sparse sequence with many non-informative masked positions. This representational deficiency shows in several ways. When ht captures complex semantics such as topic identification or syntactic structure, these infer-ences must be re-derived at step t−1, causing re-dundant computation across all T steps. Indepen-dent re-derivation in the presence of noise also produces cross-step inconsistency: step t and step 
+
+t−1 may assign different entities to the same refer-ent, leading to agreement errors in the final output. Without cross-step memory, the model also cannot implement a coherent multi-stage generation strat-egy, since each step must determine its role without access to prior continuous signals. 
+
+4 Method 
+
+4.1 MetaState 
+
+MetaState augments a frozen dLLM backbone with three lightweight trainable modules ( Injector ,
+
+Mixer , and Updater ) and a shared time conditioner. These modules form a recurrent loop along the re-verse denoising trajectory with continuous working memory to bridge the discrete steps. 
+
+Persistent recurrent state. To address the In-formation Island problem (§3.2), MetaState aug-ments the reverse process with a persistent state 
+
+st ∈ RM ×Ds : a set of M fixed memory slots of dimension Ds that are independent of the sequence 4Figure 3: Overview of the MetaState architecture. The three modules (Injector, Mixer, Updater) and shared time conditioner form a recurrent loop around the frozen backbone, propagating a persistent state across denoising steps. 
+
+length N . The state is initialized to zero, sT = 0.The augmented transition is 
+
+pθ(xt−1 | xt, st), st−1 = gϕ(st, ht, t ),
+
+where gϕ is the state-update function realized by the Mixer and Updater modules (§4.1.2–§4.1.3). The state storage is O(M D s), independent of 
+
+N . Each cross-attention introduces an additional 
+
+O(M N ) computational cost per denoising step. When M ≪ N , this overhead is typically domi-nated by the self-attention cost of the frozen back-bone. 
+
+Write path versus update path. The state inter-acts with the backbone through a separate write path: the Injector (§4.1.4) modulates the back-bone’s input embeddings using the current state via a cross-attention, but the Injector does not up-date the state. State updates are performed only by the Mixer followed by the Updater. 
+
+Cross-step time conditioning. The Injector uses the time conditioning of the previous step tprev cond 
+
+rather than the current step’s, because the injected state was produced at previous step. The current 
+
+tcond is computed after the forward pass of the backbone and is used only by the Mixer and Up-dater. The model returns tcond in its output so that the caller can pass it as tprev cond at the next step. 
+
+Training and inference. Training uses K-step unrolling (§4.2): we repeat Algorithm 1 for K steps and apply backpropagation through time along the state chain sT → sT −1 → · · · , accumulating cross-entropy losses at each unrolled step. The time con-ditioning tcond is threaded across steps as tprev cond ,
+
+Algorithm 1 MetaState: Single Denoising Step 
+
+Require: Noisy sequence xt, persistent state st
+
+(or None ), previous time conditioning tprev cond 
+
+(or None ), timestep t
+
+Ensure: Logits ˆxt, updated state st−1, time condi-tioning tcond  
+
+> 1:
+
+et ← Embed( xt) 
+
+> 2:
+
+if st̸ = None and tprev cond ̸ = None then  
+
+> 3:
+
+˜et ← Injector( et, st, tprev cond ) 
+
+> 4:
+
+else  
+
+> 5:
+
+˜et ← et ▷ Skip injection first step  
+
+> 6:
+
+end if  
+
+> 7:
+
+(ht, ˆxt) ← fθ(˜ et, t ) ▷ Frozen backbone  
+
+> 8:
+
+tcond ← TimeCond( t) ▷ Time condition  
+
+> 9:
+
+if st = None then  
+
+> 10:
+
+st ← 0 ∈ RM ×Ds ▷ Zero-init state  
+
+> 11:
+
+end if  
+
+> 12:
+
+ct ← Mixer( st, ht, tcond ) ▷ Read from ht 
+
+> 13:
+
+st−1 ← Updater( st, ct, tcond ) ▷ Update state  
+
+> 14:
+
+return (ˆ xt, st−1, tcond ) ▷ For next step creating a cross-step conditioning chain. At infer-ence, the recurrent loop runs for all T denoising steps. 
+
+4.1.1 Shared Time Conditioner and AdaRMSNorm Shared time conditioner. We use a shared sinu-soidal embedding (Vaswani et al., 2017) followed by an MLP: 
+
+tcond = MLP(sinusoidal 256 (t)) ∈ Rdc ,
+
+where dc is the output dimension of the time condi-tioner. The MLP consists of two linear layers with a SiLU activation in between. 5AdaRMSNorm. Each AdaRMSNorm layer in-cludes a modulation projection Wmod (with output dimensions matched to the layer width) and a RM-SNorm module (Zhang and Sennrich, 2019). Given conditioning tcond , we compute 
+
+[γ, β] = Wmod (tcond ),
+
+N (x, t ) = γ ⊙ RMSNorm( x) + β.
+
+At initialization, γ = β = 0, N (·, t ) outputs 0.This behavior is used as a zero-bridge in the Injec-tor to ensure that the augmented model is initially identical to the frozen backbone. 
+
+Cross attention. We write Attn GQA (Q, K, V )
+
+for grouped-query attention and FFN( ·) for a SwiGLU feed-forward network. 
+
+4.1.2 MetaState Mixer 
+
+The Mixer extracts salient context from the final-layer hidden activation of the backbone ht ∈
+
+RN ×D into the M -slot memory via grouped-query cross-attention. To keep the module lightweight, the Mixer operates in a bottleneck space of dimen-sion dm (the mixer dimension ) through learned downward and upward projections. Both the state and hidden activations are projected into the bottle-neck, 
+
+sbt = W s 
+
+> ↓
+
+N (st, t ) ∈ RM ×dm ,
+
+hbt = W h 
+
+> ↓
+
+N (ht, t ) ∈ RN ×dm .
+
+Cross-attention is computed in the bottleneck space, 
+
+Qt = W Q 
+
+> mix
+
+sbt , (Kt, Vt) = ( W K 
+
+> mix
+
+hbt , W V 
+
+> mix
+
+hbt ),
+
+abt = W O 
+
+> mix
+
+Attn GQA (Qt, Kt, Vt).
+
+An FFN residual is applied in the bottleneck, fol-lowed by an up-projection back to the state dimen-sion, 
+
+cbt = abt +FFN 
+
+
+
+N (abt , t )
+
+
+
+, ct = W↑ cbt ∈ RM ×Ds .
+
+4.1.3 MetaState Updater 
+
+The Updater integrates the Mixer’s context into the persistent state via a time-conditioned GRU (Dey and Salem, 2017). Given st ∈ RM ×Ds and 
+
+ct ∈ RM ×Ds ,
+
+¯st = N (st, t ).
+
+We compute gates and candidate state, 
+
+zt, rt = σ(Wg([¯ st ∥ ct]) + Wtg (tcond )) ,
+
+˜st = tanh( Wc([ rt ⊙ ¯st ∥ ct]) + Wtc (tcond )) ,
+
+and update 
+
+st−1 = (1 − zt) ⊙ st + zt ⊙ ˜st.
+
+The time projections Wtg and Wtc are zero-initialized so that temporal modulation is intro-duced gradually. We initialize both gate biases to 0.0, so that σ(0) = 0 .5, a neutral initialization that neither favors preserving nor overwriting the state. 
+
+4.1.4 MetaState Injector 
+
+The Injector translates the persistent state into an additive modulation of the input embeddings of the backbone through a bottleneck cross-attention block. Given embeddings et ∈ RN ×D and state st ∈
+
+RM ×Ds , both are projected into a bottleneck space 
+
+Rdb ,
+
+xbt = W e 
+
+> ↓
+
+N (et, t ), sbt = W s 
+
+> ↓
+
+N (st, t ).
+
+Grouped-query cross-attention and an FFN are then applied in the bottleneck, 
+
+Qbt = W Q 
+
+> inj
+
+xbt , (Kbt , Vbt ) = ( W K 
+
+> inj
+
+sbt , W V 
+
+> inj
+
+sbt ),
+
+xbt ← xbt + W O 
+
+> inj
+
+Attn GQA (Qbt , Kbt , Vbt ),
+
+xbt ← xbt + FFN 
+
+
+
+N (xbt , t )
+
+
+
+.
+
+Finally, we use a zero-bridge up-projection to gen-erate an additive embedding shift, 
+
+δt = W↑ N (xbt , t ) ∈ RN ×D, ˜et = et + δt.
+
+Zero-bridge (preservation at initialization). 
+
+Because N (·, t ) outputs 0 at initialization, δt = 0
+
+initially and thus ˜et = et. Therefore, the aug-mented model is functionally identical to the frozen backbone at the start of training, and the recurrent pathway is introduced gradually as the modulation parameters learn nonzero values. 
+
+4.2 Training: K-Step Iterative Unrolling 
+
+Standard masked diffusion training samples a sin-gle random timestep t per example and optimizes a single-step denoising objective. Although this approach is sufficient for original dLLM training, 6it is inadequate for MetaState because the recur-rent modules must learn what information to write into the persistent state, what information to retain across a multi-step denoising trajectory, and how to inject retained information at subsequent steps. A single-step objective does not provide cross-step credit assignment through the persistent state. We therefore train MetaState with multi-step unrolling and backpropagation through time (BPTT) (Wer-bos, 2002; Gers et al., 2002) along the unrolled state trajectory. 
+
+4.2.1 Algorithm 
+
+We train with K-step iterative unrolling that simu-lates a reverse denoising trajectory segment with a decreasing masked ratio (equivalently, a decreasing noise level). Starting from a fully masked input, each step stochastically unmasks a subset of po-sitions according to the noise schedule, performs a state-warmup forward pass, executes the main forward pass, and computes loss on the positions that remain masked. The time-conditioning vector 
+
+tcond returned by each forward pass is passed to the Injector at the next step as tprev cond , yielding a cross-step conditioning chain. Let M ⊆ { 1, . . . , N } denote the set of mask-able positions (e.g., response tokens in instruction tuning), and let Nm = |M| . We denote by Mk
+
+the set of positions that remain masked at unroll step k, with M0 = M and Mk ⊂ M k−1. After step k, the sequence x(k) is formed by revealing ground-truth tokens at the newly unmasked posi-tions, and Mk is updated as the complement of these revealed positions within M.
+
+Stochastic unmasking. At step k, we sample a per-example timestep t(k) ∼ U [ε, 1] and compute the masking probability p(k)mask = 1 − αt(k) from the noise schedule (Section 3). Each still-masked position is independently unmasked if its sampled uniform random value exceeds p(k)mask . To guar-antee progress, if no position is unmasked for a batch element that still contains masked tokens, we force-unmask the position with the largest sampled uniform value. We then compute the effective dis-crete timestep from the empirical masked ratio after unmasking, 
+
+¯t(k) =
+
+ |M k|
+
+Nm
+
+
+
+· Tmax 
+
+
+
+,
+
+where Tmax is the discrete timestep resolution used by the backbone. 
+
+State warmup. Before each main forward pass, we run a state-warmup pass by temporarily re-masking the most recently unmasked token and propagating one forward pass through the full model, including the recurrent state pathway. This warmup pass updates the persistent state and pro-duces a time-conditioning vector that is used as 
+
+tprev cond for the main forward pass. No training loss is computed for the warmup pass. This procedure conditions the recurrent state on the unmasking tra-jectory and allows the state to adapt to the current noise level before the main forward pass. 
+
+4.2.2 Loss Function 
+
+The total objective is 
+
+L =
+
+> K
+
+X
+
+> k=1
+
+ 1
+
+|M k|
+
+X
+
+> i∈M k
+
+− log pθ(x(i)0 | x(k))
+
+
+
++ λsKX
+
+> k=1
+
+∥s(k)∥2
+
+> F
+
+Ds
+
+.
+
+The cross-entropy at step k is computed over positions that remain masked and is normalized by the total number of current step’s maskable tokens 
+
+|M k|. This normalization ensures that each step contributes equally to the total loss, without requir-ing explicit per-step weighting. The state-norm regularizer weighted by λs prevents unbounded growth of the persistent state. 
+
+5 Experiments 
+
+5.1 Experimental Settings Models and Datasets. We instantiate MetaState on two discrete diffusion LLM families, each in Base and Instruct variants: LLaDA-Instruct-8B / LLaDA-Base-8B (Nie et al., 2025) (hidden size 
+
+D = 4096 ) and Dream-v0-Instruct-7B / Dream-v0-Base-7B (Ye et al., 2025) (hidden size D = 3584 ). To isolate the effect of the recurrent design, we freeze the backbone parameters throughout training and update only the MetaState components (Mixer, Updater, Injector, and the time-conditioning mod-ule). This adds a small number of trainable param-eters, amounting to less than 0.8% of each back-bone. We train on 50,000 sequences sampled from the Tülu-3 SFT mixture (allenai/tulu-3-sft-mixture) (Lambert et al., 2024) and hold out 1,000 sequences for evaluation. All examples are processed with each model’s native tokenizer and chat template, 7Table 1: Main results on mathematical reasoning and code generation benchmarks (generation length 256, block size 32, dual cache). MetaState rows report the configuration described in the text. ∆ denotes improvement over the corresponding baseline. Bold marks the best result per column within each backbone group. 
+
+Model GSM8K MATH-500 HumanEval MBPP 
+
+Dream backbone (7B) 
+
+Dream-Base 73.7 37.6 54.9 52.6 + MetaState 75.7 46.0 61.0 53.8   
+
+> ∆vs. Base
+
++2.0 +8.4 +6.1 +1.2 Dream-Instruct 76.2 45.0 56.1 51.0 + + MetaState 79.5 46.8 57.3 54.2   
+
+> ∆vs. Instruct
+
++3.3 +1.8 +1.2 +3.2 
+
+LLaDA backbone (8B) 
+
+LLaDA-Base 67.4 28.8 33.5 25.6 + MetaState 76.4 38.4 39.6 29.6   
+
+> ∆vs. Base
+
++9.0 +9.6 +6.1 +4.0 LLaDA-Instruct 78.5 36.8 37.2 26.0 + MetaState 80.0 39.2 39.6 28.6   
+
+> ∆vs. Instruct
+
++1.5 +2.4 +2.4 +2.6 tokenized to a maximum length of 1024, and right-padded to the maximum length within each batch. 
+
+Evaluation Benchmarks. We evaluate on four established benchmarks covering mathematics and code generation. For mathematical reasoning, we use GSM8K (Cobbe et al., 2021) with 5-shot prompting and MATH-500 (Lewkowycz et al., 2022) with 4-shot prompting. For code synthe-sis, we report results on HumanEval (Chen et al., 2021) in the 0-shot setting and MBPP (Austin et al., 2021b) with 3-shot prompting. Following common dLLM inference practice, we cap the generation length at 256 tokens and decode in blocks of 32 tokens per unmasking step. All evaluations use the KV-cache and parallel decoding mechanism from Fast-dLLM (Wu et al., 2025) for faster inference. 
+
+5.2 Main Results 
+
+Table 1 compares MetaState against both Base and Instruct backbones on four benchmarks cov-ering mathematical reasoning (GSM8K, MATH-500) and code generation (HumanEval, MBPP). For each backbone, we report the configuration with 50k training samples from "allenai/tulu-3-sft-mixture" dataset. On Dream, MetaState outperforms both the Base and Instruct variants on every benchmark. Com-pared with Dream-Base, the largest gains are on MATH-500 ( +8 .4) and HumanEval ( +6 .1), with additional improvements on GSM8K ( +2 .0) and MBPP ( +1 .2). The trend persists when we com-pare against the stronger Dream-Instruct base-line, where MetaState improves GSM8K by +3 .3,MBPP by +3 .2, MATH-500 by +1 .8, and Hu-manEval by +1 .2. These tasks are sensitive to step-to-step drift, either because the model must preserve intermediate conclusions across a multi-step solution (GSM8K, MATH-500) or because it must maintain global program structure over many lines (MBPP, HumanEval). MetaState helps by providing a persistent channel for information that would otherwise be compressed away when hidden activations are converted back into discrete tokens during sampling and remasking. LLaDA shows the same behavior at a larger scale. Relative to LLaDA-Base, MetaState yields gains of +9 .6 on MATH-500, +9 .0 on GSM8K, 
+
++6 .1 on HumanEval, and +4 .0 on MBPP. Rel-ative to LLaDA-Instruct, the improvements are smaller but still consistent, with +2 .6 on MBPP, 
+
++2 .4 on MATH-500 and HumanEval, and +1 .5
+
+on GSM8K. The larger margins over Base models are expected, since instruction tuning already en-courages more stable structure through supervised exemplars, which can partially reduce cross-step inconsistency. The fact that MetaState continues to improve Instruct backbones, and does so across two architecturally different dLLMs, supports the interpretation that the gains come from mitigating 8the Information Island bottleneck at the denoising interface. 
+
+6 Conclusion 
+
+We presented MetaState, a lightweight recurrent augmentation for discrete diffusion language mod-els (dLLMs). By introducing a persistent, fixed-size working memory along the reverse diffusion trajectory, MetaState enables cross-step communi-cation beyond the lossy sampling and remasking interface (Information Island). The architecture reads backbone activations into a compact set of memory slots, integrates information across steps via gated recurrence, and writes the accumulated memory back into the backbone through embed-ding modulation, coordinated by shared time con-ditioning. Empirically, on frozen LLaDA-8B and Dream-7B backbones, MetaState introduces less than 0.8% trainable parameters and yields consis-tent improvements over strong frozen baselines, supporting persistent cross-step memory as an ef-fective mechanism for improving denoising coher-ence in dLLMs. 
+
+7 Limitations 
+
+MetaState improves discrete diffusion language models by adding a lightweight recurrent working-memory pathway, but these gains also introduce ad-ditional computational cost. Training requires un-rolling recurrent computation over diffusion steps, which is slower than standard single-step training and increases memory pressure. At inference, gen-eration is no longer limited to forward passes of the backbone because MetaState modules should also be executed at each step, increasing latency and memory overhead. These overheads may be reduced through implementation and systems-level optimizations, such as kernel fusion and hardware-aware scheduling of recurrent components, which are left for future work. 
+
+References 
+
+Ana Lawry Aguila, Ayodeji Ijishakin, Juan Euge-nio Iglesias, Tomomi Takenaga, Yukihiro Nomura, Takeharu Yoshikawa, Osamu Abe, and Shouhei Hanaoka. 2025. Cadd: Context aware disease de-viations via restoration of brain images using nor-mative conditional diffusion models. arXiv preprint arXiv:2508.03594 .Marianne Arriola, Aaron Gokaslan, Justin T Chiu, Zhi-han Yang, Zhixuan Qi, Jiaqi Han, Subham Sekhar Sahoo, and Volodymyr Kuleshov. 2025. Block diffusion: Interpolating between autoregressive and diffusion language models. arXiv preprint arXiv:2503.09573 .Jacob Austin, Daniel D Johnson, Jonathan Ho, Daniel Tarlow, and Rianne Van Den Berg. 2021a. Structured denoising diffusion models in discrete state-spaces. 
+
+Advances in neural information processing systems ,34:17981–17993. Jacob Austin, Augustus Odena, Maxwell Nye, Maarten Bosma, Henryk Michalewski, David Dohan, Ellen Jiang, Carrie Cai, Michael Terry, Quoc Le, and 1 oth-ers. 2021b. Program synthesis with large language models. arXiv preprint arXiv:2108.07732 .Tiwei Bie, Maosong Cao, Kun Chen, Lun Du, Min-gliang Gong, Zhuochen Gong, Yanmei Gu, Jiaqi Hu, Zenan Huang, Zhenzhong Lan, and 1 others. 2025. Llada2. 0: Scaling up diffusion language models to 100b. arXiv preprint arXiv:2512.15745 .Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, and 1 others. 2020. Language models are few-shot learners. Advances in neural information processing systems , 33:1877–1901. Boyuan Chen, Diego Martí Monsó, Yilun Du, Max Sim-chowitz, Russ Tedrake, and Vincent Sitzmann. 2024. Diffusion forcing: Next-token prediction meets full-sequence diffusion. Advances in Neural Information Processing Systems , 37:24081–24125. Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de Oliveira Pinto, Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, Alex Ray, Raul Puri, Gretchen Krueger, Michael Petrov, Heidy Khlaaf, Girish Sastry, Pamela Mishkin, Brooke Chan, Scott Gray, and 39 others. 2021. Evaluating large language models trained on code. Shuang Cheng, Yihan Bian, Dawei Liu, Linfeng Zhang, Qian Yao, Zhongbo Tian, Wenhai Wang, Qipeng Guo, Kai Chen, Biqing Qi, and 1 others. 2025. Sdar: A synergistic diffusion-autoregression paradigm for scalable sequence generation. arXiv preprint arXiv:2510.06303 .Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. 2021. Training verifiers to solve math word prob-lems. arXiv preprint arXiv:2110.14168 .Rahul Dey and Fathi M Salem. 2017. Gate-variants of gated recurrent unit (gru) neural networks. In 
+
+2017 IEEE 60th international midwest symposium on circuits and systems (MWSCAS) , pages 1597–1600. IEEE. 
+
+9Felix A Gers, Nicol N Schraudolph, and Jürgen Schmid-huber. 2002. Learning precise timing with lstm recur-rent networks. Journal of machine learning research ,3(Aug):115–143. Shansan Gong, Shivam Agarwal, Yizhe Zhang, Jiacheng Ye, Lin Zheng, Mukai Li, Chenxin An, Peilin Zhao, Wei Bi, Jiawei Han, and 1 others. 2024. Scaling dif-fusion language models via adaptation from autore-gressive models. arXiv preprint arXiv:2410.17891 .Shibo Hao, Sainbayar Sukhbaatar, DiJia Su, Xian Li, Zhiting Hu, Jason Weston, and Yuandong Tian. 2022. Training large language models to reason in a continuous latent space, 2024. URL https://arxiv. org/abs/2412.06769 , 98. Yuezhou Hu, Harman Singh, Monishwaran Mah-eswaran, Haocheng Xi, Coleman Hooper, Jintao Zhang, Aditya Tomar, Michael W Mahoney, Se-won Min, Mehrdad Farajtabar, and 1 others. 2026. Residual context diffusion language models. arXiv preprint arXiv:2601.22954 .Allan Jabri, David Fleet, and Ting Chen. 2022. Scalable adaptive computation for iterative generation. arXiv preprint arXiv:2212.11972 .Haoqiang Kang, Yizhe Zhang, Nikki Lijing Kuang, Nicklas Majamaki, Navdeep Jaitly, Yi-An Ma, and Lianhui Qin. 2025. Ladir: Latent diffusion en-hances llms for text reasoning. arXiv preprint arXiv:2510.04573 .Nathan Lambert, Jacob Morrison, Valentina Pyatkin, Shengyi Huang, Hamish Ivison, Faeze Brahman, Lester James V. Miranda, Alisa Liu, Nouha Dziri, Shane Lyu, Yuling Gu, Saumya Malik, Victoria Graf, Jena D. Hwang, Jiangjiang Yang, Ronan Le Bras, Oyvind Tafjord, Chris Wilhelm, Luca Soldaini, and 4 others. 2024. Tülu 3: Pushing frontiers in open language model post-training. Aitor Lewkowycz, Anders Andreassen, David Dohan, Ethan Dyer, Henryk Michalewski, Vinay Ramasesh, Ambrose Slone, Cem Anil, Imanol Schlag, Theo Gutman-Solo, and 1 others. 2022. Solving quan-titative reasoning problems with language models. 
+
+Advances in neural information processing systems ,35:3843–3857. Tianyi Li, Mingda Chen, Bowei Guo, and Zhiqiang Shen. 2025. A survey on diffusion language models. 
+
+arXiv preprint arXiv:2508.10875 .Zhiyuan Liu, Yicun Yang, Yaojie Zhang, Junjie Chen, Chang Zou, Qingyuan Wei, Shaobo Wang, and Lin-feng Zhang. 2025. dllm-cache: Accelerating diffu-sion large language models with adaptive caching. 
+
+arXiv preprint arXiv:2506.06295 .Aaron Lou, Chenlin Meng, and Stefano Ermon. 2023. Discrete diffusion modeling by estimating the ratios of the data distribution. arXiv preprint arXiv:2310.16834 .Justin Lovelace, Christian Belardi, Sofian Zalouk, Ad-hitya Polavaram, Srivatsa Kundurthy, and Kilian Q Weinberger. 2026. Stop-think-autoregress: Lan-guage modeling with latent diffusion planning. arXiv preprint arXiv:2602.20528 .Shen Nie, Fengqi Zhu, Zebin You, Xiaolu Zhang, Jingyang Ou, Jun Hu, Jun Zhou, Yankai Lin, Ji-Rong Wen, and Chongxuan Li. 2025. Large language dif-fusion models. arXiv preprint arXiv:2502.09992 .Jingyang Ou, Shen Nie, Kaiwen Xue, Fengqi Zhu, Ji-acheng Sun, Zhenguo Li, and Chongxuan Li. 2024. Your absorbing discrete diffusion secretly models the conditional distributions of clean data. arXiv preprint arXiv:2406.03736 .Patrick Pynadath, Jiaxin Shi, and Ruqi Zhang. 2025. Candi: Hybrid discrete-continuous diffusion models. 
+
+arXiv preprint arXiv:2510.22510 .Alec Radford, Karthik Narasimhan, Tim Salimans, Ilya Sutskever, and 1 others. 2018. Improving language understanding by generative pre-training. Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, Ilya Sutskever, and 1 others. 2019. Language models are unsupervised multitask learn-ers. OpenAI blog , 1(8):9. Subham Sahoo, Marianne Arriola, Yair Schiff, Aaron Gokaslan, Edgar Marroquin, Justin Chiu, Alexan-der Rush, and Volodymyr Kuleshov. 2024. Simple and effective masked diffusion language models. Ad-vances in Neural Information Processing Systems ,37:130136–130184. Zhenyi Shen, Hanqi Yan, Linhai Zhang, Zhanghao Hu, Yali Du, and Yulan He. Codi: Compressing chain-of-thought into continuous space via self-distillation, 2025. URL https://arxiv. org/abs/2502.21074 .Jiaxin Shi, Kehang Han, Zhe Wang, Arnaud Doucet, and Michalis Titsias. 2024. Simplified and general-ized masked diffusion for discrete data. Advances in neural information processing systems , 37:103131– 103167. Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. Attention is all you need. Advances in neural information processing systems , 30. Paul J Werbos. 2002. Backpropagation through time: what it does and how to do it. Proceedings of the IEEE , 78(10):1550–1560. Chengyue Wu, Hao Zhang, Shuchen Xue, Zhijian Liu, Shizhe Diao, Ligeng Zhu, Ping Luo, Song Han, and Enze Xie. 2025. Fast-dllm: Training-free accelera-tion of diffusion llm by enabling kv cache and parallel decoding. arXiv preprint arXiv:2505.22618 .
+
+10 Jiacheng Ye, Zhihui Xie, Lin Zheng, Jiahui Gao, Zirui Wu, Xin Jiang, Zhenguo Li, and Lingpeng Kong. 2025. Dream 7b: Diffusion large language models. 
+
+arXiv preprint arXiv:2508.15487 .Biao Zhang and Rico Sennrich. 2019. Root mean square layer normalization. Advances in neural information processing systems , 32. Zhen Zhang, Xuehai He, Weixiang Yan, Ao Shen, Chenyang Zhao, Shuohang Wang, Yelong Shen, and Xin Eric Wang. 2025. Soft thinking: Unlocking the reasoning potential of llms in continuous concept space. arXiv preprint arXiv:2505.15778 .Fengqi Zhu, Rongzhen Wang, Shen Nie, Xiaolu Zhang, Chunwei Wu, Jun Hu, Jun Zhou, Jianfei Chen, Yankai Lin, Ji-Rong Wen, and 1 others. 2025a. Llada 1.5: Variance-reduced preference optimization for large language diffusion models. arXiv preprint arXiv:2505.19223 .Fengqi Zhu, Zebin You, Yipeng Xing, Zenan Huang, Lin Liu, Yihong Zhuang, Guoshan Lu, Kangyu Wang, Xudong Wang, Lanning Wei, and 1 others. 2025b. Llada-moe: A sparse moe diffusion language model. 
+
+arXiv preprint arXiv:2509.24389 .Qinglin Zhu, Yizhen Yao, Runcong Zhao, Yanzheng Xiang, Amrutha Saseendran, Chen Jin, Philip Teare, Bin Liang, Yulan He, and Lin Gui. 2025c. Latent refinement decoding: Enhancing diffusion-based lan-guage models by refining belief states. arXiv preprint arXiv:2510.11052 .
+
+11

@@ -1,0 +1,995 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-03-10T19:39:35.880100+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 27,
+    "deep_cap": 6,
+    "deep_selected": 14,
+    "quick_candidates": 35,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2603.01761v1",
+      "title": "Modular Memory is the Key to Continual Learning Agents",
+      "abstract": "Foundation models have transformed machine learning through large-scale pretraining and increased test-time compute. Despite surpassing human performance in several domains, these models remain fundamentally limited in continuous operation, experience accumulation, and personalization, capabilities that are central to adaptive intelligence. While continual learning research has long targeted these goals, its historical focus on in-weight learning (IWL), i.e., updating a single model's parameters to absorb new knowledge, has rendered catastrophic forgetting a persistent challenge. Our position is that combining the strengths of In-Weight Learning (IWL) and the newly emerged capabilities of In-Context Learning (ICL) through the design of modular memory is the missing piece for continual adaptation at scale. We outline a conceptual framework for modular memory-centric architectures that leverage ICL for rapid adaptation and knowledge accumulation, and IWL for stable updates to model capabilities, charting a practical roadmap toward continually learning agents.",
+      "authors": [
+        "Vaggelis Dorovatas",
+        "Malte Schwerin",
+        "Andrew D. Bagdanov",
+        "Lucas Caccia",
+        "Antonio Carta",
+        "Laurent Charlin",
+        "Barbara Hammer",
+        "Tyler L. Hayes",
+        "Timm Hess",
+        "Christopher Kanan",
+        "Dhireesha Kudithipudi",
+        "Xialei Liu",
+        "Vincenzo Lomonaco",
+        "Jorge Mendez-Mendez",
+        "Darshan Patil",
+        "Ameya Prabhu",
+        "Elisa Ricci",
+        "Tinne Tuytelaars",
+        "Gido M. van de Ven",
+        "Liyuan Wang",
+        "Joost van de Weijer",
+        "Jonghyun Choi",
+        "Martin Mundt",
+        "Rahaf Aljundi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-02T11:40:05+00:00",
+      "link": "https://arxiv.org/pdf/2603.01761v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "modular memory combining in-weight and in-context learning for agents",
+      "llm_evidence_cn": "结合权重内学习和上下文学习的代理模块化记忆",
+      "llm_evidence": "结合权重内学习和上下文学习的代理模块化记忆",
+      "canonical_evidence": "结合权重内学习和上下文学习的代理模块化记忆",
+      "llm_tldr_en": "Proposes modular memory as a key architecture for continual learning and experience accumulation in AI agents.",
+      "llm_tldr_cn": "提出模块化记忆作为 AI 代理持续学习和经验积累的关键架构。",
+      "llm_tldr": "提出模块化记忆作为 AI 代理持续学习和经验积累的关键架构。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.02473v1",
+      "title": "Diagnosing Retrieval vs. Utilization Bottlenecks in LLM Agent Memory",
+      "abstract": "Memory-augmented LLM agents store and retrieve information from prior interactions, yet the relative importance of how memories are written versus how they are retrieved remains unclear. We introduce a diagnostic framework that analyzes how performance differences manifest across write strategies, retrieval methods, and memory utilization behavior, and apply it to a 3x3 study crossing three write strategies (raw chunks, Mem0-style fact extraction, MemGPT-style summarization) with three retrieval methods (cosine, BM25, hybrid reranking). On LoCoMo, retrieval method is the dominant factor: average accuracy spans 20 points across retrieval methods (57.1% to 77.2%) but only 3-8 points across write strategies. Raw chunked storage, which requires zero LLM calls, matches or outperforms expensive lossy alternatives, suggesting that current memory pipelines may discard useful context that downstream retrieval mechanisms fail to compensate for. Failure analysis shows that performance breakdowns most often manifest at the retrieval stage rather than at utilization. We argue that, under current retrieval practices, improving retrieval quality yields larger gains than increasing write-time sophistication. Code is publicly available at https://github.com/boqiny/memory-probe.",
+      "authors": [
+        "Boqin Yuan",
+        "Yue Su",
+        "Kun Yao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-02T23:47:23+00:00",
+      "link": "https://arxiv.org/pdf/2603.02473v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "diagnostic framework for LLM agent memory retrieval vs utilization",
+      "llm_evidence_cn": "LLM智能体记忆检索与利用的诊断框架",
+      "llm_evidence": "LLM智能体记忆检索与利用的诊断框架",
+      "canonical_evidence": "LLM智能体记忆检索与利用的诊断框架",
+      "llm_tldr_en": "Analyzes bottlenecks in agent memory by comparing different write strategies and retrieval methods.",
+      "llm_tldr_cn": "通过比较不同的写入策略和检索方法，诊断智能体记忆系统中的瓶颈。",
+      "llm_tldr": "通过比较不同的写入策略和检索方法，诊断智能体记忆系统中的瓶颈。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.07379v1",
+      "title": "SoK: Agentic Retrieval-Augmented Generation (RAG): Taxonomy, Architectures, Evaluation, and Research Directions",
+      "abstract": "Retrieval-Augmented Generation (RAG) systems are increasingly evolving into agentic architectures where large language models autonomously coordinate multi-step reasoning, dynamic memory management, and iterative retrieval strategies. Despite rapid industrial adoption, current research lacks a systematic understanding of Agentic RAG as a sequential decision-making system, leading to highly fragmented architectures, inconsistent evaluation methodologies, and unresolved reliability risks. This Systematization of Knowledge (SoK) paper provides the first unified framework for understanding these autonomous systems. We formalize agentic retrieval-generation loops as finite-horizon partially observable Markov decision processes, explicitly modeling their control policies and state transitions. Building upon this formalization, we develop a comprehensive taxonomy and modular architectural decomposition that categorizes systems by their planning mechanisms, retrieval orchestration, memory paradigms, and tool-invocation behaviors. We further analyze the critical limitations of traditional static evaluation practices and identify severe systemic risks inherent to autonomous loops, including compounding hallucination propagation, memory poisoning, retrieval misalignment, and cascading tool-execution vulnerabilities. Finally, we outline key doctoral-scale research directions spanning stable adaptive retrieval, cost-aware orchestration, formal trajectory evaluation, and oversight mechanisms, providing a definitive roadmap for building reliable, controllable, and scalable agentic retrieval systems.",
+      "authors": [
+        "Saroj Mishra",
+        "Suman Niroula",
+        "Umesh Yadav",
+        "Dilip Thakur",
+        "Srijan Gyawali",
+        "Shiva Gaire"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.CR",
+        "cs.IR"
+      ],
+      "published": "2026-03-07T23:38:57+00:00",
+      "link": "https://arxiv.org/pdf/2603.07379v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "survey of agentic RAG covering dynamic memory management and evaluation",
+      "llm_evidence_cn": "涵盖动态记忆管理和评估的智能体RAG综述",
+      "llm_evidence": "涵盖动态记忆管理和评估的智能体RAG综述",
+      "canonical_evidence": "涵盖动态记忆管理和评估的智能体RAG综述",
+      "llm_tldr_en": "Provides a unified framework and taxonomy for agentic RAG systems, including memory management and evaluation.",
+      "llm_tldr_cn": "为智能体RAG系统提供统一框架和分类法，涵盖记忆管理和评估。",
+      "llm_tldr": "为智能体RAG系统提供统一框架和分类法，涵盖记忆管理和评估。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "survey of memory mechanisms in large language model agents",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.07670v1",
+      "title": "Memory for Autonomous LLM Agents:Mechanisms, Evaluation, and Emerging Frontiers",
+      "abstract": "Large language model (LLM) agents increasingly operate in settings where a single context window is far too small to capture what has happened, what was learned, and what should not be repeated. Memory -- the ability to persist, organize, and selectively recall information across interactions -- is what turns a stateless text generator into a genuinely adaptive agent. This survey offers a structured account of how memory is designed, implemented, and evaluated in modern LLM-based agents, covering work from 2022 through early 2026. We formalize agent memory as a \\emph{write--manage--read} loop tightly coupled with perception and action, then introduce a three-dimensional taxonomy spanning temporal scope, representational substrate, and control policy. Five mechanism families are examined in depth: context-resident compression, retrieval-augmented stores, reflective self-improvement, hierarchical virtual context, and policy-learned management. On the evaluation side, we trace the shift from static recall benchmarks to multi-session agentic tests that interleave memory with decision-making, analyzing four recent benchmarks that expose stubborn gaps in current systems. We also survey applications where memory is the differentiating factor -- personal assistants, coding agents, open-world games, scientific reasoning, and multi-agent teamwork -- and address the engineering realities of write-path filtering, contradiction handling, latency budgets, and privacy governance. The paper closes with open challenges: continual consolidation, causally grounded retrieval, trustworthy reflection, learned forgetting, and multimodal embodied memory.",
+      "authors": [
+        "Pengfei Du"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-08T15:08:01+00:00",
+      "link": "https://arxiv.org/pdf/2603.07670v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "survey of memory mechanisms and evaluation in LLM agents",
+      "llm_evidence_cn": "LLM智能体记忆机制与评估综述",
+      "llm_evidence": "LLM智能体记忆机制与评估综述",
+      "canonical_evidence": "LLM智能体记忆机制与评估综述",
+      "llm_tldr_en": "A comprehensive survey of memory design, implementation, and evaluation in modern LLM agents.",
+      "llm_tldr_cn": "对现代LLM智能体中记忆设计、实现和评估的全面综述。",
+      "llm_tldr": "对现代LLM智能体中记忆设计、实现和评估的全面综述。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "survey of memory mechanisms in large language model agents",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.04222v1",
+      "title": "PRAM-R: A Perception-Reasoning-Action-Memory Framework with LLM-Guided Modality Routing for Adaptive Autonomous Driving",
+      "abstract": "Multimodal perception enables robust autonomous driving but incurs unnecessary computational cost when all sensors remain active. This paper presents PRAM-R, a unified Perception-Reasoning-Action-Memory framework with LLM-Guided Modality Routing for adaptive autonomous driving. PRAM-R adopts an asynchronous dual-loop design: a fast reactive loop for perception and control, and a slow deliberative loop for reasoning-driven modality selection and memory updates. An LLM router selects and weights modalities using environmental context and sensor diagnostics, while a hierarchical memory module preserves temporal consistency and supports long-term adaptation. We conduct a two-stage evaluation: (1) synthetic stress tests for stability analysis and (2) real-world validation on the nuScenes dataset. Synthetic stress tests confirm 87.2% reduction in routing oscillations via hysteresis-based stabilization. Real-world validation on nuScenes shows 6.22% modality reduction with 20% memory recall while maintaining comparable trajectory accuracy to full-modality baselines in complex urban scenarios. Our work demonstrates that LLM-augmented architectures with hierarchical memory achieve efficient, adaptive multimodal perception in autonomous driving.",
+      "authors": [
+        "Yi Zhang",
+        "Xian Zhang",
+        "Saisi Zhao",
+        "Yinglei Song",
+        "Chengdong Wu",
+        "Nenad Petrovic",
+        "Alois Knoll"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI"
+      ],
+      "published": "2026-03-04T16:04:54+00:00",
+      "link": "https://arxiv.org/pdf/2603.04222v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "hierarchical memory module for long-term adaptation in autonomous driving",
+      "llm_evidence_cn": "用于自动驾驶长期适应的分层记忆模块",
+      "llm_evidence": "用于自动驾驶长期适应的分层记忆模块",
+      "canonical_evidence": "用于自动驾驶长期适应的分层记忆模块",
+      "llm_tldr_en": "A framework for autonomous driving using a hierarchical memory module to support long-term adaptation and consistency.",
+      "llm_tldr_cn": "提出PRAM-R框架，利用分层记忆模块支持自动驾驶中的长期适应和时空一致性。",
+      "llm_tldr": "提出PRAM-R框架，利用分层记忆模块支持自动驾驶中的长期适应和时空一致性。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.04370v1",
+      "title": "$τ$-Knowledge: Evaluating Conversational Agents over Unstructured Knowledge",
+      "abstract": "Conversational agents are increasingly deployed in knowledge-intensive settings, where correct behavior depends on retrieving and applying domain-specific knowledge from large, proprietary, and unstructured corpora during live interactions with users. Yet most existing benchmarks evaluate retrieval or tool use independently of each other, creating a gap in realistic, fully agentic evaluation over unstructured data in long-horizon interactions. We introduce $τ$-Knowledge, an extension of $τ$-Bench for evaluating agents in environments where success depends on coordinating external, natural-language knowledge with tool outputs to produce verifiable, policy-compliant state changes. Our new domain, $τ$-Banking, models realistic fintech customer support workflows in which agents must navigate roughly 700 interconnected knowledge documents while executing tool-mediated account updates. Across embedding-based retrieval and terminal-based search, even frontier models with high reasoning budgets achieve only $\\sim$25.5% pass^1, with reliability degrading sharply over repeated trials. Agents struggle to retrieve the correct documents from densely interlinked knowledge bases and to reason accurately over complex internal policies. Overall, $τ$-Knowledge provides a realistic testbed for developing agents that integrate unstructured knowledge in human-facing deployments.",
+      "authors": [
+        "Quan Shi",
+        "Alexandra Zytek",
+        "Pedram Razavi",
+        "Karthik Narasimhan",
+        "Victor Barres"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.IR"
+      ],
+      "published": "2026-03-04T18:34:47+00:00",
+      "link": "https://arxiv.org/pdf/2603.04370v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "evaluating agents in long-horizon interactions over unstructured knowledge",
+      "llm_evidence_cn": "在非结构化知识的长时程交互中评估智能体",
+      "llm_evidence": "在非结构化知识的长时程交互中评估智能体",
+      "canonical_evidence": "在非结构化知识的长时程交互中评估智能体",
+      "llm_tldr_en": "An evaluation framework for conversational agents managing unstructured knowledge in long-horizon interactions.",
+      "llm_tldr_cn": "推出τ-Knowledge框架，用于评估智能体在长时程交互中协调非结构化知识与工具调用的能力。",
+      "llm_tldr": "推出τ-Knowledge框架，用于评估智能体在长时程交互中协调非结构化知识与工具调用的能力。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.04390v1",
+      "title": "A Dual-Helix Governance Approach Towards Reliable Agentic AI for WebGIS Development",
+      "abstract": "WebGIS development requires rigor, yet agentic AI frequently fails due to five large language model (LLM) limitations: context constraints, cross-session forgetting, stochasticity, instruction failure, and adaptation rigidity. We propose a dual-helix governance framework reframing these challenges as structural governance problems that model capacity alone cannot resolve. We implement the framework as a 3-track architecture (Knowledge, Behavior, Skills) that uses a knowledge graph substrate to stabilize execution by externalizing domain facts and enforcing executable protocols, complemented by a self-learning cycle for autonomous knowledge growth. Applying this to the FutureShorelines WebGIS tool, a governed agent refactored a 2,265-line monolithic codebase into modular ES6 components. Results demonstrated a 51\\% reduction in cyclomatic complexity and a 7-point increase in maintainability index. A comparative experiment against a zero-shot LLM confirms that externalized governance, not just model capability, drives operational reliability in geospatial engineering. This approach is implemented in the open-source AgentLoom governance toolkit.",
+      "authors": [
+        "Boyuan",
+        "Guan",
+        "Wencong Cui",
+        "Levente Juhasz"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.SE"
+      ],
+      "published": "2026-03-04T18:53:25+00:00",
+      "link": "https://arxiv.org/pdf/2603.04390v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cross-session forgetting and externalized knowledge substrate",
+      "llm_evidence_cn": "跨会话遗忘与外部化知识基座",
+      "llm_evidence": "跨会话遗忘与外部化知识基座",
+      "canonical_evidence": "跨会话遗忘与外部化知识基座",
+      "llm_tldr_en": "Proposes a dual-helix governance framework to solve LLM memory constraints using knowledge graphs.",
+      "llm_tldr_cn": "提出双螺旋治理框架，利用知识图谱解决大语言模型的记忆限制问题。",
+      "llm_tldr": "提出双螺旋治理框架，利用知识图谱解决大语言模型的记忆限制问题。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.04639v1",
+      "title": "RoboMME: Benchmarking and Understanding Memory for Robotic Generalist Policies",
+      "abstract": "Memory is critical for long-horizon and history-dependent robotic manipulation. Such tasks often involve counting repeated actions or manipulating objects that become temporarily occluded. Recent vision-language-action (VLA) models have begun to incorporate memory mechanisms; however, their evaluations remain confined to narrow, non-standardized settings. This limits their systematic understanding, comparison, and progress measurement. To address these challenges, we introduce RoboMME: a large-scale standardized benchmark for evaluating and advancing VLA models in long-horizon, history-dependent scenarios. Our benchmark comprises 16 manipulation tasks constructed under a carefully designed taxonomy that evaluates temporal, spatial, object, and procedural memory. We further develop a suite of 14 memory-augmented VLA variants built on the π0.5 backbone to systematically explore different memory representations across multiple integration strategies. Experimental results show that the effectiveness of memory representations is highly task-dependent, with each design offering distinct advantages and limitations across different tasks. Videos and code can be found at our website https://robomme.github.io.",
+      "authors": [
+        "Yinpei Dai",
+        "Hongze Fu",
+        "Jayjun Lee",
+        "Yuejiang Liu",
+        "Haoran Zhang",
+        "Jianing Yang",
+        "Chelsea Finn",
+        "Nima Fazeli",
+        "Joyce Chai"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI"
+      ],
+      "published": "2026-03-04T21:59:32+00:00",
+      "link": "https://arxiv.org/pdf/2603.04639v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "benchmark for evaluating memory in robotic generalist policies",
+      "llm_evidence_cn": "评估机器人通用策略记忆能力的基准",
+      "llm_evidence": "评估机器人通用策略记忆能力的基准",
+      "canonical_evidence": "评估机器人通用策略记忆能力的基准",
+      "llm_tldr_en": "Introduces a standardized benchmark to evaluate memory mechanisms in long-horizon robotic manipulation tasks.",
+      "llm_tldr_cn": "引入了一个标准化基准，用于评估长周期机器人操作任务中的记忆机制。",
+      "llm_tldr": "引入了一个标准化基准，用于评估长周期机器人操作任务中的记忆机制。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.04885v1",
+      "title": "Bounded State in an Infinite Horizon: Proactive Hierarchical Memory for Ad-Hoc Recall over Streaming Dialogues",
+      "abstract": "Real-world dialogue usually unfolds as an infinite stream. It thus requires bounded-state memory mechanisms to operate within an infinite horizon. However, existing read-then-think memory is fundamentally misaligned with this setting, as it cannot support ad-hoc memory recall while streams unfold. To explore this challenge, we introduce \\textbf{STEM-Bench}, the first benchmark for \\textbf{ST}reaming \\textbf{E}valuation of \\textbf{M}emory. It comprises over 14K QA pairs in dialogue streams that assess perception fidelity, temporal reasoning, and global awareness under infinite-horizon constraints. The preliminary analysis on STEM-Bench indicates a critical \\textit{fidelity-efficiency dilemma}: retrieval-based methods use fragment context, while full-context models incur unbounded latency. To resolve this, we propose \\textbf{ProStream}, a proactive hierarchical memory framework for streaming dialogues. It enables ad-hoc memory recall on demand by reasoning over continuous streams with multi-granular distillation. Moreover, it employs Adaptive Spatiotemporal Optimization to dynamically optimize retention based on expected utility. It enables a bounded knowledge state for lower inference latency without sacrificing reasoning fidelity. Experiments show that ProStream outperforms baselines in both accuracy and efficiency.",
+      "authors": [
+        "Bingbing Wang",
+        "Jing Li",
+        "Ruifeng Xu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-05T07:25:25+00:00",
+      "link": "https://arxiv.org/pdf/2603.04885v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "benchmark for streaming evaluation of memory",
+      "llm_evidence_cn": "流式记忆评估基准",
+      "llm_evidence": "流式记忆评估基准",
+      "canonical_evidence": "流式记忆评估基准",
+      "llm_tldr_en": "Introduces STEM-Bench to evaluate memory perception and reasoning in infinite-horizon dialogue streams.",
+      "llm_tldr_cn": "引入STEM-Bench，用于评估无限时界对话流中的记忆感知和推理。",
+      "llm_tldr": "引入STEM-Bench，用于评估无限时界对话流中的记忆感知和推理。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.07024v1",
+      "title": "Enhancing Web Agents with a Hierarchical Memory Tree",
+      "abstract": "Large language model-based web agents have shown strong potential in automating web interactions through advanced reasoning and instruction following. While retrieval-based memory derived from historical trajectories enables these agents to handle complex, long-horizon tasks, current methods struggle to generalize across unseen websites. We identify that this challenge arises from the flat memory structures that entangle high-level task logic with site-specific action details. This entanglement induces a workflow mismatch in new environments, where retrieved contents are conflated with current web, leading to logically inconsistent execution. To address this, we propose Hierarchical Memory Tree (HMT), a structured framework designed to explicitly decouple logical planning from action execution. HMT constructs a three-level hierarchy from raw trajectories via an automated abstraction pipeline: the Intent level maps diverse user instructions to standardized task goals; the Stage level defines reusable semantic subgoals characterized by observable pre-conditions and post-conditions; and the Action level stores action patterns paired with transferable semantic element descriptions. Leveraging this structure, we develop a stage-aware inference mechanism comprising a Planner and an Actor. By explicitly validating pre-conditions, the Planner aligns the current state with the correct logical subgoal to prevent workflow mismatch, while the Actor grounds actions by matching the stored semantic descriptions to the target page. Experimental results on Mind2Web and WebArena show that HMT significantly outperforms flat-memory methods, particularly in cross-website and cross-domain scenarios, highlighting the necessity of structured memory for robust generalization of web agents.",
+      "authors": [
+        "Yunteng Tan",
+        "Zhi Gao",
+        "Xinxiao Wu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-07T04:07:47+00:00",
+      "link": "https://arxiv.org/pdf/2603.07024v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "hierarchical memory tree for long-horizon web tasks",
+      "llm_evidence_cn": "用于长周期Web任务的分层存储树",
+      "llm_evidence": "用于长周期Web任务的分层存储树",
+      "canonical_evidence": "用于长周期Web任务的分层存储树",
+      "llm_tldr_en": "Proposes a structured memory framework to decouple logical planning from site-specific actions in web agents.",
+      "llm_tldr_cn": "提出了一种结构化记忆框架，用于解耦Web智能体中的逻辑规划与特定站点操作。",
+      "llm_tldr": "提出了一种结构化记忆框架，用于解耦Web智能体中的逻辑规划与特定站点操作。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.07647v1",
+      "title": "TempoFit: Plug-and-Play Layer-Wise Temporal KV Memory for Long-Horizon Vision-Language-Action Manipulation",
+      "abstract": "Pretrained Vision-Language-Action (VLA) policies have achieved strong single-step manipulation, but their inference remains largely memoryless, which is brittle in non-Markovian long-horizon settings with occlusion, state aliasing, and subtle post-action changes. Prior approaches inject history either by stacking frames, which scales visual tokens and latency while adding near-duplicate pixels, or by learning additional temporal interfaces that require (re-)training and may break the original single-frame inference graph. We present TempoFit, a training-free temporal retrofit that upgrades frozen VLAs through state-level memory. Our key insight is that prefix attention K/V already form a model-native, content-addressable runtime state; reusing them across timesteps introduces history without new tokens or trainable modules. TempoFit stores layer-wise FIFO prefix K/V at selected intermediate layers, performs parameter-free K-to-K retrieval with Frame-Gap Temporal Bias (FGTB), a fixed recency bias inspired by positional biases in NLP, to keep decisions present-dominant, and injects the retrieved context via pre-attention residual loading with norm-preserving rescaling to avoid distribution shift under frozen weights. On LIBERO-LONG, TempoFit improves strong pretrained backbones by up to +4.0% average success rate while maintaining near-real-time latency, and it transfers consistently to CALVIN and real-robot long-horizon tasks.",
+      "authors": [
+        "Jun Sun",
+        "Boyu Yang",
+        "Jiahao Zhang",
+        "Ning Ma",
+        "Chencheng Wu",
+        "Siqing Zhang",
+        "Yiou Huang",
+        "Qiufeng Wang",
+        "Shan Liang",
+        "Yaran Chen"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-03-08T14:17:25+00:00",
+      "link": "https://arxiv.org/pdf/2603.07647v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "layer-wise temporal KV memory for long-horizon tasks",
+      "llm_evidence_cn": "用于长程任务的分层时间KV存储",
+      "llm_evidence": "用于长程任务的分层时间KV存储",
+      "canonical_evidence": "用于长程任务的分层时间KV存储",
+      "llm_tldr_en": "TempoFit provides a training-free temporal KV memory retrofit for long-horizon vision-language-action tasks.",
+      "llm_tldr_cn": "TempoFit为长程视觉-语言-动作任务提供了一种免训练的时间KV存储改进方案。",
+      "llm_tldr": "TempoFit为长程视觉-语言-动作任务提供了一种免训练的时间KV存储改进方案。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.07997v1",
+      "title": "CMMR-VLN: Vision-and-Language Navigation via Continual Multimodal Memory Retrieval",
+      "abstract": "Although large language models (LLMs) are introduced into vision-and-language navigation (VLN) to improve instruction comprehension and generalization, existing LLM- based VLN lacks the ability to selectively recall and use relevant priori experiences to help navigation tasks, limiting their performance in long-horizon and unfamiliar scenarios. In this work, we propose CMMR-VLN (Continual Multimodal Memory Retrieval based VLN), a VLN framework that endows LLM agents with structured memory and reflection capabilities. Specifically, the CMMR-VLN constructs a multimodal experi- ence memory indexed by panoramic visual images and salient landmarks to retrieve relevant experiences during navigation, introduces a retrieved-augmented generation pipeline to mimick how experienced human navigators leverage priori knowledge, and incorporates a reflection-based memory update strategy that selectively stores complete successful paths and the key initial mistake in failure cases. Comprehensive tests illustrate average success rate improvements of 52.9%, 20.9% and 20.9%, and 200%, 50% and 50% over the NavGPT, the MapGPT, and the DiscussNav in simulation and real tests, respectively eluci- dating the great potential of the CMMR-VLN as a backbone VLN framework.",
+      "authors": [
+        "Haozhou Li",
+        "Xiangyu Dong",
+        "Huiyan Jiang",
+        "Yaoming Zhou",
+        "Xiaoguang Ma"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-09T06:02:50+00:00",
+      "link": "https://arxiv.org/pdf/2603.07997v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "structured memory and reflection for LLM agents",
+      "llm_evidence_cn": "LLM智能体的结构化记忆与反思能力",
+      "llm_evidence": "LLM智能体的结构化记忆与反思能力",
+      "canonical_evidence": "LLM智能体的结构化记忆与反思能力",
+      "llm_tldr_en": "Proposes CMMR-VLN, a framework giving LLM agents multimodal experience memory and retrieval for navigation.",
+      "llm_tldr_cn": "提出CMMR-VLN框架，为LLM智能体提供多模态经验记忆和检索能力以辅助导航。",
+      "llm_tldr": "提出CMMR-VLN框架，为LLM智能体提供多模态经验记忆和检索能力以辅助导航。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.08391v1",
+      "title": "Adaptive Loops and Memory in Transformers: Think Harder or Know More?",
+      "abstract": "Chain-of-thought (CoT) prompting enables reasoning in language models but requires explicit verbalization of intermediate steps. Looped transformers offer an alternative by iteratively refining representations within hidden states. This parameter efficiency comes at a cost, as looped models lack the storage capacity of deeper models which use unique weights per layer. In this work, we investigate transformer models that feature both adaptive per-layer looping, where each transformer block learns to iterate its hidden state via a learned halting mechanism, and gated memory banks, that provide additional learned storage. We find that looping primarily benefits mathematical reasoning, while memory banks help recover performance on commonsense tasks compared to parameter and FLOP matched models. Combining both mechanisms yields a model that outperforms an iso-FLOP baseline -- with three times the number of layers -- on math benchmarks. Analysis of model internals reveals layer specialization: early layers learn to loop minimally and access memory sparingly, while later layers do both more heavily.",
+      "authors": [
+        "Markus Frey",
+        "Behzad Shomali",
+        "Ali Hamza Bashir",
+        "David Berghaus",
+        "Mehdi Ali"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-03-09T13:49:03+00:00",
+      "link": "https://arxiv.org/pdf/2603.08391v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "gated memory banks for learned storage in transformers",
+      "llm_evidence_cn": "Transformer中用于学习存储的门控记忆库",
+      "llm_evidence": "Transformer中用于学习存储的门控记忆库",
+      "canonical_evidence": "Transformer中用于学习存储的门控记忆库",
+      "llm_tldr_en": "Investigates adaptive looping and gated memory banks in transformers to enhance reasoning and storage capacity.",
+      "llm_tldr_cn": "研究Transformer中的自适应循环和门控记忆库，以增强推理和存储能力。",
+      "llm_tldr": "研究Transformer中的自适应循环和门控记忆库，以增强推理和存储能力。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.08561v1",
+      "title": "RetroAgent: From Solving to Evolving via Retrospective Dual Intrinsic Feedback",
+      "abstract": "Large language model (LLM)-based agents trained with reinforcement learning (RL) have shown strong potential on complex interactive tasks. However, standard RL paradigms favor static problem-solving over continuous adaptation: agents often converge to suboptimal strategies due to insufficient exploration, while learned knowledge remains implicit within parameters rather than explicitly retrievable, limiting effective experiential learning. To address these limitations, we introduce RetroAgent, an online RL framework that empowers agents to master complex interactive environments not just by solving, but by evolving. Concretely, RetroAgent features a hindsight self-reflection mechanism that produces dual intrinsic feedback: (1) intrinsic numerical feedback that that tracks incremental subtask completion relative to prior attempts, rewarding promising explorations, and (2) intrinsic language feedback that distills reusable lessons into a memory buffer, retrieved via our proposed Similarity & Utility-Aware Upper Confidence Bound (SimUtil-UCB) strategy balancing relevance, utility, and exploration to effectively leverage past experiences. Extensive experiments on two model families across four challenging agentic tasks demonstrate that RetroAgent significantly outperforms existing methods, achieving state-of-the-art results -- e.g., surpassing Group Relative Policy Optimization (GRPO)-trained agents by +18.3% on ALFWorld, +15.4% on WebShop, +27.1% on Sokoban, and +8.9% on MineSweeper -- while exhibiting strong test-time adaptation and generalization to out-of-distribution scenarios.",
+      "authors": [
+        "Xiaoying Zhang",
+        "Zichen Liu",
+        "Yipeng Zhang",
+        "Xia Hu",
+        "Wenqi Shao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-09T16:23:33+00:00",
+      "link": "https://arxiv.org/pdf/2603.08561v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "hindsight self-reflection and experiential learning for agent evolution",
+      "llm_evidence_cn": "代理演化的事后自我反思和经验学习",
+      "llm_evidence": "代理演化的事后自我反思和经验学习",
+      "canonical_evidence": "代理演化的事后自我反思和经验学习",
+      "llm_tldr_en": "Proposes RetroAgent, an RL framework using retrospective feedback for continuous agent adaptation and learning.",
+      "llm_tldr_cn": "提出 RetroAgent，一种利用回顾性反馈进行持续代理适应和学习的强化学习框架。",
+      "llm_tldr": "提出 RetroAgent，一种利用回顾性反馈进行持续代理适应和学习的强化学习框架。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory consolidation and update strategies in LLM agents",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2603.01331v1",
+      "title": "MetaState: Persistent Working Memory for Discrete Diffusion Language Models",
+      "abstract": "Discrete diffusion language models (dLLMs) generate text by iteratively denoising a masked sequence. Compared with autoregressive models, this paradigm naturally supports parallel decoding, bidirectional context, and flexible generation patterns. However, standard dLLMs condition each denoising step only on the current hard-masked sequence, while intermediate continuous representations are discarded after sampling and remasking. We refer to this bottleneck as the \\textbf{Information Island} problem. It leads to redundant recomputation across steps and can degrade cross-step consistency. We address this limitation with \\textbf{MetaState}, a lightweight recurrent augmentation that equips a frozen dLLM backbone with a persistent, fixed-size working memory that remains independent of sequence length. \\textbf{MetaState} consists of three trainable modules: a cross-attention Mixer that reads backbone activations into memory slots, a GRU-style Updater that integrates information across denoising steps, and a cross-attention Injector that feeds the updated memory back into backbone activations. We train these modules with $K$-step unrolling to expose them to multi-step denoising dynamics during fine-tuning. On LLaDA-8B and Dream-7B, \\textbf{MetaState} introduces negligible trainable parameters while keeping the backbone frozen, and it consistently improves accuracy over frozen baselines. These results demonstrate that persistent cross-step memory is an effective mechanism for bridging denoising steps and improving generation quality in discrete diffusion language models.",
+      "authors": [
+        "Kejing Xia",
+        "Mingzhe Li",
+        "Lixuan Wei",
+        "Zhenbang Du",
+        "Xiangchi Yuan",
+        "Qirui Jin",
+        "Wenke Lee"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-03-02T00:16:35+00:00",
+      "link": "https://arxiv.org/pdf/2603.01331v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "persistent working memory for discrete diffusion language models",
+      "llm_evidence_cn": "离散扩散语言模型的持久工作记忆",
+      "llm_evidence": "离散扩散语言模型的持久工作记忆",
+      "canonical_evidence": "离散扩散语言模型的持久工作记忆",
+      "llm_tldr_en": "Introduces MetaState to provide persistent working memory, improving consistency in diffusion-based generation.",
+      "llm_tldr_cn": "引入 MetaState 以提供持久工作记忆，提高基于扩散生成的连贯性。",
+      "llm_tldr": "引入 MetaState 以提供持久工作记忆，提高基于扩散生成的连贯性。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.01423v1",
+      "title": "Quantifying Conversational Reliability of Large Language Models under Multi-Turn Interaction",
+      "abstract": "Large Language Models (LLMs) are increasingly deployed in real-world applications where users engage in extended, mixed-topic conversations that depend on prior context. Yet, their reliability under realistic multi-turn interactions remains poorly understood. We conduct a systematic evaluation of conversational reliability through three representative tasks that reflect practical interaction challenges: (1) maintaining global constraints across topic shifts, (2) selecting the correct tool or agent amid interleaved intents, and (3) tracking structured entities under revisions and distractions. Each task pairs single-turn and multi-turn settings, allowing us to quantify reliability degradation under extended dialogue. Across both commercial and open-source models, we observe substantial declines in reliability, particularly for smaller models. Error analyses reveal recurring failure modes such as instruction drift, intent confusion, and contextual overwriting, which compromise dependable behavior in operational systems. Our findings highlight the need for stress-testing LLMs for conversational reliability and developing more robust evaluation methods for trustworthy deployment.",
+      "authors": [
+        "Jiyoon Myung"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-03-02T03:59:40+00:00",
+      "link": "https://arxiv.org/pdf/2603.01423v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "quantifying reliability under multi-turn interaction",
+      "llm_evidence_cn": "量化多轮交互下的可靠性",
+      "llm_evidence": "量化多轮交互下的可靠性",
+      "canonical_evidence": "量化多轮交互下的可靠性",
+      "llm_tldr_en": "Evaluates LLM reliability in multi-turn dialogues, focusing on constraint maintenance and entity tracking.",
+      "llm_tldr_cn": "评估LLM在多轮对话中的可靠性，侧重于约束维护和实体跟踪。",
+      "llm_tldr": "评估LLM在多轮对话中的可靠性，侧重于约束维护和实体跟踪。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "performance metrics for agent memory and reasoning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.01426v1",
+      "title": "Understanding the Physics of Key-Value Cache Compression for LLMs through Attention Dynamics",
+      "abstract": "As context windows in LLMs scale to 100K+ tokens, the key-value (KV) cache becomes the dominant memory bottleneck, with recent methods claiming 80-90% savings and minimal benchmark degradation. We argue these evaluations miss a structural issue: attention is not just storage but routing, and retaining KV pairs does not guarantee semantic accessibility. We propose a physics-inspired view of KV compression as a controlled perturbation of token-level routing, distinguishing retention, accessibility, and utilization. Using synthetic tasks probing multi-entity tracking, disambiguation, coreference, and multi-hop reasoning, we find that moderate compression degrades internal representations with little accuracy loss, revealing redundancy; all models exhibit a sharp hallucination safety cliff near 90% compression, correlated with spikes in Global Eviction Ratio (GER), suggesting a phase transition in semantic reachability; and architectures differ in routing dynamics, with LLaMA showing early consensus and late diversification, and Qwen showing funnel-like late convergence, leading to distinct resilience profiles. Beyond erasure, we identify representational rigidity, where excessive head-level consensus collapses routing flexibility despite token survival. These results suggest sparse token-route structures govern compression tolerance, reframing KV compression as a structural probe of attention geometry and linking long-context scalability to sparsity and the lottery ticket hypothesis in self-attention.",
+      "authors": [
+        "Samhruth Ananthanarayanan",
+        "Ayan Sengupta",
+        "Tanmoy Chakraborty"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-03-02T04:16:36+00:00",
+      "link": "https://arxiv.org/pdf/2603.01426v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "KV cache compression as a memory bottleneck in long-context LLMs",
+      "llm_evidence_cn": "长文本LLM中作为记忆瓶颈的KV缓存压缩",
+      "llm_evidence": "长文本LLM中作为记忆瓶颈的KV缓存压缩",
+      "canonical_evidence": "长文本LLM中作为记忆瓶颈的KV缓存压缩",
+      "llm_tldr_en": "Investigates how KV cache compression affects semantic accessibility and routing in long-context models.",
+      "llm_tldr_cn": "研究KV缓存压缩如何影响长文本模型中的语义可访问性和路由。",
+      "llm_tldr": "研究KV缓存压缩如何影响长文本模型中的语义可访问性和路由。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.01357v1",
+      "title": "ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context",
+      "abstract": "Next-generation AI must manage vast personal data, diverse tools, and multi-step reasoning, yet most benchmarks remain context-free and single-turn. We present ASTRA-bench (Assistant Skills in Tool-use, Reasoning \\& Action-planning), a benchmark that uniquely unifies time-evolving personal context with an interactive toolbox and complex user intents. Our event-driven pipeline generates 2,413 scenarios across four protagonists, grounded in longitudinal life events and annotated by referential, functional, and informational complexity. Evaluation of state-of-the-art models (e.g., Claude-4.5-Opus, DeepSeek-V3.2) reveals significant performance degradation under high-complexity conditions, with argument generation emerging as the primary bottleneck. These findings expose critical limitations in current agents' ability to ground reasoning within messy personal context and orchestrate reliable multi-step plans. We release ASTRA-bench with a full execution environment and evaluation scripts to provide a diagnostic testbed for developing truly context-aware AI assistants.",
+      "authors": [
+        "Zidi Xiu",
+        "David Q. Sun",
+        "Kevin Cheng",
+        "Maitrik Patel",
+        "Josh Date",
+        "Yizhe Zhang",
+        "Jiarui Lu",
+        "Omar Attia",
+        "Raviteja Vemulapalli",
+        "Oncel Tuzel",
+        "Meng Cao",
+        "Samy Bengio"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-02T01:34:48+00:00",
+      "link": "https://arxiv.org/pdf/2603.01357v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "benchmark for evaluating agent reasoning with time-evolving personal context",
+      "llm_evidence_cn": "评估具有随时间演变的个人上下文的智能体推理能力的基准",
+      "llm_evidence": "评估具有随时间演变的个人上下文的智能体推理能力的基准",
+      "canonical_evidence": "评估具有随时间演变的个人上下文的智能体推理能力的基准",
+      "llm_tldr_en": "A benchmark for evaluating AI agents on multi-step reasoning and action planning using longitudinal personal context.",
+      "llm_tldr_cn": "一个利用长期个人上下文评估AI智能体多步推理和行动规划能力的基准。",
+      "llm_tldr": "一个利用长期个人上下文评估AI智能体多步推理和行动规划能力的基准。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.01465v1",
+      "title": "Non-Markovian Long-Horizon Robot Manipulation via Keyframe Chaining",
+      "abstract": "Existing Vision-Language-Action (VLA) models often struggle to generalize to long-horizon tasks due to their heavy reliance on immediate observations. While recent studies incorporate retrieval mechanisms or extend context windows to handle procedural tasks, they often struggle to capture Non-Markovian dependencies, where optimal actions rely solely on specific past states rather than the current observation. To address this, we introduce Keyframe-Chaining VLA, a framework that extracts and links key historical frames to model long-horizon dependencies. Specifically, we propose an automatic keyframe selector that learns a discriminative embedding space, effectively identifying distinct state transitions. To capture task-critical information, we design a progress-aware query mechanism that dynamically retrieves historical frames based on their temporal relevance to the current execution phase. These selected keyframes are integrated into the VLA as interleaved visual tokens, explicitly grounding the policy in the long-horizon temporal context. Finally, we introduce a suite of four Non-Markovian manipulation tasks built upon the ManiSkill simulator to measure task success rates. Experimental results demonstrate that our method achieves superior performance, effectively tackling robot manipulation tasks characterized by long-horizon temporal dependencies. Code is available at https://github.com/cytoplastm/KC-VLA.",
+      "authors": [
+        "Yipeng Chen",
+        "Wentao Tan",
+        "Lei Zhu",
+        "Fengling Li",
+        "Jingjing Li",
+        "Guoli Yang",
+        "Heng Tao Shen"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI"
+      ],
+      "published": "2026-03-02T05:26:29+00:00",
+      "link": "https://arxiv.org/pdf/2603.01465v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "extracts and links key historical frames to model long-horizon dependencies",
+      "llm_evidence_cn": "提取并链接关键历史帧以建模长程依赖关系",
+      "llm_evidence": "提取并链接关键历史帧以建模长程依赖关系",
+      "canonical_evidence": "提取并链接关键历史帧以建模长程依赖关系",
+      "llm_tldr_en": "Introduces Keyframe-Chaining VLA to handle non-Markovian long-horizon robot tasks via historical state memory.",
+      "llm_tldr_cn": "引入关键帧链式VLA，通过历史状态记忆处理非马尔可夫长程机器人任务。",
+      "llm_tldr": "引入关键帧链式VLA，通过历史状态记忆处理非马尔可夫长程机器人任务。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.02072v1",
+      "title": "Cognitive Prosthetic: An AI-Enabled Multimodal System for Episodic Recall in Knowledge Work",
+      "abstract": "Modern knowledge workplaces increasingly strain human episodic memory as individuals navigate fragmented attention, overlapping meetings, and multimodal information streams. Existing workplace tools provide partial support through note-taking or analytics but rarely integrate cognitive, physiological, and attentional context into retrievable memory representations. This paper presents the Cognitive Prosthetic Multimodal System (CPMS) --an AI-enabled proof-of-concept designed to support episodic recall in knowledge work through structured episodic capture and natural language retrieval. CPMS synchronizes speech transcripts, physiological signals, and gaze behavior into temporally aligned, JSON-based episodic records processed locally for privacy. Beyond data logging, the system includes a web-based retrieval interface that allows users to query past workplace experiences using natural language, referencing semantic content, time, attentional focus, or physiological state. We present CPMS as a functional proof-of-concept demonstrating the technical feasibility of transforming heterogeneous sensor data into queryable episodic memories. The system is designed to be modular, supporting operation with partial sensor configurations, and incorporates privacy safeguards for workplace deployment. This work contributes an end-to-end, privacy-aware architecture for AI-enabled memory augmentation in workplace settings.",
+      "authors": [
+        "Lawrence Obiuwevwi",
+        "Krzysztof J. Rechowicz",
+        "Vikas Ashok",
+        "Sachin Shetty",
+        "Sampath Jayarathna"
+      ],
+      "primary_category": "cs.HC",
+      "categories": [
+        "cs.HC",
+        "cs.AI"
+      ],
+      "published": "2026-03-02T16:58:53+00:00",
+      "link": "https://arxiv.org/pdf/2603.02072v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "episodic recall and structured memory records",
+      "llm_evidence_cn": "情境回忆与结构化记忆记录",
+      "llm_evidence": "情境回忆与结构化记忆记录",
+      "canonical_evidence": "情境回忆与结构化记忆记录",
+      "llm_tldr_en": "Develops a multimodal system for episodic memory capture and retrieval in knowledge work.",
+      "llm_tldr_cn": "开发了一个多模态系统，用于知识工作中情境记忆的捕获与检索。",
+      "llm_tldr": "开发了一个多模态系统，用于知识工作中情境记忆的捕获与检索。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.01564v1",
+      "title": "From Secure Agentic AI to Secure Agentic Web: Challenges, Threats, and Future Directions",
+      "abstract": "Large Language Models (LLMs) are increasingly deployed as agentic systems that plan, memorize, and act in open-world environments. This shift brings new security problems: failures are no longer only unsafe text generation, but can become real harm through tool use, persistent memory, and interaction with untrusted web content. In this survey, we provide a transition-oriented view from Secure Agentic AI to a Secure Agentic Web. We first summarize a component-aligned threat taxonomy covering prompt abuse, environment injection, memory attacks, toolchain abuse, model tampering, and agent network attacks. We then review defense strategies, including prompt hardening, safety-aware decoding, privilege control for tools and APIs, runtime monitoring, continuous red-teaming, and protocol-level security mechanisms. We further discuss how these threats and mitigations escalate in the Agentic Web, where delegation chains, cross-domain interactions, and protocol-mediated ecosystems amplify risks via propagation and composition. Finally, we highlight open challenges for web-scale deployment, such as interoperable identity and authorization, provenance and traceability, ecosystem-level response, and scalable evaluation under adaptive adversaries. Our goal is to connect recent empirical findings with system-level requirements, and to outline practical research directions toward trustworthy agent ecosystems.",
+      "authors": [
+        "Zhihang Deng",
+        "Jiaping Gui",
+        "Weinan Zhang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR"
+      ],
+      "published": "2026-03-02T07:44:18+00:00",
+      "link": "https://arxiv.org/pdf/2603.01564v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "survey covering persistent memory and memory attacks in agents",
+      "llm_evidence_cn": "涵盖智能体持久化存储和存储攻击的综述",
+      "llm_evidence": "涵盖智能体持久化存储和存储攻击的综述",
+      "canonical_evidence": "涵盖智能体持久化存储和存储攻击的综述",
+      "llm_tldr_en": "A survey on security for agentic AI, including threats to persistent memory and tool use.",
+      "llm_tldr_cn": "关于智能体AI安全的综述，涵盖了持久化存储和工具调用的威胁。",
+      "llm_tldr": "关于智能体AI安全的综述，涵盖了持久化存储和工具调用的威胁。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "survey of memory mechanisms in large language model agents",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.01692v1",
+      "title": "Reasoning as Gradient: Scaling MLE Agents Beyond Tree Search",
+      "abstract": "LLM-based agents for machine learning engineering (MLE) predominantly rely on tree search, a form of gradient-free optimization that uses scalar validation scores to rank candidates. As LLM reasoning capabilities improve, exhaustive enumeration becomes increasingly inefficient compared to directed updates, analogous to how accurate gradients enable efficient descent over random search. We introduce \\textsc{Gome}, an MLE agent that operationalizes gradient-based optimization. \\textsc{Gome} maps structured diagnostic reasoning to gradient computation, success memory to momentum, and multi-trace execution to distributed optimization. Under a closed-world protocol that isolates architectural effects from external knowledge, \\textsc{Gome} achieves a state-of-the-art 35.1\\% any-medal rate on MLE-Bench with a restricted 12-hour budget on a single V100 GPU. Scaling experiments across 10 models reveal a critical crossover: with weaker models, tree search retains advantages by compensating for unreliable reasoning through exhaustive exploration; as reasoning capability strengthens, gradient-based optimization progressively outperforms, with the gap widening at frontier-tier models. Given the rapid advancement of reasoning-oriented LLMs, this positions gradient-based optimization as an increasingly favorable paradigm. We release our codebase and GPT-5 traces.",
+      "authors": [
+        "Yifei Zhang",
+        "Xu Yang",
+        "Xiao Yang",
+        "Bowen Xian",
+        "Qizheng Li",
+        "Shikai Fang",
+        "Jingyuan Li",
+        "Jian Wang",
+        "Mingrui Xu",
+        "Weiqing Liu",
+        "Jiang Bian"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-02T10:22:47+00:00",
+      "link": "https://arxiv.org/pdf/2603.01692v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "success memory to momentum in MLE agents",
+      "llm_evidence_cn": "MLE智能体中将成功记忆映射为动量",
+      "llm_evidence": "MLE智能体中将成功记忆映射为动量",
+      "canonical_evidence": "MLE智能体中将成功记忆映射为动量",
+      "llm_tldr_en": "Introduces Gome, an MLE agent using success memory as momentum to optimize reasoning beyond tree search.",
+      "llm_tldr_cn": "引入Gome智能体，将成功记忆转化为动量，通过梯度式优化提升机器学习工程任务的推理效率。",
+      "llm_tldr": "引入Gome智能体，将成功记忆转化为动量，通过梯度式优化提升机器学习工程任务的推理效率。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.03024v1",
+      "title": "MA-CoNav: A Master-Slave Multi-Agent Framework with Hierarchical Collaboration and Dual-Level Reflection for Long-Horizon Embodied VLN",
+      "abstract": "Vision-Language Navigation (VLN) aims to empower robots with the ability to perform long-horizon navigation in unfamiliar environments based on complex linguistic instructions. Its success critically hinges on establishing an efficient ``language-understanding -- visual-perception -- embodied-execution'' closed loop. Existing methods often suffer from perceptual distortion and decision drift in complex, long-distance tasks due to the cognitive overload of a single agent. Inspired by distributed cognition theory, this paper proposes MA-CoNav, a Multi-Agent Collaborative Navigation framework. This framework adopts a ``Master-Slave'' hierarchical agent collaboration architecture, decoupling and distributing the perception, planning, execution, and memory functions required for navigation tasks to specialized agents. Specifically, the Master Agent is responsible for global orchestration, while the Subordinate Agent group collaborates through a clear division of labor: an Observation Agent generates environment descriptions, a Planning Agent performs task decomposition and dynamic verification, an Execution Agent handles simultaneous mapping and action, and a Memory Agent manages structured experiences. Furthermore, the framework introduces a ``Local-Global'' dual-stage reflection mechanism to dynamically optimize the entire navigation pipeline. Empirical experiments were conducted using a real-world indoor dataset collected by a Limo Pro robot, with no scene-specific fine-tuning performed on the models throughout the process. The results demonstrate that MA-CoNav comprehensively outperforms existing mainstream VLN methods across multiple metrics.",
+      "authors": [
+        "Ling Luo",
+        "Qianqian Bai"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI"
+      ],
+      "published": "2026-03-03T14:16:02+00:00",
+      "link": "https://arxiv.org/pdf/2603.03024v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "hierarchical agent collaboration architecture for long-horizon tasks",
+      "llm_evidence_cn": "长程任务的分层智能体协作架构",
+      "llm_evidence": "长程任务的分层智能体协作架构",
+      "canonical_evidence": "长程任务的分层智能体协作架构",
+      "llm_tldr_en": "Proposes a master-slave multi-agent framework to handle cognitive overload in long-distance navigation tasks.",
+      "llm_tldr_cn": "提出一种主从式多智能体框架，通过分层协作解决长程导航中的认知过载问题。",
+      "llm_tldr": "提出一种主从式多智能体框架，通过分层协作解决长程导航中的认知过载问题。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.02112v1",
+      "title": "Recursive Models for Long-Horizon Reasoning",
+      "abstract": "Modern language models reason within bounded context, an inherent constraint that poses a fundamental barrier to long-horizon reasoning. We identify recursion as a core principle for overcoming this barrier, and propose recursive models as a minimal realization, where the model can recursively invoke itself to solve subtasks in isolated contexts. We prove that any computable problem admits a recursive decomposition in which each subtask requires only exponentially smaller active context than standard autoregressive models; this strictly surpasses any context management approach confined to a single sequence, such as summarization. We further generalize our framework to modern agentic systems with arbitrary context processing and control flows, and prove that recursive models can achieve optimal power within this broader class. Experimentally, we train a 3B model to reason recursively and evaluate on Boolean satisfiability, a task requiring long-horizon combinatorial search, where it significantly outperforms frontier LLMs.",
+      "authors": [
+        "Chenxiao Yang",
+        "Nathan Srebro",
+        "Zhiyuan Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-03-02T17:37:10+00:00",
+      "link": "https://arxiv.org/pdf/2603.02112v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "recursive models for long-horizon reasoning and context management",
+      "llm_evidence_cn": "用于长程推理和上下文管理的递归模型",
+      "llm_evidence": "用于长程推理和上下文管理的递归模型",
+      "canonical_evidence": "用于长程推理和上下文管理的递归模型",
+      "llm_tldr_en": "Proposes recursive model invocation as a core principle for overcoming context limits in agentic systems.",
+      "llm_tldr_cn": "提出递归模型调用作为克服智能体系统上下文限制的核心原则。",
+      "llm_tldr": "提出递归模型调用作为克服智能体系统上下文限制的核心原则。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.02586v1",
+      "title": "LiveAgentBench: Comprehensive Benchmarking of Agentic Systems Across 104 Real-World Challenges",
+      "abstract": "As large language models grow more capable, general AI agents have become increasingly prevalent in practical applications. However, existing benchmarks face significant limitations, failing to represent real-world user tasks accurately. To address this gap, we present LiveAgentBench, a comprehensive benchmark with 104 scenarios that reflect real user requirements. It is constructed from publicly sourced questions on social media and real-world products. Central to our approach is the Social Perception-Driven Data Generation (SPDG) method, a novel process we developed to ensure each question's real-world relevance, task complexity, and result verifiability. We evaluate various models, frameworks, and commercial products using LiveAgentBench, revealing their practical performance and identifying areas for improvement. This release includes 374 tasks, with 125 for validation and 249 for testing. The SPDG process enables continuous updates with fresh queries from real-world interactions.",
+      "authors": [
+        "Hao Li",
+        "Huan Wang",
+        "Jinjie Gu",
+        "Wenjie Wang",
+        "Chenyi Zhuang",
+        "Sikang Bian"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-03T04:03:05+00:00",
+      "link": "https://arxiv.org/pdf/2603.02586v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "comprehensive benchmarking of agentic systems across real-world challenges",
+      "llm_evidence_cn": "跨现实世界挑战的代理系统综合基准测试",
+      "llm_evidence": "跨现实世界挑战的代理系统综合基准测试",
+      "canonical_evidence": "跨现实世界挑战的代理系统综合基准测试",
+      "llm_tldr_en": "Introduces LiveAgentBench to evaluate general AI agents on 104 real-world scenarios and complex tasks.",
+      "llm_tldr_cn": "引入 LiveAgentBench，在 104 个真实场景和复杂任务中评估通用 AI 代理。",
+      "llm_tldr": "引入 LiveAgentBench，在 104 个真实场景和复杂任务中评估通用 AI 代理。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

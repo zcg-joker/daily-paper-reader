@@ -1,0 +1,569 @@
+Title: ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context
+
+URL Source: https://arxiv.org/pdf/2603.01357v1
+
+Published Time: Tue, 03 Mar 2026 03:11:06 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+Zidi Xiu * 1 David Q. Sun * 1 2 Kevin Cheng 1 2 Maitrik Patel 1 Josh Date 1 Yizhe Zhang 1 Jiarui Lu 1
+
+Omar Attia 1 Raviteja Vemulapalli 1 Oncel Tuzel 1 Meng Cao 1 Samy Bengio 1
+
+## Abstract 
+
+Next-generation AI must manage vast personal data, diverse tools, and multi-step reasoning, yet most benchmarks remain context-free and single-turn. We present ASTRA-bench (Assistant Skills in Tool-use, Reasoning & Action-planning), a benchmark that uniquely unifies time-evolving personal context with an interactive toolbox and complex user intents. Our event-driven pipeline generates 2,413 scenarios across four protago-nists, grounded in longitudinal life events and annotated by referential, functional, and infor-mational complexity. Evaluation of state-of-the-art models (e.g., Claude-4.5-Opus, DeepSeek-V3.2) reveals significant performance degrada-tion under high-complexity conditions, with ar-gument generation emerging as the primary bot-tleneck. These findings expose critical limita-tions in current agents’ ability to ground reasoning within messy personal context and orchestrate re-liable multi-step plans. We release ASTRA-bench with a full execution environment and evaluation scripts to provide a diagnostic testbed for devel-oping truly context-aware AI assistants. 
+
+## 1. Introduction 
+
+Large language models (LLMs) have demonstrated remark-able general-purpose capabilities across language under-standing, reasoning, and generation tasks (Brown et al., 2020). Within the intelligent assistant (IA) space, early uses of LLMs mainly replaced individual natural language un-derstanding (NLU) components — such as intent classifiers, parsers, and entity resolvers (Chen et al., 2019). More recent systems are taking greater advantage of the LLM’s ability to 
+
+understand multi-modal context (Achiam et al., 2023), plan ,
+
+reason , and manage conversational state (Yao et al., 2022) over long horizons (Park et al., 2023). As users increasingly   
+
+> 1Apple 2Work done while at Apple. Correspondence to: Zidi Xiu <z xiu@apple.com >.
+> Preprint. March 3, 2026.
+
+rely on digital assistants in everyday workflows, building agents that can autonomously achieve complex user goals becomes both technically urgent and economically valuable. 
+
+Desiderata for next-generation assistants. We distill three core capabilities that any truly capable personal assistant ought to master: (1) Context inference & understanding :ground user queries in fine-grained personal, system, and world context; (2) Robust reasoning with tool use : decide 
+
+when , how , and in what order to invoke external tools while gracefully handling failures; (3) Iterative action planning :decompose high-level goals into executable steps, main-taining state across turns, and adapting plans as new infor-mation arrives (Yao et al., 2022; Schick et al., 2023; Park et al., 2023). Fulfilling these desiderata in practice requires operating at the intersection of three information sources: (i) the device’s system capabilities (installed apps, available APIs, sensors); (ii) rich, longitudinal personal-context data (emails, calendars, notes, files, preferences); and (iii) the dynamically changing state of the external world (Thoppilan et al., 2022; Park et al., 2023). Crucially, it is the interaction among these sources—rather than any single factor in iso-lation—that gives rise to the most challenging real-world assistant behaviors. Yet most existing benchmarks factorize these challenges, evaluating tool use, context grounding, or planning in isolation, and therefore fail to capture the compounded difficulty of realistic, stateful assistant use. A growing body of benchmarks captures individual aspects of these challenges. For example, GTA (Wang et al., 2024) evaluates general tool agents using human-written real user queries together with real deployed tools and authentic mul-timodal contexts; UltraTool (Huang et al., 2024) empha-sizes the end-to-end process of tool utilization, including explicit evaluation of planning, tool creation, and tool us-age in complex scenarios; DialogTool (Wang et al., 2025) targets stateful tool use in multi-turn dialogues across the full tool lifecycle and introduces a virtual mobile environ-ment for API execution; and Vending-Bench (Backlund & Petersson, 2025) stress-tests long-horizon coherence in a persistent simulated environment. Meanwhile, large-scale API-centric resources such as ToolLLM focus on tool in-vocation over thousands of real-world APIs, largely via 1 
+
+> arXiv:2603.01357v1 [cs.AI] 2 Mar 2026 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context
+> Figure 1. The ASTRA-bench Evaluation Lifecycle. Scenarios are grounded in a protagonist’s behavioral prior and time-evolving storyline. Events are projected into multi-source personal data (Panel 1 & 2), forming the basis for human-authored queries annotated by complexity tiers. Evaluation is grounded in intermediate reasoning monologues, related entities, and verifiable success conditions (Panel 3 & 4).
+
+automatically constructed instructions and solution paths (Qin et al., 2023). However, these benchmarks typically prioritize specific facets (e.g., general tool execution, tool creation, dialogue-stateful tool use, or long-horizon coher-ence) rather than jointly modeling longitudinal personal-context corpora (e.g., emails/calendars/messages), realistic personal-assistant tool suites , and diagnostic complexity axes within a unified, stateful evaluation protocol. Furthermore, benchmarks such as GAIA-2 (Andrews et al., 2025) evaluate tool-augmented agents through multi-step tasks of varying difficulty, but largely treat task complexity as a scalar property. In contrast, ASTRA-bench decomposes task difficulty into orthogonal dimensions capturing refer-ential ambiguity, informational demands, and functional planning requirements, enabling more diagnostic evaluation of agent capabilities. Consequently, such benchmarks often fail to reveal the unique challenges that arise when an agent must reason over a user’s noisy, complex, multi-source context while or-chestrating real tools. A next-generation benchmark should therefore jointly provide: • Coherent, diverse personal-context traces spanning weeks or months; • Executable tool environments that persist across dia-logue turns; • Diverse user queries with reasoning monologues and success conditions. To bridge this gap, we introduce ASTRA-bench - A ssistant Skills in Tool-use, Reasoning, and A ction-planning. ASTRA-bench couples (i) time-evolving personal-context data grounded in realistic life events, (ii) an interactive tool sandbox (email, calendar, messages, etc. ), and (iii) 2,413 hu-man-authored conversational scenarios with context-aware 
+
+goals at varying complexity levels along referential, func-tional, and informational axes. An overview of the bench-mark is shown in Fig. 1. ASTRA-bench builds upon Tool-Sandbox (Lu et al., 2024), extending it with longitudinal time awareness, richer personal context, and structured com-plexity annotations. In Table 1, we compare ASTRA-bench against existing frameworks based on five key axes. Specifi-cally, Human Authorship (Hum. Auth.) distinguishes sce-narios with explicit human intent from purely synthetic tem-plates, while Trajectory Verifiability (Traj. Verif.) ensures that models are evaluated on intermediate tool execution traces rather than just final outputs. To support scalable yet reliable evaluation, ASTRA-bench adopts a grounded evaluation framework that leverages ob-servable evidence—such as tool traces and system state—to enable fine-grained, diagnostic assessment of agent behavior beyond final-answer correctness. Using ASTRA-bench, we perform a zero-shot study of state-of-the-art proprietary and open-source LLMs equipped with tool-calling. Our results show that even state-of-the-art reasoning-tuned models are still insufficient to act as an effective personal assistant. 
+
+Summary of Contributions 1. ASTRA-bench: A benchmark with 2,413 scenarios grounded in longitudinal life events with multi-dimensional complexity labels. 
+
+2. Evaluation Protocol: Grounded assessment framework leveraging observable evidence for diagnostic analysis of agent behavior. 
+
+3. Empirical Study: Revealing bottlenecks in argument generation and performance decay under high complexity. 
+
+## 2. Related Work 
+
+2.1. Tool-Use Agents and Benchmarks 
+
+Early tool-use agents focused on augmenting LLMs with ex-ternal knowledge via web browsing (Nakano et al., 2021) or self-supervised API discovery (Schick et al., 2023). As core 2ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+challenges shifted from simple tool selection to integrating tool outputs into coherent, multi-step responses, frameworks like ReAct (Yao et al., 2022), ToolLLM (Qin et al., 2023), and Gorilla (Patil et al., 2025) improved reasoning loops and invocation accuracy. This evolution has moved toward orchestrator-style agents and user-centric assistants using realistic context for personalized tasks. Parallel to agent development, benchmarks have evolved from single-turn function-calling (e.g., API-Bank (Li et al., 2023), BFCL (Patil et al., 2025)) to multi-step reasoning tasks like AgentBench (Liu et al., 2023) and GAIA (Mi-alon et al., 2023). While these broaden task coverage, they often assess interactions in isolation using only outcome-based criteria. Recent efforts like GAIA-2 (Andrews et al., 2025), ToolTalk (Farn & Shin, 2023), and τ 2-Bench (Barres et al., 2025) introduce multi-turn goals but largely rely on outcome-based success criteria.                                                           
+
+> BENCHMARK
+> HUM .AUTH .TRAJ .VERIF .SKILL
+> COMP .CTX .GOALS
+> GND .CTX .ASTRA-BENCH ✓✓✓✓✓
+> HICUPID ✗✗✗✓✗
+> APP WORLD ✓✓✓✗✓
+> TOOL SANDBOX ✓✓✓✗✗
+> τ2-B ENCH ✓✓✗✗✗
+> TOOL TALK ✓✓✓✗✗
+> AGENT BENCH ✗✓✗✗✗
+> GAIA ✓✗✓✗✗
+> GAIA-2 ✓✗✓✓✓
+> API-B ANK ✓✓✓✗✗
+> BFCL ✓✓✓✗✗
+> Table 1. Comparison of tool-use benchmarks. Criteria include Human Authorship (Hum. Auth.), Trajectory Verifiability (Traj. Verif.), Skill Complexity (Skill Comp.), Context-Dependent Goals (Ctx. Goals), and Grounded Personal Context (Gnd. Ctx.).
+
+2.2. Personal Context in Agent Evaluation 
+
+A critical frontier is evaluating agents within persistent, stateful environments. AppWorld (Trivedi et al., 2024) pro-vides a mobile-app sandbox but focuses on code generation rather than structured function calls. ToolSandbox (Lu et al., 2024) and HiCUPID (Mok et al., 2025) move toward state-ful settings where user state evolves, with the latter targeting personalization capabilities. As shown in Table 1, ASTRA-bench fills this gap by provid-ing an interactive tool sandbox, covering email, calendars, and messaging, coupled with a grounded evaluation frame-work. Unlike previous benchmarks that rely on surface-level text correctness, we leverage observable evidence from tool traces and system state snapshots to enable fine-grained, diagnostic assessment of agent behavior. This ensures the agent is evaluated on its ability to navigate complex, multi-source personal context rather than merely matching an end-goal answer. 
+
+2.3. Synthetic Personas and Storylines 
+
+LLMs are increasingly used to generate synthetic personal data to reduce reliance on costly human annotation (Chen et al., 2023). Early work like the Persona-Chat corpus grounded dialogues in predefined personas (Zhang et al., 2018), which has since been scaled using generator-critic frameworks to preserve fidelity. Recent efforts, such as Con-versation Chronicles (Jang et al., 2023) and HiCUPID (Mok et al., 2025), have expanded this to multi-session dynamics and rich user metadata—like schedules and traits—that un-fold across dialogue turns. Despite these advances, existing datasets often treat interactions as self-contained episodes, which limits their ability to evaluate an agent’s long-term continuity. ASTRA-bench extends this paradigm by shift-ing from episodic personas to “Protagonists” whose digital artifacts are grounded in a continuous, time-evolving sto-ryline. As detailed in Section 3, we utilize an event-driven generation pipeline to ensure that every email, calendar en-try, and message jointly projects a coherent, longitudinal narrative, providing a more realistic testbed for persistent AI assistants. 
+
+## 3. Personal Data Generation 
+
+Personal-context data grounded in realistic life events—rather than unconstrained raw human logs—form the core of ASTRA-bench. An assistant expected to reschedule “Dinner with Jess” or find a “book recommenda-tion from my brother” cannot succeed unless the underlying text messages, calendar entries, contacts, and emails jointly tell a believable story. We therefore propose a pipeline that synthesizes personal user data by first generating a sequences of events and then producing the associated personal data. 
+
+3.1. The Protagonist: Real-Life Event-Driven Storyline 
+
+To ensure longitudinal consistency, inspired by the Agent-Based Modeling paradigm (Silverman et al., 2006) and drama-writing principles (Spencer, 2002), we introduce the concept of a Protagonist—the simulated owner of the digital environment. Unlike previous benchmarks that generate tasks in isolation, our pipeline grounds all digital artifacts in a coherent “behavioral prior” composed of three layers: 
+
+Biography & Social Network: Each protagonist is instan-tiated with a fixed biography (e.g., demographic fields, so-cioeconomic markers, long-term preferences) and a directed multigraph representing their social network. This graph encodes relationship types (Family, Friend) and contact fre-quencies, ensuring that simulated interactions are grounded in stable social dynamics. 
+
+Pattern of Life (PoL): We implement a probabilistic context-free grammar to generate daily agendas and weekly routines. The PoL expands high-level routines—such as commutes or family time—into timestamped events, cap-turing realistic circadian rhythms and weekday/weekend asymmetries. 
+
+Long-Horizon Consistency: By conditioning down-stream events on this frozen biography and social graph, 3ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context  
+
+> Figure 2. Example of an Event and its Projected Artifacts from our Generation Workflow
+
+we produce a “storyline”, a sequence of persistent events anchored in character habits and obligations. This ensures digital interactions remain consistent over weeks or months. 
+
+3.2. The Tenet: Event-Driven Context Data Generation 
+
+A central premise to our design is that every digital artifact is a lossy projection of an event in the real world. By first simulating events, we can then “project” those events onto application-specific records. We represent each event as a structured object that anchors the simulation. This schema provides a clear, structured input for our generation pipeline and is defined by: 
+
+Contextual Anchors: Absolute Time (anchoring the no-tion of “now”) and Place (physical or virtual location). 
+
+Narrative Core: Acts (primary actions) and Outcome (trig-gered follow-up actions). 
+
+Social & Digital Trace: Participants (social network mem-bers involved) and Projected Artifacts (the resulting digital entities, such as emails, calendar invites, or SMS logs). By repeating this projection for every event across the story-line, we ensure that a single occurrence—such as a theatre outing—consistently manifests as a shared calendar invite, an email confirmation, and related text messages. A sample input (event) and output (expected personal data entities) is shown in Figure 2. 
+
+3.3. Agentic Generation Workflow 
+
+We translate each high-level event into concrete multi-app ar-tifacts via a cascade of lightweight, task-specialized agents .The pipeline follows a structured draft → critique → revise 
+
+→ verify loop that fuses the generative fluency of LLMs with systematic self-reflection: 
+
+Draft Agent (Generator) receives the structured event object and emits a first-pass set of candidate artifacts (e.g. e-mail body, calendar metadata, SMS text). 
+
+Critique Agent (Self-Reviewer) checks the draft against domain-specific acceptance criteria (e.g. factual coher-ence with the event, stylistic consistency with the pro-tagonist, schema validity, and cross-app coherence) and returns a structured list of violations. 
+
+Revision Agent (Fixer) consumes the critique and pro-duces an improved artifact set. Localized failures allow revisions to typically converge within one or two itera-tions. 
+
+Verification Agent (Gatekeeper) runs schema validation, referential-integrity checks, and temporal consistency tests. Outputs are either ACCEPT or a minimal failure report that re-enters the critique–revision loop. Each agent is defined only by (i) a concise task description, (ii) its reasoning rubric, and (iii) machine-checkable out-puts—no additional fine-tuning is required. Agents can be swapped or extended (e.g., inserting a Redaction Agent to remove personally identifiable information) without retrain-ing the pipeline. Because only failing components re-run, the cascade amortises compute: fewer than 8 % of events trigger a second revision pass in our experiments. 
+
+## 4. Protagonist-Centered Scenarios Authoring 
+
+Building on the artifacts from Section 3, we now define the user-agent interaction framework. We translate story-lines into executable scenarios (interchangeable with tasks ), where goals are grounded in specific life events. As shown in Figure 1, every query—from rescheduling dinner to find-ing flights—becomes a natural extension of the protago-nist’s digital life rather than a context-free instruction. This grounding provides the verifiable foundation for diagnostic evaluation of reasoning and multi-turn planning. 
+
+4.1. User-Centric Scenario Set Up User goal . A user goal specifies the objective the protag-onist intends to achieve. Rather than using static prompts, these goals guide an LLM-powered user simulator in multi-turn dialogues, where the agent may need to seek clarifica-tion if the initial request is ambiguous. To maintain realism, each simulator is constrained by a knowledge boundary, ensuring it only shares information the protagonist would 4ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+naturally know, thereby forcing the agent to rely on tool interaction for fact-finding. 
+
+Reference time . Crucially, every goal is anchored by a reference time that defines “now” within the protagonist’s longitudinal data. Because personal context (e.g., “unread” emails or “upcoming” meetings) is time-dependent, the agent must perform temporal canonicalization. It must trans-form relative expressions like “next Friday” or “last night” into precise timestamps to filter records accurately. This temporal awareness is a primary differentiator from context-free benchmarks, as it requires agents to distinguish between historical routines and current obligations. 
+
+4.2. User Queries and Complexity Tiers 
+
+To enable fine-grained diagnostic analysis, we annotate each scenario across three orthogonal complexity axes. This multi-dimensional stratification (visualized in Figure 1) al-lows us to isolate specific failure modes in agent reasoning, retrieval, and tool-calling. 
+
+Informational complexity. This axis measures the depth of reasoning and multi-step synthesis required to satisfy the query. Low -complexity tasks involve direct retrieval, while high -complexity tasks require synthesizing informa-tion across multiple apps or longitudinal time spans (e.g., “Find the restaurant I visited with the same person I met for coffee last Tuesday”). 
+
+Referential complexity. This axis quantifies the effort required to ground ambiguous or indirect mentions into concrete entities. High referential complexity involves re-solving multiple underspecified pronouns (“her”, “them”) or time-anchored descriptions (“my last guest”) that require cross-referencing the protagonist’s social graph and commu-nication history. 
+
+Functional complexity. This axis tracks the coordination and logic of the required tool calls. It evaluates the agent’s ability to handle conditional dependencies, parallel tool execution, and the correct sequencing of actions within the stateful environment. 
+
+Robustness stress tests. Beyond standard execution, we introduce two critical stress conditions: Misinformation 
+
+and Insufficient Context . In misinformation scenarios, the agent must detect and reconcile conflicting or erroneous data within the personal context. In insufficient context scenarios, the agent must recognize that the user’s request is underspecified and proactively seek clarification via the user simulator. 
+
+4.3. Components of Annotated Ground Truth for Scenario Evaluation 
+
+To support grounded evaluation, each scenario is paired with a comprehensive ground-truth annotation. This annotation moves beyond simple “correct answer” to provide a full trace of the intended reasoning and system state changes. 
+
+Related entities. We identify the set of personal context (e.g. email threads, contact cards, etc.) that an agent must interact with to fulfill the goal. These entities serve as a “retrieval gold standard”, allowing us to verify if the agent correctly navigated the protagonist’s complex social and digital history. 
+
+Reasoning monologue. Each scenario includes a human-authored chain-of-thought that details the optimal logic re-quired to solve the task. This monologue explains how to resolve ambiguities, which tools to prioritize, and how to handle potential data conflicts. It acts as the reference for evaluating the agent’s internal reasoning trajectory. 
+
+Success conditions. We define the required terminal state of the environment and the specific information that must be conveyed to the user. These conditions represent the ground-truth outcome for each scenario. Success conditions can be (1) stateless, requiring no modification to persistent data (e.g., providing a precise answer), or (2) stateful, involving changes to the environment or device state (e.g., sending a confirmed email). These components form the foundation of our evaluation frameworks, introduced in Sec. 5.3, which includes both LLM-based judgment and verifiable milestone calculations, following methodologies similar to Lu et al. (2024). 
+
+## 5. ASTRA-bench 
+
+5.1. Scale and Diversity of ASTRA-bench 
+
+The ASTRA-bench dataset 1 consists of 2,400 human-authored scenarios grounded in the digital lives of five unique protagonists. Each protagonist is defined by a dis-tinct demographic and behavioral profile, with digital histo-ries spanning an average of 14 days to ensure long-horizon context. As summarized in Table 2, the benchmark provides a high-density environment for agent interaction, containing over 600 projected digital artifacts across email, messaging, and calendar applications. By focusing on a deep history for each of the five protagonists, we ensure that agents must navigate a significant volume of realistic “noise”-including overlapping meetings and recurring social threads—to iden-tify the precise entities required for task completion. The scenarios are balanced across our complexity tiers (Sec-tion 4.2) to provide a robust diagnostic signal. 
+
+5.2. Simulation Environment 
+
+Our simulation environment is built upon the foundational principles of ToolSandbox (Lu et al., 2024), but introduces critical enhancements to address the unique challenges of personal assistant evaluation.  
+
+> 1ASTRA-bench Evaluation Framework is released at https: //github.com/<coming-soon>
+
+5ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+Table 2. ASTRA-bench dataset composition (top) and complexity distribution (bottom)                                                          
+
+> COUNT SCENARIOS COUNT DOMAIN CONTEXT COUNT
+> EVENTS USER GOALS SCENARIOS CONTACT CALENDAR EMAIL MESSAGE WHATS APP PHONE CALL
+> TOTAL 111 1360 2413 69 115 84 309 30 15
+> COMPLEXITY DISTRIBUTION
+> REFERENTIAL COMPLEXITY INFORMATIONAL COMPLEXITY FUNCTIONAL COMPLEXITY MISINFORMATION INSUFFICIENT CONTEXT
+> LOW MODERATE HIGH LOW MODERATE HIGH LOW MODERATE HIGH NOYES NOYES
+> COUNT 390 1733 290 642 1292 479 1386 857 170 2376 37 2396 17
+
+Personal Context Integration. While the original frame-work focuses on generic tool execution, our sandbox is grounded in the protagonist’s digital history. Every tool call interacts with the 622 projected artifacts generated in our workflow, ensuring that the agent must reason over specific personal data—such as social graphs and past communica-tions—to fulfill a request. 
+
+Temporal Awareness. A core advancement in our environ-ment is the introduction of a global reference time. This “temporal anchor” forces the agent to perform canonical-ization of relative time expressions (e.g., yesterday or last week ) against the persistent system state. This ensures that tool outputs are factually synchronized with the timeline of the protagonist’s life. 
+
+Expanded Tool Coverage We significantly expand the breadth of available tools to include 25+ more across six domains: Contact, Calendar, Email, Message, WhatsApp, and Phone Call. This cross-app coverage requires the agent to coordinate actions across multiple digital silos, moving beyond the single-app focus of many existing benchmarks. 
+
+Enhanced Evaluation Strategies. We provide human-authored evaluation components that measure task success relative to explicit user goals, leveraging success conditions, reasoning monologues, and related entities, moving beyond the Milestones and Minefields introduced in ToolSandbox. Further, milestone and minefield evaluations are refined to emphasize information retrieval accuracy and user-facing outcomes, moving beyond strict tool-parameter matching. In addition, an LLM Judge is incorporated to assess task success using these same ground-truth components, offer-ing a complementary evaluation that captures retrieval and reasoning quality. 
+
+5.3. Evaluation Methodology 
+
+We evaluate performance by comparing agent trajectories against human-authored ground-truth targets (goals, queries, success conditions, and entities). Assessment is grounded in observable evidence —tool traces and system state snap-shots—enabling multi-dimensional diagnostics through two decoupled methodologies. 
+
+Verifiable Measures: Milestones and Minefields. We adopt and extend the Milestones & Minefields framework (Lu et al., 2024) to capture intermediate, fact-grounded sub-goals such as retrieval accuracy and payload correct-ness. Unlike the original framework, we structure these as a directed acyclic graph (DAG) to enforce temporal and logi-cal dependencies, denoted as GM + (VM + , E M + ) for mile-stones and GM − (VM − , E M − ) for minefields. We further introduce high-resolution similarity metrics to specifically evaluate information retrieval accuracy and goal alignment. A critical feature of our stateful environment is the enforce-ment of a strict penalty: any minefield violation—such as the unintended removal of calendar events—nullifies the overall score, even if all milestones are achieved. 
+
+SRule-Based = SMilestones × 1[SMinefields = 0] (1) These measures are initially generated by GPT-o3 based on grounded evaluation from annotation and subsequently revised by humans to ensure diagnostic precision. 
+
+LLM-Based Evaluators. In parallel, rubric-guided LLM judges assess the same evidence alongside human-authored rationales and personal context. This captures higher-level signals like conversational efficiency and hallucination ro-bustness. Performance is scored (0–2) across five dimen-sions: Task Completion , Tool Usage , Information Retrieval ,
+
+Conversation Effectiveness , and No Hallucination . This provides a nuanced assessment of reasoning and semantic correctness where rule-based metrics may be too rigid. 
+
+Comparative Perspective. While rule-based measures are precise but rigid, LLM judges offer flexible, interpre-tive assessments. Despite these differences, model rankings across both methods show strong alignment. This dual-approach captures both structured success and broader rea-soning quality (see Appendix for detailed comparison). 
+
+## 6. Results 
+
+6.1. Experiment Setup Models. We evaluate a diverse suite of state-of-the-art models, ranging from frontier proprietary systems to lead-ing open-source checkpoints, as detailed in Table 3. This includes frontier systems like Claude-4.5-Opus and GPT-4.1, alongside the DeepSeek-V3.2 and Qwen3 families, pro-viding a comprehensive cross-section of current reasoning architectures and scales. 
+
+6.2. Complexity Ceiling 
+
+Table 4 demonstrates a sharp performance decay as task complexity increases across our three diagnostic axes—referential, functional, and informational. Rather than defining disjoint categories, these dimensions progres-6ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context CATEGORY MODEL VARIANTS & C ITATIONS          
+
+> PROPRIETARY GPT-O3, GPT-4.1 (H URST ET AL ., 2024); CLAUDE -4.5-O PUS , C LAUDE -4.5-H AIKU
+> (A NTHROPIC , 2024)
+> OPEN -SOURCE DEEP SEEK -V3.2 (L IU ET AL ., 2025); QWEN 3(30B-A3B, 30B-A3B-I NST ., 235B-A22B) (B AI ET AL ., 2023)
+> Table 3. Suite of state-of-the-art models evaluated in this study.
+
+sively stress distinct aspects of tool-use reasoning within the same interactive scenarios. A primary observation is that while performance at low and moderate complexity is relatively saturated among top-tier models, high-complexity scenarios serve as the definitive differentiator. Claude-4.5-Opus achieves the highest macro-average score overall (0.9112) and consistently attains the best performance in high-complexity tranches across all three dimensions. Among open-source models, DeepSeek-V3.2 emerges as the strongest performer (0.9050), matching proprietary counterparts at low complexity but exhibiting a noticeable performance gap as informational and functional setting demands increase. Furthermore, robustness to complexity is tied to a model’s ability to integrate long-horizon reasoning with structured execution. While Claude-4.5-Opus and DeepSeek-V3.2 ex-hibit graceful degradation, GPT-4.1 and the Qwen family face sharp performance cliffs at high complexity. This sug-gests scale alone cannot ensure reliability; instead, targeted optimization for multi-step planning, state tracking, and er-ror recovery is essential for high-density personal contexts. Finally, the systematic degradation across all models vali-dates that ASTRA-bench successfully captures a spectrum of difficulty that surface-level benchmarks miss. The sub-stantial widening of performance gaps at higher complexity levels proves these scenarios probe fundamental reasoning capabilities rather than simple tool invocation. This con-firms the benchmark as a sensitive testbed for evaluating the robustness of agents in realistic, high-stakes environments. 
+
+6.3. Capability Decomposition via Step- and Task-Level Success 
+
+While Table 4 characterizes robustness under complexity, Table 5 provides a complementary, capability-oriented view by decomposing performance into step-level execution and task-level end-goal success using deterministic milestone-based metrics. Together, these analyses reveal not only where models fail, but the specific technical bottlenecks causing those failures. 
+
+Step-Level Success: Core Tool-Use Capabilities. We decompose the tool-use workflow into three fundamental ca-pabilities evaluated via milestone similarity over thousands of intermediate steps: 
+
+Information Retrieval (IR) Recall: Measures tool invo-cation and grounding accuracy. 
+
+Response Generation: Evaluates the coherence of natural-language responses synthesized from tool outputs. 
+
+Argument Generation (Payloads): Assesses the preci-sion of structured arguments (referred to as payloads in Table 5) required to modify persistent entities. As shown in Table 5, IR Recall is consistently the strongest capability, with top systems like DeepSeek-V3.2 reaching 0.9516. In contrast, Payload Generation emerges as the primary bottleneck, exhibiting the lowest scores and the largest variance (ranging from 0.5603 to 0.8478). This asymmetry explains the sharp performance cliffs observed in high-complexity settings in Table 4: models are profi-cient at “finding” the relevant personal context but struggle to “translate” that context into the precise structured data required for stateful execution. 
+
+Task-Level Success: End-Goal Completion. Task-level success evaluates whether an agent ultimately achieves the user’s end goal, categorized by either providing an answer (Contextual Question Answering , CQA) or modifying the environment ( Entity Creation ). This distinction is critical: high step-level accuracy does not necessarily imply end-goal completion, particularly in long-horizon or stateful interactions where a single error can invalidate the final result. As shown in Table 5, task-level performance generally mir-rors step-level strength, but with key exceptions. Claude-4.5-Opus and DeepSeek-V3.2 lead in both categories, with DeepSeek-V3.2 notably attaining the highest Entity Cre-ation success (0.9161) despite its open-source status. The gap between step- and task-level success is most pronounced in weaker models like the Qwen-30B family, where error ac-cumulation across multiple turns disproportionately impacts final outcomes. This fragility reinforces the need for bench-marks like ASTRA-bench that measure the entire execution lifecycle rather than isolated tool calls. 
+
+6.4. Robustness Under Misinformation and Insufficient Context 
+
+In addition to graded complexity, we evaluate robustness under two targeted stress conditions: Insufficient Context (N = 17 ) and Misinformation ( N = 37 ). These rare but critical scenarios probe behaviors essential for reliable de-ployment, such as proactive clarification and self-correction. Both conditions trigger significant performance drops, yet exhibit distinct failure signatures. 
+
+Insufficient Context. The Execution Bias. Under insuffi-cient context, task completion rates collapse across all mod-els, with drops ranging from 0.150 to 0.410 points. Notably, 7ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context MODEL MACRO                                                                                     
+
+> AVG .(N=2413) REFERENTIAL FUNCTIONAL INFORMATIONAL
+> LOW
+> (N=390) MOD .(N=1,733) HIGH
+> (N=290) LOW
+> (N=1,586) MOD .(N=857) HIGH
+> (N=170) LOW
+> (N=642) MOD .(N=1,292) HIGH
+> (N=479) PROPRIETARY MODELS
+> GPT-O30.8782 0.8987 0.9050 0.8213 0.9025 0.8986 0.8000 0.9353 0.8880 0.8548 GPT-4.1 0.7922 0.8667 0.8213 0.6564 0.7856 0.8596 0.7412 0.9064 0.8058 0.6867 CLAUDE -4.5-O PUS 0.9112 0.9423 0.9212 0.8677 0.9181 0.9260 0.8794 0.9462 0.9174 0.8828
+> CLAUDE -4.5-H AIKU 0.7646 0.7949 0.8057 0.6873 0.8213 0.7617 0.6735 0.8183 0.8031 0.7158
+> OPEN -S OURCE MODELS
+> DEEP SEEK -V3.2 0.9050 0.9321 0.9275 0.8505 0.9217 0.9295 0.8441 0.9540 0.9225 0.8631 QWEN -30B 0.6567 0.8231 0.6790 0.4828 0.6664 0.7279 0.5294 0.8565 0.6640 0.4813 QWEN -30B-I NSTRUCT 0.6796 0.8218 0.6992 0.5223 0.6968 0.7209 0.5882 0.8362 0.6860 0.5446 QWEN -235B 0.6902 0.8385 0.7142 0.5275 0.7072 0.7448 0.5824 0.8604 0.7054 0.5311
+
+Table 4. Task completion performance under increasing complexity, evaluated by gpt-5.1-2025-11-13 . Results are reported across referential, functional, and informational complexity tranches. Best results are shown in bold , second-best are underlined.                                                                  
+
+> MODEL AVG .TURNS
+> (N=2413) MILESTONE
+> SIM .(N=2413) STEP -L EVEL SUCCESS TASK -L EVEL SUCCESS
+> IR R ECALL
+> (N=2,273) RESPONSE GEN .(N=1,228) PAYLOAD GEN .(N=1,360) CQA (N=1,221) ENTITY CREATION
+> (N=1,222) PROPRIETARY MODELS
+> GPT-O37.6 0.8993 0.9234 0.8248 0.8055 0.9141 0.8827 GPT-4.1 5.4 0.8459 0.8419 0.7539 0.7395 0.8513 0.8394 CLAUDE -4.5-O PUS 6.3 0.9243 0.9336 0.8843 0.8478 0.9359 0.9129 CLAUDE -4.5-H AIKU 7.0 0.8248 0.8477 0.8256 0.6297 0.8780 0.7718
+> OPEN -S OURCE MODELS
+> DEEP SEEK -V3.2 7.1 0.9340 0.9516 0.9180 0.8377 0.9514 0.9161
+> QWEN -30B 5.4 0.6998 0.6650 0.6481 0.5603 0.7478 0.6526 QWEN -30B-I NSTRUCT 5.6 0.7910 0.7750 0.6798 0.6312 0.7997 0.7820 QWEN -235B 4.9 0.7335 0.6912 0.6896 0.6055 0.7718 0.6952
+
+Table 5. Milestone-based capability breakdown of tool-use agents. Step-Level Success reflects intermediate execution accuracy; Task-Level Success reflects scenario-level end-goal completion. Best results are shown in bold , the second-best are underlined. 
+
+“No Hallucination” rates remain largely stable (e.g., GPT-o3 drops only 0.026). This indicates that failures are primarily driven by an execution bias—where agents attempt to ful-fill requests despite missing prerequisites—rather than by fabricated data. Even frontier models like DeepSeek-V3.2 show a 0.244 impact on completion, suggesting that consis-tently deferring action for clarification remains a challenge. The detailed impact of these challenges across all models is provided in Table S3 in the Appendix. 
+
+Misinformation. The Verification Gap. Misinformation scenarios also cause degradation in task completion (e.g., 0.231 for GPT-4.1), but these are frequently accompanied by more variable drops in “No Hallucination” scores. For instance, Qwen-30b-Instruct experiences a 0.221 impact on hallucination, reflecting the difficulty of reconciling conflicting premises within a personal context. While Claude-4.5-Opus exhibits notable resilience to misinfor-mation (only 0.027 completion drop), most models suffer from compounded losses, highlighting a widespread gap in self-correction and premise verification. Together, these results demonstrate that robustness to un-certainty and contradiction is not merely a byproduct of complexity scaling. While Tables 4 and 5 diagnose per-formance under standard difficulty, our stress tests reveal a critical need for agents to balance safe non-action with proactive correction—a fundamental requirement for trust-worthy, real-world tool-use systems. 
+
+## 7. Conclusion 
+
+ASTRA-bench bridges the gap between synthetic tool-use benchmarks and the demands of real-world personal assis-tants by unifying time-evolving personal context, stateful tool environments, and human-authored multi-turn goals. By shifting from final-answer metrics to milestone-based scoring, we provide a diagnostic framework that reveals not just if a model fails, but why. Our evaluation of state-of-the-art models highlights a significant “complexity tax”: performance degrades sharply as referential and functional demands increase, with argument generation and multi-step plan orchestration emerging as primary bottlenecks. These findings suggest that the path to reliable next-generation as-sistants lies in improving grounding within messy personal data and disciplining tool orchestration. We release our full datasets, execution harness, and evaluation suite to the com-munity, providing a common substrate for the development of trustworthy, plan-centric AI agents. 8ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+## Limitations and Future Work 
+
+While ASTRA-bench advances realistic evaluation, several limitations remain. 
+
+Authoring Cost: Handcrafting context-aware milestones yields high diagnostic value but is labor-intensive. Auto-mated mining of milestones from executions via trace align-ment could improve scale. 
+
+Evaluator Reliability: LLM-based graders and milestone checks may yield false negatives for unanticipated yet valid plans. Future work includes calibrated ensembles and reference-free validators to mitigate this. 
+
+Synthetic Gap: Synthetic corpora cannot fully capture the noise and idiosyncrasy of real data. Incorporating richer noise processes or redacted real logs would narrow the real-ity gap. 
+
+Tool Coverage: Our suite focuses on productivity flows but excludes background processes or concurrent invoca-tions, which pose unique scheduling challenges for agent control. 
+
+Policy Enforcement: Real actions often require mandatory authentication. Integrating explicit confirmation policies would better test an agent’s ability to honor user consent before stateful changes. Beyond these, we see opportunities to incorporate multi-modal context, evaluate long-horizon safety (e.g., least-privilege tool use), and study training-time interventions like tool-aware RL to target the bottlenecks revealed by ASTRA-bench. 
+
+## Acknowledgement 
+
+We would like to thank our colleagues at Apple - Joe Y.-C. Wang, Ceci Pompeo, Xin Hu, Alfonso Moya, Ted Levin, Jason Williams, Russ Webb, Hari Narayan, Enrica Shimizu, Tianlin Duan, and Jiannan Lu for their feedback and support in various stages of this work. 
+
+## References 
+
+Achiam, J., Adler, S., Agarwal, S., Ahmad, L., Akkaya, I., Aleman, F. L., Almeida, D., Altenschmidt, J., Altman, S., Anadkat, S., et al. Gpt-4 technical report. arXiv preprint arXiv:2303.08774 , 2023. Andrews, P., Benhalloum, A., Bertran, G. M.-T., Bettini, M., Budhiraja, A., Cabral, R. S., Do, V., Froger, R., Garreau, E., Gaya, J.-B., et al. Are: Scaling up agent environments and evaluations. arXiv preprint arXiv:2509.17158 , 2025. Anthropic. Claude models and api. https://docs. anthropic.com/claude , 2024. Accessed 2025. Backlund, A. and Petersson, L. Vending-bench: A bench-mark for long-term coherence of autonomous agents. 
+
+arXiv preprint arXiv:2502.15840 , 2025. Bai, J., Bai, S., Chu, Y., Cui, Z., Dang, K., Deng, X., Fan, Y., Ge, W., Han, Y., Huang, F., et al. Qwen technical report. arXiv preprint arXiv:2309.16609 , 2023. Barres, V., Dong, H., Ray, S., Si, X., and Narasimhan, K. τ 2-bench: Evaluating conversational agents in a dual-control environment. arXiv preprint arXiv:2506.07982 , 2025. Brown, T., Mann, B., Ryder, N., Subbiah, M., Kaplan, J. D., Dhariwal, P., Neelakantan, A., Shyam, P., Sastry, G., Askell, A., et al. Language models are few-shot learners. 
+
+Advances in neural information processing systems , 33: 1877–1901, 2020. Chen, M., Papangelis, A., Tao, C., Kim, S., Rosenbaum, A., Liu, Y., Yu, Z., and Hakkani-Tur, D. PLACES: Prompt-ing language models for social conversation synthesis. In 
+
+Findings of the Association for Computational Linguis-tics: EACL 2023 , pp. 844–868, Dubrovnik, Croatia, 2023. Association for Computational Linguistics. Chen, Q., Zhuo, Z., and Wang, W. Bert for joint intent classi-fication and slot filling. arXiv preprint arXiv:1902.10909 ,2019. Farn, N. and Shin, R. Tooltalk: Evaluating tool-usage in a conversational setting. arXiv preprint arXiv:2311.10775 ,2023. Huang, S., Zhong, W., Lu, J., Zhu, Q., Gao, J., Liu, W., Hou, Y., Zeng, X., Wang, Y., Shang, L., et al. Planning, creation, usage: Benchmarking llms for comprehensive tool utilization in real-world complex scenarios. arXiv preprint arXiv:2401.17167 , 2024. Hurst, A., Lerer, A., Goucher, A. P., Perelman, A., Ramesh, A., Clark, A., Ostrow, A., Welihinda, A., Hayes, A., Radford, A., et al. Gpt-4o system card. arXiv preprint arXiv:2410.21276 , 2024. Jang, J., Boo, M., and Kim, H. Conversation chronicles: To-wards diverse temporal and relational dynamics in multi-session conversations. In Proceedings of the 2023 Con-ference on Empirical Methods in Natural Language Pro-cessing (EMNLP) , pp. 13584–13606, Singapore, 2023. Association for Computational Linguistics. Li, M., Zhao, Y., Yu, B., Song, F., Li, H., Yu, H., Li, Z., Huang, F., and Li, Y. Api-bank: A comprehen-sive benchmark for tool-augmented llms. arXiv preprint arXiv:2304.08244 , 2023. Liu, A., Mei, A., Lin, B., Xue, B., Wang, B., Xu, B., Wu, B., Zhang, B., Lin, C., Dong, C., et al. Deepseek-v3.2: Pushing the frontier of open large language models. arXiv preprint arXiv:2512.02556 , 2025. 9ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+Liu, X., Yu, H., Zhang, H., Xu, Y., Lei, X., Lai, H., Gu, Y., Ding, H., Men, K., Yang, K., et al. Agentbench: Evalu-ating llms as agents. arXiv preprint arXiv:2308.03688 ,2023. Lu, J., Holleis, T., Zhang, Y., Aumayer, B., Nan, F., Bai, F., Ma, S., Ma, S., Li, M., Yin, G., et al. Toolsand-box: A stateful, conversational, interactive evaluation benchmark for llm tool use capabilities. arXiv preprint arXiv:2408.04682 , 2024. Mialon, G., Fourrier, C., Wolf, T., LeCun, Y., and Scialom, T. Gaia: a benchmark for general ai assistants. In The Twelfth International Conference on Learning Represen-tations , 2023. Mok, J., Kim, I.-h., Park, S., and Yoon, S. Exploring the potential of llms as personalized assistants: Dataset, eval-uation, and analysis. arXiv preprint arXiv:2506.01262 ,2025. Nakano, R., Hilton, J., Balaji, S., et al. Webgpt: Browser-assisted question-answering with human feedback. arXiv preprint arXiv:2112.09332 , 2021. Park, J. S., O’Brien, J., Cai, C. J., Morris, M. R., Liang, P., and Bernstein, M. S. Generative agents: Interactive simulacra of human behavior. In Proceedings of the 36th annual acm symposium on user interface software and technology , pp. 1–22, 2023. Patil, S. G., Mao, H., Cheng-Jie Ji, C., Yan, F., Suresh, V., Stoica, I., and E. Gonzalez, J. The berkeley func-tion calling leaderboard (bfcl): From tool use to agentic evaluation of large language models. In Forty-second International Conference on Machine Learning , 2025. Qin, Y., Liang, S., Ye, Y., Zhu, K., Yan, L., Lu, Y., Lin, Y., Cong, X., Tang, X., Qian, B., et al. Toolllm: Facilitating large language models to master 16000+ real-world apis. 
+
+arXiv preprint arXiv:2307.16789 , 2023. Schick, T., Dwivedi-Yu, A. T., Hosseini, S., Hou, Y., Sch ¨utze, H., and Schlangen, D. Toolformer: Language models can teach themselves to use tools. arXiv preprint arXiv:2302.04761 , 2023. Silverman, B. G., Johns, M., Cornwell, J., and O’Brien, K. Human behavior models for agents in simulators and games: Part i: Enabling science with pmfserv. Presence: Teleoperators and Virtual Environments , 15(2):139–162, 04 2006. Spencer, S. The playwright’s guidebook: An insightful primer on the art of dramatic writing . Macmillan, 2002. Thoppilan, R., De Freitas, D., Hall, J., Shazeer, N., Kul-shreshtha, A., Cheng, H.-T., Jin, A., Bos, T., Baker, L., Du, Y., et al. Lamda: Language models for dialog appli-cations. arXiv preprint arXiv:2201.08239 , 2022. Trivedi, H., Khot, T., Hartmann, M., Manku, R., Dong, V., Li, E., Gupta, S., Sabharwal, A., and Balasubramanian, N. Appworld: A controllable world of apps and people for benchmarking interactive coding agents. arXiv preprint arXiv:2407.18901 , 2024. Wang, H., Huang, W., Wang, Y., Xi, Y., Lu, J., Zhang, H., Hu, N., Liu, Z., Pan, J. Z., and Wong, K.-F. Rethinking stateful tool use in multi-turn dialogues: Benchmarks and challenges. arXiv preprint arXiv:2505.13328 , 2025. Wang, J., Zerun, M., Li, Y., Zhang, S., Chen, C., Chen, K., and Le, X. Gta: a benchmark for general tool agents. 
+
+Advances in Neural Information Processing Systems , 37: 75749–75790, 2024. Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K. R., and Cao, Y. React: Synergizing reasoning and acting in language models. In ICLR , 2022. Yao, S., Shinn, N., Razavi, P., and Narasimhan, K. τ -bench: A benchmark for tool–agent–user interaction in real-world domains. arXiv preprint arXiv:2406.12045 ,2024. Zhang, S., Dinan, E., Urbanek, J., Szlam, A., Kiela, D., and Weston, J. Personalizing dialogue agents: I have a dog, do you have pets too? In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 2204–2213, Melbourne, Australia, 2018. Association for Computational Linguis-tics. 10 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+## 8. Appendix for ASTRA Benchmark A. Details about Personal Context Generation 
+
+We will further discuss our methods for generating protago-nists below. 
+
+A.1. Real-Life Event-Driven Storyline Generation Biography. We begin with developing a set of core demo-graphic and social attributes that remains fixed throughout the simulation. The biography content, in natural language form, may include demographic fields (e.g. age, gender, nationality, education, occupation), socioeconomic markers (income bracket, housing status), and long-term preferences (dietary choices, hobbies). This frozen biography serves as a coherent prior that conditions downstream decision rules and grounds long-horizon consistency in simulated events. 
+
+Social Network. We represent the protagonist’s so-cial network as a weighted, directed multigraph G =(V, E, ℓ, w ). Each vertex v ∈ V denotes someone who recurrently interacts with the protagonist. Every ordered pair (u, v ) may be connected by one or more edges e ∈ E, each endowed with (a) a categorical label 
+
+ℓ(e) ∈ { FAMILY , FRIEND , CLASSMATE , . . . } for the rela-tionship type, and (b) a non-negative weight w(e) ∈ R≥0
+
+proportional to expected contact frequency, encoding con-nection strength (e.g., w(e) = 11 implies ≈ 11 encounters per quarter). The graph is seeded from the protagonist’s bi-ography via a template-based schema and undergoes human review to ensure plausibility and coverage. 
+
+Pattern of Life. The Pattern of Life is commonly used to describe recurring and predictable behaviors of individuals or groups. In our design, it is implemented as a proba-bilistic context-free grammar that generates weekly plans and daily agenda. Non-terminal symbols encode high-level routines (e.g. COMMUTE , EXERCISE , FAMILY -TIME ); pro-duction rules with LLM-assisted generation expand them into timestamped events in prescribed format, conditioned on biography and social network. The resulting storyline 
+
+exhibits circadian rhythms, weekday/weekend asymmetries, and seasonal shifts. 
+
+A.2. Protagonists Overview 
+
+Table S1 summarizes the ASTRA-bench dataset statistics. The benchmark contains 2,413 scenarios derived from 1,360 user goals across five protagonists, each with distinct per-sonal contexts and communication patterns. To ensure eco-logical validity, we ground each protagonist in realistic domain data spanning six modalities: contacts, calendar events, emails, text messages, WhatsApp conversations, and phone call logs. The varying distributions across protag-onists—ranging from 384 to 592 scenarios per character and differing entity counts per domain—reflect authentic heterogeneity in how individuals organize and access per-sonal information. This design enables robust evaluation of agents’ generalization capabilities across diverse user profiles and task distributions. To ensure the benchmark captures realistic variation in per-sonal assistant usage patterns, we designed five distinct protagonists with diverse demographics, occupations, and lifestyles: • Dawei Shen (29, Data Science Manager): A multi-lingual professional fluent in English, Chinese, and German, with a cosmopolitan background spanning Shanghai, Singapore, and Munich. His interests in-clude long-distance cycling, theater, and international travel. • Theo Appleseed (25, Applied Researcher): A recent computer science graduate balancing a career in tech research with outdoor activities. He enjoys hiking, science fiction, and hosting dinner parties for close friends. • John Quinn (25, Junior Engineer): A data-driven pro-fessional with interests in criminology and military history. He maintains a health-oriented lifestyle cen-tered around trail running, archery with a traditional Mongolian bow, and outdoor exploration. • Emily Rose (29, Event Coordinator): A community-focused professional with a Public Relations back-ground. She is deeply involved in local volunteering, gardening, and pet care, maintaining strong ties with neighbors and community members. • Lucas Garcia (33, Personal Trainer): A bilingual English-Spanish fitness professional who competes in triathlons and leads a training group. He balances his coaching career with surfing and craft beer apprecia-tion, while building an online fitness presence. This diversity in age (25–33), profession (tech, community services, fitness), cultural background, and social interaction patterns ensures that ASTRA-bench evaluates agents across a broad spectrum of realistic user contexts. 
+
+## B. Annotation Framework 
+
+Figure S1 illustrates the end-to-end workflow used to author evaluation scenarios. Each scenario begins with a high-level storyline that captures a realistic sequence of life events, which is then refined into a concrete plot describing the immediate situation faced by the user. Annotators make an explicit decision about whether the scenario should yield 11 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context                                                                  
+
+> Table S1. ASTRA-bench by Protagonists Breakdown.
+> Protagonist Scenarios Count Domain Context Count Events User Goals Scenarios Contact Calendar Email Message WhatsApp Phone call
+> Dawei Shen 21 222 394 17 13 17 26 14 3Theo Appleseed 27 366 592 11 32 984 04John Quinn 21 309 535 15 27 22 100 04Emily Rose 21 203 384 10 17 25 31 62Lucas Garcia 21 260 508 16 26 11 68 10 2Total 111 1360 2413 69 115 84 309 30 15
+
+a single-turn or multi-turn interaction. They then specify structured grounding elements, including the relevant en-tities, reference time, user goal, and success criteria. For single-turn scenarios, annotators produce a standalone user query accompanied by a complexity breakdown along func-tional, referential, and informational dimensions, as well as optional challenge flags such as missing context or misin-formation. For multi-turn scenarios, annotators define the initial user query and an expected dialogue trajectory, with success criteria evaluated over stateful interactions. This structured authoring process ensures that scenarios are both grounded in realistic personal context and amenable to fine-grained, interpretable evaluation. 
+
+B.1. First User Query Style 
+
+• Comprehensive Single Turn Query This refers to queries where all necessary information to complete the task is provided within a single, initial user mes-sage. The agent is expected to understand the entire request and perform all required steps without needing to ask the user for further clarification or engaging in a dialogue. The goal is to test the IA’s ability to com-prehend and complete multi-step tasks autonomously, assuming the required information is readily available in the initial input. This encourages the IA to resolve any ambiguities or implicit references on its own, based on available sources. Note that all of our queries in the first version of ASTRA-bench is of this type. • Multi-turn User Query This type of query involves a conversational interaction where the initial message from the user may be ambiguous or incomplete, requir-ing the agent to engage in a dialogue to gather more information and clarify the user’s intent. We provide the first turn of a multi-turn conversation, along with the previous user goal, to encourage conversation be-tween the agent and the user to complete the task. An “example dialogue” is also often provided in the dataset as a meta information. This evaluates the agent’s ability to handle the “conversational” and “interactive” nature of real-world scenarios. Such scenarios often start with “ambiguous requests or missing information, requiring further clarification from the user. 
+
+B.2. Complexity Trenches in Details Informational Complexity This dimension quantifies the difficulty of information processing, extraction, and synthe-sis required for an agent to successfully address a user query. It directly assesses the agent’s Understanding capability, which encompasses aspects such as complex instruction following, user intent understanding, and data parsing. • low : The query contains all necessary information explicitly within the prompt itself, requiring no external retrieval or complex inference from the user’s personal context or provided entities. Example: “Set up an alarm at 6 a.m. tomorrow.” 
+
+• moderate : The required information is readily avail-able and explicitly presented within the user’s immedi-ate personal context, without necessitating multi-step reasoning or complex cross-referencing. Example: 
+
+“Set up an alarm 1 hour before my first meeting to-morrow” , where the first meeting is directly accessible within provided calendar entities. • high : Fulfilling the query demands multi-step rea-soning, implicit inference, or synthesis of information from disparate and potentially historical sources within the user’s personal context (e.g., past records, recurring schedules) to derive the complete answer or required parameters. Example: “Wake me up at my usual time” ,where the agent needs to analyze the user’s past behav-ior and schedule, potentially adjusting for weekdays or weekends, to determine the exact alarm time. 
+
+Referential Complexity This dimension measures the dif-ficulty an agent faces in resolving references within a user query. This involves identifying and grounding pronouns, vague nouns, or implicit mentions to the correct entities or contextual information. The complexity level reflects the intricacy of the lookup and inference process required to establish these links, often leveraging available personal context. • low : The query contains explicit, direct references to entities, requiring no external lookup or disambigua-tion. The necessary information is immediately ap-12 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context  
+
+> Figure S1. Annotation Flowchart End-to-End
+
+parent from the query itself. Example: “Email John Appleseed.” 
+
+• moderate : The query includes one indirect refer-ence that necessitate a straightforward lookup or match-ing process against the user’s immediate personal con-text. This may involve canonicalization, transforming a surface-form reference (e.g., “my bestie”) into a spe-cific, actionable entity (e.g., a contact number) without complex multi-step reasoning. Example: “Call my girlfriend” , where the agent needs to check the user’s contacts or other provided sources to retrieve the cor-rect contact number. This aligns with cases where canonicalization might be performed by the model or with simple tool aid. • high : Fulfilling the query demands resolving multi-ple ambiguous or implicit references, frequently requir-ing chained inference or complex multi-step lookups across disparate or historical entities and contexts. This can involve disambiguation in the face of multiple pos-sibilities or inferring a target based on a sequence of contextual cues, such as time-related arguments that are particularly challenging to canonicalize and rea-son about. Example: “Text the person who emailed me last night” , where the agent must first identify the email sender from a specific time frame, then find their contact information to send a text. This often poses a challenge for models, as they might hallucinate or struggle with information retrieval. 
+
+Functional Complexity This dimension specifically quan-tifies the intricacy of the actions or tool invocations an IA needs to perform to fulfill a user’s request. It directly as-sesses the LLM’s “function calling” or “tool use” profi-ciency, which are critical capabilities for modern AI assis-tants. • low : The query requires a single, straightforward ac-tion or tool invocation. The agent needs to identify and execute one function without complex dependencies or prior steps. Example: “Send a message to John.” 
+
+• moderate : Fulfilling the query involves a sequence of 2-3 dependent steps or tool calls. The agent must perform actions in a specific order, where the output of one step informs the next, or select a single best function from multiple available options. Example: 
+
+“Find the latest message from Theo and reply with the address.” , This would involve a “search messages” tool call, followed by extracting address, and then a “send message” tool call. This aligns with BFCL’s “Multi-ple Function” scenario where the model selects one function out of several (Patil et al., 2025). • high : The query demands multiple coordinated ac-tions, conditional logic, multi-step tool use, or inter-action with stateful environments. This can involve parallel function calls (invoking multiple functions con-currently), sequential multi-tool execution where tool performance is coupled with and can alter an exist-ing entity, or scenarios requiring implicit state depen-dencies. Such tasks are particularly challenging for even state-of-the-art LLMs, especially those involv-ing “State Dependency” and “Canonicalization” with tool aid, as highlighted in Lu et al. (2024). Example: 
+
+“Check if I’m free at 3pm tomorrow and if so, schedule a call with Sarah.” , this involves checking a calen-dar, interpreting the availability, and then conditionally invoking a scheduling tool. 
+
+B.3. Combination of Complexity scores 
+
+In Table S2, we show the combination of different complex-ity breakdown by frequency. The top 5 combinations take in total around 70% of total scenarios. 13 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context  
+
+> Table S2. Combination of all scenarios for ASTRA Benchmark
+
+informational complexity referential complexity functional complexity count percentage Moderate Moderate Low 693 0.287 Moderate Moderate Moderate 308 0.128 Low Moderate Moderate 242 0.100 High Moderate Low 186 0.077 Low Moderate Low 145 0.060 Low Low Low 133 0.055 Moderate Low Low 97 0.040 High Moderate Moderate 94 0.039 Low Low Moderate 87 0.036 High High Low 60 0.025 High High Moderate 51 0.021 Moderate High Low 48 0.020 High High High 46 0.019 Moderate High High 38 0.016 Moderate Moderate High 38 0.016 Moderate High Moderate 35 0.015 Moderate Low Moderate 28 0.012 High Low Low 21 0.009 High Moderate High 15 0.006 Low Moderate High 11 0.005 Low Low High 10 0.004 High Low Moderate 9 0.004 Low High High 7 0.003 Moderate Low High 5 0.002 Low High Moderate 4 0.002 Low High Low 2 0.001 14 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+## C. Interactive Environment Setup 
+
+C.1. Prompting for Agent 
+
+We used the same system prompt for all models. The prompts are adjusted based on successful turn-based heuris-tic milestone mappings, to avoid multiple write tool calls within a single turn. 
+
+Listing 1. System Prompt 
+
+You are a helpful assistant equipped with tool-using abilities. Try your best to determine what values to plug into function calls based on the available information. Tool Invocation Rules: - You may call multiple read-only tools within a single respond. - You must call at most one write tool per respond. If you call more than one write tool in a single response, your response will be ignored. Always wait for the result of the first write tool before continuing. After receiving aresult from a write tool, always summarize the outcome to the user. - When calling a write tool, do not include a summary message in the same turn. Wait for the tool result before replying. - After receiving the result of a write tool, respond with a brief confirmation or summary message for the user. - If multiple write operations are needed, handle them sequentially across multiple responds. - Assume all phone numbers are valid, regardless of format or length, as they may be anonymized or synthetic. 
+
+Following this general prompt, we tailor additional instruc-tions according to the style of the conversation. For queries that are self-contained and intended to evaluate the agent’s reasoning capabilities, the agent is encouraged to seek in-formation independently or infer missing details within the same turn. 
+
+Listing 2. Single-Turn Scenario Prompt Add-ons 
+
+- If the user’s request is ambiguous, do not ask for clarification. Their input may be incorrect or incomplete. Proceed using your best judgment based on the available information and tools. - You may use read-only tools to retrieve relevant user context (e.g., messages, emails, calendars, WhatsApp, etc.) before completing the task. If asearch_* tool returns nothing, try using the corresponding get_all_* tool if available. - When asked to send a message, infer the user’s intended communication channel using contextual clues such as prior conversations. If no such information is available, default to using the ’ message’ related tool. 
+
+In contrast, for queries that are incomplete or lack nec-essary information, the agent is guided to engage across multiple turns, asking for clarification rather than making assumptions. This approach ensures that the agent behaves appropriately depending on the completeness and context of the user request. 
+
+Listing 3. Multi-Turn Scenario Prompt Add-ons 
+
+- Don’t make assumptions about what values to plug into functions. - Ask for clarification if a user request is ambiguous. 
+
+C.2. Available Tools 
+
+ASTRA-bench provides agents with 27 tools spanning six personal information management domains. Each domain includes both retrieval tools (prefixed with search or 
+
+get all ) and action tools for creating, modifying, or removing entities: • Contact (5 tools): search contacts ,
+
+get all contacts , add contact ,
+
+modify contact , remove contact 
+
+• Calendar (5 tools): search calendar events ,
+
+get all calendars ,
+
+create calendar event ,
+
+modify calendar event ,
+
+remove calendar event 
+
+• Email (5 tools): search emails ,
+
+get all emails , send email ,
+
+modify draft email ,
+
+remove email or thread 
+
+• Messaging (4 tools): search messages ,
+
+get all messages , send message ,
+
+remove message or conversation 
+
+15 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+• WhatsApp (4 tools): 
+
+search whatsapp messages ,
+
+get all whatsapp messages ,
+
+send whatsapp message ,
+
+remove whatsapp message or conversation 
+
+• Phone Call (4 tools): search phonecall logs ,
+
+get all phone calls ,
+
+create outgoing call ,
+
+remove phone call logs 
+
+This tool design reflects real-world personal assistant ca-pabilities, requiring agents to retrieve relevant information before performing actions—mirroring how users interact with their devices through multi-step, cross-domain work-flows. 
+
+C.3. Evaluation Methodology in Details 
+
+An illustration of our evaluation methods are presented in Figure S2. 
+
+Verifiable Measures: Milestones and Minefields. Each scenario is annotated with intermediate, verifiable mile-stones that capture critical fact-grounded sub-goals (e.g., information retrieval, payload generation, and response quality). These milestones are evaluated using determin-istic, rule-based criteria over tool traces and system state snapshots, enabling fine-grained diagnostics and avoiding all-or-nothing reward signals. This rule-based method builds on the Milestones & Minefields framework (Lu et al., 2024), where key actions must occur (milestones) or be avoided (minefields) during task execution. For each scenario, milestones are structured as a directed acyclic graph (DAG) based on temporal dependencies, de-noted GM + (VM + , E M + ). The average similarity score 
+
+SMilestones is computed accordingly. We extend this with high-resolution column-level similarity metrics to evaluate retrieval accuracy, goal alignment, response quality, and payload correctness. Similarly, Minefields are represented as a DAG, GM − (VM − , E M − ), with a corresponding sim-ilarity score SMinefields . Any violation of minefields—such as incorrectly removing calendar events—sets the overall rule-based score to zero, even if all milestones are satisfied (Figure S2). The overall rule-based score is then calculated as: 
+
+SRule-Based = SMilestones × 1[SMinefields = 0] (2) 
+
+LLM-Based Evaluators. In parallel, we employ rubric-guided LLM judges that assess agent performance using the same observable evidence, together with human-authored evaluation artifacts (e.g., explicit success conditions, refer-ence rationales and related personal context). These LLM-based evaluators are intentionally decoupled from the rule-based metrics and capture complementary, higher-level sig-nals such as conversational efficiency, robustness to hallu-cination, and other implicit aspects of agent behavior. We evaluate task performance along five dimensions: Task Com-pletion , Tool Usage , Information Retrieval , Conversation Effectiveness and No Hallucination , yielding a numerical score from 0 to 2, with 2 as a perfect and reasoning. This method enables more nuanced assessment, capturing sub-tleties in reasoning and semantic correctness that rule-based metrics may miss. 
+
+Comparative Perspective. Milestone-based evaluation is precise and reproducible but rigid—penalizing any rule violation, and is not evaluating task efficiency. Also, when it comes to evaluate open-ended generation, it is using ei-ther key-word matching or Rouge-L similarity matching to expected response. In contrast, LLM judges offer more flex-ible, interpretive assessments, though potentially subject to prompt sensitivity and model bias. Despite their differences, the two approaches show strong alignment, with the ranking over different models perfectly aligned. Together, these methods provide complementary perspec-tives on assistant performance, capturing both structured success criteria and broader reasoning quality across diverse tasks and interaction complexities. 
+
+## D. Additional Results and Analysis 
+
+D.1. Metrics by Complexity Trenches 
+
+Figure S3 reports mean LLM-judge scores across five eval-uation axes: Task Completion, Tool Call Accuracy, Infor-mation Retrieval, Conversation Efficiency, and No Hallu-cination, stratified by functional, referential, and informa-tional complexity at three difficulty levels (low, moderate, high). Results are shown for all evaluated models and re-veal systematic performance degradation as task complexity increases, with varying sensitivity across axes and model families. 
+
+D.2. Model Performance under Challenging Settings 
+
+To assess model robustness under degraded inputs, we eval-uate performance in two challenging settings: insufficient context and misinformation. Table S3 summarizes the im-pact of challenging scenarios on model performance using two representative evaluation metrics: Task Completion and No Hallucination. For each model, we report mean scores under standard conditions (“No Challenge”) and un-der insufficient context or misinformation, along with the absolute performance change ( ∆). The comparison high-lights that challenging inputs primarily degrade task success, while effects on hallucination behavior are more model- and condition-dependent. Figure S4 reports mean LLM-judge scores across five evaluation axes under two challenging con-16 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context  
+
+> Figure S2. Evaluation Strategy Review
+
+ditions: misinformation and insufficient context. For each condition, results are shown for all evaluated models across the same evaluation axes as in Figure S3. These settings probe model robustness when inputs contain misleading signals or omit required information, revealing axis-specific and model-dependent performance degradation. 
+
+D.3. LLM judges vs Verifiable Milestones 
+
+LLM judges, while strong at semantic understanding, ex-hibit systematic biases: penalizing appropriate clarification behavior, requiring exact textual matches, and imposing for-mat requirements incompatible with the evaluation context. Milestone evaluation provides complementary strengths in determinism, tool usage verification, and resistance to these stylistic biases. 
+
+## E. Multilingual User Queries 
+
+We convert the ASTRA-bench (Dawei Shen related scenar-ios) to different languages to examine LLMs’ multilingual reasoning capabilities in terms of tool-use and task com-pletion. To emulate the realistic settings, system prompts are still in en US, making this task as a more challenging mix-code reasoning task. Context data, user queries, and expected responses are machine translated to five languages: 1) es ES, 2) de DE, 3) fr FR, 4) ja JP, and 5) zh CN. We store entity names, emails, phone numbers, and etc as well as some previously translated phrases in a mapping table to make sure the consistency of the translated data. Table S4 presents a representative set of annotator-authored plausible user queries alongside their corre-sponding machine-translated versions in multiple target languages. Analysis based on Dawei Shen scenarios. The languages selected for our multilingual analysis in-clude es ES (Spanish–Spain), de DE (German–Germany), 
+
+fr FR (French–France), ja JP (Japanese), and zh CN 
+
+(Simplified Chinese). The results in Table S5 highlight notable disparities in mul-tilingual performance across LLMs. GPT-4o and Claude 3.7 Sonnet demonstrate stronger multilingual robustness, showing smaller average degradation from English (en US) to other locales. In contrast, GPT-4o-mini and Claude 3.5 Haiku suffer larger degradations—especially in Japanese (ja JP) and Spanish (es ES). DeepSeek-v3 shows promis-ing overall stability, though with noticeable drops in East Asian languages. Across the board, Japanese (ja JP) and Chinese (zh CN) consistently show the largest degradation gaps, underscoring ongoing challenges in CJK locale gener-alization. GPT-o3 still leads in absolute en US performance, but newer models like GPT-4o and Claude 3.7 better balance quality and multilingual consistency. 17 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+Figure S3. LLM-judge evaluation across complexity regimes 
+
+18 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+Figure S4. LLM-judge results on challenging task conditions. 
+
+19 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+Table S3. Impact of challenging scenarios on model performance                                                                                                                                                                            
+
+> NTask Completion No Hallucination Model Challenge No Challenge With Challenge No Challenge With Challenge Impact (∆)No Challenge With Challenge Impact (∆)GPT-o3 Insufficient Context 2396 17 0.895 0.706 0.189 0.967 0.941 0.026 GPT-o3 Misinformation 2376 37 0.895 0.811 0.084 0.967 0.946 0.021 GPT-4.1 Insufficient Context 2396 17 0.810 0.647 0.163 0.936 0.853 0.083 GPT-4.1 Misinformation 2376 37 0.812 0.581 0.231 0.937 0.865 0.072 Claude 4.5 Opus Insufficient Context 2396 17 0.919 0.765 0.155 0.974 0.941 0.033 Claude 4.5 Opus Misinformation 2376 37 0.919 0.892 0.027 0.974 0.959 0.014 Claude 4.5 Haiku Insufficient Context 2396 17 0.790 0.735 0.055 0.908 0.941 -0.033 Claude 4.5 Haiku Misinformation 2376 37 0.791 0.676 0.116 0.910 0.811 0.099 DeepSeek V3.2 Insufficient Context 2396 17 0.921 0.676 0.244 0.979 0.941 0.038 DeepSeek V3.2 Misinformation 2376 37 0.920 0.838 0.082 0.979 0.946 0.033 GLM V4.6 Insufficient Context 2396 17 0.910 0.500 0.410 0.973 1.000 -0.027 GLM V4.6 Misinformation 2376 37 0.910 0.743 0.166 0.973 0.932 0.041 Qwen 30b Insufficient Context 2396 17 0.680 0.529 0.150 0.925 0.912 0.013 Qwen 30b Misinformation 2376 37 0.682 0.446 0.236 0.924 0.959 -0.035 Qwen 30b Instruct Insufficient Context 2396 17 0.699 0.559 0.140 0.867 0.853 0.014 Qwen 30b Instruct Misinformation 2376 37 0.701 0.473 0.228 0.870 0.649 0.221 Qwen 235b Insufficient Context 2396 17 0.712 0.735 -0.024 0.922 0.971 -0.049 Qwen 235b Misinformation 2376 37 0.715 0.514 0.201 0.923 0.878 0.044
+
+User Query Translated Query (by locale) 
+
+Move the meeting I have on my calendar for Wednesday the 4th of December at 10:00 to 11:00. 
+
+es ES : Mueve la reuni ´on que tengo en mi calendario para el mi ´ercoles 4 de diciembre de 10:00 a 11:00. 
+
+de DE : Verschiebe das Meeting, das ich in meinem Kalender f ¨ur Mittwoch, den 4. Dezember um 10:00 Uhr habe, auf 11:00 Uhr. 
+
+fr FR : D ´eplacez la r ´eunion que j’ai sur mon calendrier du mercredi 4 d´ ecembre de 10h00 ` a 11h00. 
+
+ja JP : 12 月4日水曜日のカレンダ ーにある 会議 を10:00 から 11:00 に
+
+変更してください 。
+
+zh CN : 将我日历上12 月4日星期三的会议从10:00 改到11:00 。
+
+I need another meeting about the virtual assistant project at the same time next week. 
+
+es ES : Necesito otra reuni ´on sobre el proyecto del asistente virtual a la misma hora la pr´ oxima semana. 
+
+de DE : Ich ben ¨otige n ¨achste Woche zur selben Zeit ein weiteres Meeting zum Projekt f¨ ur virtuelle Assistenten. 
+
+fr FR : J’ai besoin d’une autre r ´eunion au sujet du projet d’assistant virtuel `a la mˆ eme heure la semaine prochaine. 
+
+ja JP : 来週の同じ時間にバーチャルアシスタントプロジェクト についてもう 一度会議 が必要です 。
+
+zh CN : 我需要在下周同 一时间再安排一次关于虚拟助手项目的 会
+
+议。
+
+Create a new cycling trip event at the usual time on Sunday with my cycling friend. 
+
+es ES : Crea un nuevo evento de viaje de ciclismo a la hora habitual el domingo con mi amigo de ciclismo. 
+
+de DE : Erstelle am Sonntag zur ¨ublichen Zeit ein neues Radfahren-Trip-Event mit meinem Radfahren-Freund. 
+
+fr FR : Cr ´eer un nouvel ´ev ´enement de sortie cyclisme `a l’heure habituelle le dimanche avec mon ami de cyclisme. 
+
+ja JP : 日曜日のいつもの 時間にサイクリング 仲間と新しい サイク リング の旅行イベント を作成する 。
+
+zh CN : 在周日的惯常时间，与我的骑自行车朋友创建一个 新的骑自
+
+行车旅行活动。
+
+How long is my event today? 
+
+es ES : ¿Cu´ anto tiempo dura mi evento hoy? 
+
+de DE : Wie lange dauert meine Veranstaltung heute? 
+
+fr FR : Quelle est la dur´ ee de mon ´ ev´ enement aujourd’hui ? 
+
+ja JP : 今日のイベント はどのくらいの 長さですか ？
+
+zh CN : 今天我的活动持续多长时间？
+
+Table S4. User queries and their translations in multiple languages. 
+
+20 ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context 
+
+Model en US (Base) es ES de DE fr FR ja JP zh CN Acc. delta Acc. delta Acc. delta Acc. delta Acc. delta 
+
+GPT-o3 0.8309 0.7412 -8.97% 0.7481 -8.28% 0.7065 -12.44% 0.6842 -14.67% 0.7023 -12.86% GPT-4o 0.7865 0.7055 -8.10% 0.7235 -6.30% 0.7032 -8.33% 0.6326 -15.39% 0.6690 -11.75% GPT-4o-mini 0.7468 0.5913 -15.55% 0.6493 -9.75% 0.6678 -7.90% 0.6028 -14.40% 0.6208 -12.60% Claude 3.7 Sonnet 0.7876 0.6910 -9.66% 0.7301 -5.75% 0.6998 -8.78% 0.6666 -12.10% 0.7044 -8.32% Claude 3.5 Haiku 0.7138 0.5697 -14.41% 0.6840 -2.98% 0.6271 -8.67% 0.5658 -14.80% 0.6220 -9.18% DeepSeek-v3 0.7458 0.6617 -8.41% 0.6797 -6.61% 0.6923 -5.35% 0.5812 -16.46% 0.5997 -14.61% 
+
+Table S5. Macro accuracy and absolute degradation (delta) across locales, with en US as baseline. 
+
+21

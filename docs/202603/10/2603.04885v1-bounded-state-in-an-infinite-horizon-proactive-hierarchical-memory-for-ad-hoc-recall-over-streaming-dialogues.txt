@@ -1,0 +1,537 @@
+Title: Bounded State in an Infinite Horizon: Proactive Hierarchical Memory for Ad-Hoc Recall over Streaming Dialogues
+
+URL Source: https://arxiv.org/pdf/2603.04885v1
+
+Published Time: Fri, 06 Mar 2026 01:37:44 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# Bounded State in an Infinite Horizon: Proactive Hierarchical Memory for Ad-Hoc Recall over Streaming Dialogues 
+
+Bingbing Wang 1 2 Jing Li 1 Ruifeng Xu 2
+
+## Abstract 
+
+Real-world dialogue usually unfolds as an infinite stream. It thus requires bounded-state memory mechanisms to operate within an infinite hori-zon. However, existing read-then-think memory is fundamentally misaligned with this setting, as it cannot support ad-hoc memory recall while streams unfold. To explore this challenge, we introduce STEM-Bench , the first benchmark for 
+
+ST reaming Evaluation of Memory. It comprises over 14K QA pairs in dialogue streams that assess perception fidelity, temporal reasoning, and global awareness under infinite-horizon constraints. The preliminary analysis on STEM-Bench indicates a critical fidelity-efficiency dilemma : retrieval-based methods use fragment context, while full-context models incur unbounded latency. To re-solve this, we propose ProStream , a proactive hierarchical memory framework for streaming di-alogues. It enables ad-hoc memory recall on de-mand by reasoning over continuous streams with multi-granular distillation. Moreover, it employs Adaptive Spatiotemporal Optimization to dynami-cally optimize retention based on expected utility. It enables a bounded knowledge state for lower inference latency without sacrificing reasoning fidelity. Experiments show that ProStream outper-forms baselines in both accuracy and efficiency. 
+
+## 1. Introduction 
+
+Large language models (LLMs) have largely advanced dia-logue systems in various applications, e.g., customer service (Li et al., 2025) and personalized education (Kasneci et al., 2023). They usually adopt a long-term memory mecha-nism that enables systems to maintain continuity and reason 
+
+> 1
+
+Department of Computing, The Hong Kong Polytechnic University, Hong Kong, China 2The School of Computer Sci-ence and Technology, Harbin Institute of Technology (Shen-zhen), Shenzhen, Country. Correspondence to: Jing Li <jing-amelia.li@polyu.edu.hk >.
+
+Preprint. March 6, 2026. 
+
+Figure 1. Comparison of the read-then-think paradigm (left) and the streaming memory paradigm (right) based on TBBT dialogues. 
+
+across longitudinal sessions (Zhang et al., 2024; Packer et al., 2023). It has drawn significant attention, with many studies on memory retention and contextual reasoning (Ma-harana et al., 2024; Wu et al., 2024a; Pakhomov et al., 2025). Despite this progress, most memory mechanisms continue to operate under a read-then-think paradigm, which pre-supposes a static, fully accessible context. This paradigm is fundamentally misaligned with the practical system for 
+
+streaming dialogues, where ad-hoc memory recall may oc-cur anytime as the dialogue unfolds. As shown in Figure 1 (Left), full-context attention incurs prohibitive computa-tional costs and unbounded latency growth; moreover, noise from unorganized contexts can lead to reasoning failures. Consequently, we explore the streaming memory paradigm 
+
+illustrated in Figure 1 (Right). It requires memory to operate as a bounded state within an infinite horizon, reflecting the reality that dialogue unfolds as an infinite stream. To the best of our knowledge, our study is the first to explore ad-hoc memory recall in streaming dialogues, which defines the ability to retrieve specific historical context on-demand to satisfy immediate reasoning needs. To benchmark this pi-lot study, we introduce STEM-Bench , the first benchmark for ST reaming Evaluation of Memory. Based on Long-DialQA (Kim et al., 2024), we convert textual dialogues 1
+
+> arXiv:2603.04885v1 [cs.AI] 5 Mar 2026 Submission and Formatting Instructions for ICML 2026
+
+into synthesized audio to simulate real-world streaming di-alogue scenarios. STEM-Bench comprises 14k QA pairs to probe three core memory capabilities for ad-hoc recall: high-fidelity perception, structural logical reasoning, and dynamic global awareness. Our preliminary analysis of STEM-Bench uncovers a critical fidelity-efficiency dilemma 
+
+challenging current methods. Standard memory based on retrieval approaches fragment context, leading to reasoning degradation. Conversely, models attempting to maintain full context suffer from unbounded latency. These findings underscore that high performance in infinite streams cannot be achieved by reactive context scanning; it necessitates a paradigm shift toward proactive memory organization. To resolve this dilemma, we propose ProStream , a novel framework of proactive hierarchical memory within stream-ing dialogues. As depicted in Figure 1 (Right), ProStream transforms memory into an active, bounded state machine. By synergizing proactive semantic buffering with hierarchi-cal, multi-granular distillation, it facilitates ad-hoc recall whenever demanded by reasoning. Moreover, it employs Adaptive Spatiotemporal Optimization to dynamically opti-mize information retention based on expected utility. Con-sequently, it maintains a bounded knowledge state for lower inference latency without sacrificing the reasoning fidelity. To evaluate ProStream, we first conduct a comprehen-sive comparison on STEM-Bench against non-trivial base-line memory mechanisms. The results demonstrate that ProStream achieves state-of-the-art performance in both ac-curacy and efficiency, with ablation studies confirming that all modules contribute positively. Furthermore, our quanti-tative analysis indicates that ProStream scales consistently well with LLMs of varying sizes, though it may render higher complexity in certain contexts. Finally, we provide a qualitative analysis to offer insights into the model’s under-lying strengths and remaining limitations. In summary, our main contributions are as follows: • We present the pilot study of ad-hoc memory recall in dialogue streams with STEM-Bench , the first bench-mark to evaluate perception, reasoning, and global awareness under strict infinite-horizon constraints. • We propose ProStream , a novel framework imple-menting proactive hierarchical memory for streaming dialogues. Leveraging adaptive spatiotemporal opti-mization to prioritize information with expected utility, it constructs a bounded knowledge topology for ad-hoc, reasoning-demanding recall in continuous streams. • Extensive evaluations show ProStream outperforms state-of-the-art baselines in accuracy and efficiency by large margins. Crucially, it replaces the quadratic com-plexity of existing methods with much lower inference latency, enabling scalable real-time deployment. 
+
+## 2. Related Work 
+
+Dialogue Benchmarks for Long-Term Memory. STEM-Bench falls within this category. This line of research re-flects a progressive shift from traditional single-turn mod-eling (Budzianowski et al., 2018; Wei et al., 2018) toward long-term dialogue understanding. Early efforts evaluated personalized response generation from extended chat histo-ries (Xu et al., 2022a;b). To quantify memory accuracy, sub-sequent benchmarks adopted the Question Answering (QA) paradigm. Representative studies include MemoryBank (Zhong et al., 2024) (multi-day histories with 194 probing questions), LoCoMo (Maharana et al., 2024) (single-hop to adversarial reasoning over 50 long-term dialogues), and PerLTQA (Du et al., 2024) (over 8,000 questions spanning world knowledge, social relationships, and events). Re-cently, LongDialQA (Kim et al., 2024) introduced response latency constraints to penalize slow systems, while Long-MemEval (Wu et al., 2024a) and ConvoMem (Pakhomov et al., 2025) evaluated reasoning, knowledge updates, and abstention capabilities across tens of thousands of QA pairs. Despite this, existing benchmarks adopt a static, read-and-think paradigm diverging from real-world dialogue streams with dynamic, ever-growing contexts. In contrast, STEM-Bench explores streaming memory to facilitate ad-hoc recall whenever reasoning demands it within dialogue streams. 
+
+Methods of Long-Term Memory. ProStream is in line with the related research that focuses on equipping agents with long-term memory. Some work employs context win-dow expansion to directly process extensive histories (Fu et al., 2024). However, it incurs prohibitive computational costs and suffers from the “lost-in-the-middle” phenomenon (Liu et al., 2024b). Others use differentiable memory ar-chitectures to integrate learnable memory modules into the model (Wang et al., 2023). The most prevalent paradigm frames memory as context compression, condensing histo-ries into compact representations, whether as internal states (Chevalier et al., 2023), discrete tokens (Xu et al., 2023), or retrievable segments via Retrieval-Augmented Generation (RAG) (Jimenez Gutierrez et al., 2024). Recent research has advanced towards structured memory. LiCoMemory (Huang et al., 2025) and SGMem (Wu et al., 2025) lever-age hierarchical or sentence-level graph indexing to capture multi-granularity associations. RMM (Tan et al., 2025) and MemGAS (Xu et al., 2025a), incorporate online rein-forcement learning and adaptive retrieval to refine memory selection. Similarly, event-centric approaches (Zhou, 2025) ground history in neo-Davidsonian semantics. However, these methods remain largely retrieval-centric and batch-oriented, violating streaming constraints that necessitate ad-hoc memory recall. Effectively addressing this, we re-frame memory as online hierarchical state maintenance, 2Submission and Formatting Instructions for ICML 2026 
+
+utilizing proactive spatiotemporal compression to ensure high-fidelity retention with lower inference latency. 
+
+## 3. Our STEM-Bench 
+
+3.1. Problem Formulation 
+
+STEM-Bench formalizes dialogue evaluation as an incre-mental state evolution problem over an infinite input stream. Let S = {I1, I 2, . . . } denote a unbounded input sequence, where each It is either an interaction unit Ut = {st, l t}
+
+consisting of a speak identity st and audio content lt, or a question probe Pt = {qt, y t} with a query qt issued at time 
+
+t and the corresponding ground-truth answer yt. Under the streaming constraint, the model maintains a bounded inter-nal memory state Mt that is updated online via Mt−1 and 
+
+Ut. When a probe occurs, the model produces an answer 
+
+at based on Mt and qt; the objective is to maximize the alignment between the generated at and the ground truth yt.
+
+3.2. STEM-Bench Construction 
+
+Grounded in cognitive and computational theories, we cu-rate STEM-Bench to probe three fundamental capabilities: 
+
+(1) High-Fidelity Perception (HFP) quantifies atomic de-tail retention amidst noise. It specifically tests resilience against the Lost-in-the-Middle phenomenon (Liu et al., 2024a) and compression-induced hallucinations via Single-hop and Adversarial tasks . (2) Structural Logical Rea-soning (SLR) assesses the capacity to bridge fragmented events across disparate timestamps. Inspired by Composi-tional Generalization (Press et al., 2023), we employ Multi-hop and Comparative tasks to interrogate the hierarchi-cal synthesis of evidence, distinguishing deep reasoning from shallow associative retrieval. (3) Dynamic Global Awareness (DGA) concerns the maintenance of evolving statistical states and temporal causality without backtrack-ing. Inspired by State Space Models (Gu & Dao, 2024), it utilizes Aggregative and Temporal tasks to probe the abil-ity to counteract stateless fragility, requiring genuine online state evolution for frequency tracking and sequencing. 
+
+3.3. Data Construction Pipeline 
+
+We implemented a pipeline to transform textual data into a streaming benchmark with audio dialogues, as depicted in Figure 2. The process begins with audio synthesis, convert-ing LongDialQA (Kim et al., 2024) into realistic audio via ChatTTS 1, followed by semantic clustering to enforce strict causal linearity across sessions. Subsequently, QA genera-tion phase produces constraint-aware triplets (Question, An-swer, Evidence) under a strict No-Look-Ahead Constraint ,ensuring that for any trigger turn Tcurr , all supporting ev-                                                 
+
+> 1https://github.com/2noise/ChatTTS
+> Table 1. Statistics of the STEM-Bench dataset with samples exam-ining HFP, SLR, and DGA. TBBT: The Big Bang Theory.
+> Category TBBT Friends The Office Total
+> High-Fidelity Perception (HFP)
+> Single-hop 1,480 1,583 3,229 6,292
+> Adversarial 549 547 767 1,863
+> Open-domain 769 808 1,170 2,747
+> Structural Logical Reasoning (SLR)
+> Multi-hop 475 476 367 1,318
+> Comparative 408 408 298 1,114
+> Dynamic Global Awareness (DGA)
+> Aggregative 282 330 219 831
+> Temporal 284 301 188 773 Total QAs 4,247 4,453 6,238 14,938
+> Total Topics 1,370 1,400 3,283 6,053
+> Total Utterances 18,617 18,164 18,892 55,673
+> Avg. Utterances / Topic 13.59 12.97 5.75 9.20
+
+idence Tev pertains exclusively to the past Tev < T curr .Finally, data integrity is guaranteed through a hybrid verifi-cation protocol. Following automated rule-based auditing, we recruited three domain experts to validate logical con-sistency on a random subsample. This review yielded an Inter-Annotator Agreement (Cohen’s κ = 0 .74 ) (Cohen, 1960), showing good agreements and reliable annotations. 
+
+3.4. Dataset Statistics 
+
+Table 1 presents statistics for STEM-Bench, comprising 14,938 QA pairs grounded in 55,673 utterances and 6,053 semantic topics across three domains. The distribution is meticulously stratified to probe diverse memory faculties. High-Fidelity Perception forms the foundation with over 6,200 Single-hop and 2,747 Open-domain queries, crucially augmented by 1,863 Adversarial instances designed to ex-pose compression-induced hallucinations. To challenge cog-nitive depth beyond simple retrieval, Structural Logical Rea-soning incorporates 2,432 Multi-hop and Comparative tasks necessitating hierarchical synthesis, while Dynamic Global Awareness forces models to overcome stateless fragility through over 1,600 Aggregative and Temporal instances that demand genuine online state evolution for frequency tracking and chronological sequencing. 
+
+3.5. Evaluation Metric 
+
+We adopt a holistic evaluation protocol comprising perfor-mance and efficiency metrics. We utilize BLEU-4 ( B-4 ), ROUGE-L ( R-L ), and BERTScore ( B-S ) for lexical and se-mantic alignment, while Key Entity Matching ( KEM ) and Evidence Similarity ( Evid. ) quantify strictly factual pre-cision. Furthermore, we also incorporate Gemini-2.5-Pro (Gem ) as an expert judge to evaluate answer correctness and coherence. Efficiency is measured by average inference latency ( Time in seconds) to verify real-time feasibility. 3Submission and Formatting Instructions for ICML 2026  
+
+> Figure 2. Overview of STEM-Bench Benchmark Curation. (a) Taxonomy of cognitive dimensions and tasks, where QA pairs are categorized by cognitive challenges (HFP, SLR, DGA) and distinct task types. (b) Data construction pipeline of the STEM-Bench dataset.
+
+## 4. Preliminary Analysis 
+
+To identify principled design choices for streaming archi-tectures, we contrast two representative paradigms on our long-context benchmarks: a Full-Context Oracle , which ac-cesses the complete dialogue history, and a Standard RAG 
+
+baseline utilizing vector-similarity retrieval. As shown in Figure3 (Top), the Full-Context Oracle consistently main-tains higher reasoning fidelity, with its average performance metric (dashed purple line) significantly surpassing that of RAG (dashed blue line). The dense distribution of low-accuracy points for RAG, regardless of evidence distance, suggests that retrieval may fragment contexts, making it difficult to capture the global dependencies required for complete reasoning chains. Conversely, Figure 3 (Bottom) exposes the critical fidelity-efficiency dilemma . While the Full-Context approach offers superior accuracy, its latency grows unboundedly and exhibits high variance as dialogue length increases, rendering it intractable for real-time inter-action. In contrast, RAG maintains low, stable latency but at the cost of substantial context degradation. This tension necessitates a paradigm shift: an optimal streaming memory must approximate the Oracle’s reasoning precision within a strictly bounded computational budget . Motivated by this objective, we introduce ProStream , a framework specifi-cally engineered to resolve this dilemma through proactive state maintenance, as detailed in the subsequent section. 
+
+## 5. The ProStream Framework 
+
+As illustrated in Figure 4, ProStream reformulates memory maintenance as a bounded state evolution process, trans-forming infinite input streams into a finite knowledge topol-ogy. This pipeline, summarized in Algorithm 1, operates in four stages: Proactive Semantic Stream Perception segments continuous raw signals into discrete semantic blocks; Hier-archical Multi-Granular Distillation structures these blocks  
+
+> Figure 3. Preliminary analysis of RAG and full-context perfor-mance. (Top) The average accuracy of all performance metrics across evidence distances. (Bottom) Inference latency over dia-logue turns. The dashed lines indicate the overall average results.
+
+into a multi-layered tree topology; Adaptive Spatiotemporal Optimization dynamically maximizes information density under strict capacity constraints; Probabilistic Evidence-Grounded Reasoning synthesizes these memory states with immediate contexts for accurate response generation. 
+
+5.1. Proactive Semantic Stream Perception 
+
+Updating global memory M at every single turn incurs un-necessary computational overhead and risks fragmenting 4Submission and Formatting Instructions for ICML 2026    
+
+> Figure 4. Overview of our ProStream framework with four components discussed in turn from §5.1 to §5.4.
+
+coherent contexts. To address this, we introduce the Short-Term Sensing Buffer (STSB) B. Functionally, B accumu-lates an incoming stream of interaction units Ut = {st, l t}.To capture both linguistic content and speaker dynamics, we first transcribe the audio component lt via Whisper ASR fASR (Radford et al., 2023) and concatenate it with the speaker identity st to form a composite textual unit 
+
+xt = [ st; fASR (lt)] . We formulate stream segmentation as an online boundary detection problem. Specifically, for each incoming utterance xt, we compute its dense representation 
+
+vt = fEnc (xt) with an encoder fEnc (·) and monitor seman-tic continuity via cosine similarity ψt = cos( vt, vprev ) with the preceding unit’s embedding. Once this local coherence drops below a drift threshold τdrift or B reaches capacity, the accumulated sequence is consolidated into a semantic block 
+
+Tblock , ready for the following hierarchical distillation ( §5.2). Here, we further retain a leading context window of size 
+
+WSTSB from B for the subsequent cycle, thereby preserving boundary-spanning dependencies during the transition. 
+
+5.2. Hierarchical Multi-Granular Distillation 
+
+Recall the analysis results from Figure 3 implying the ne-cessity for organized memory. Inspired by that, the unstruc-tured semantic block Tblock is distilled into a hierarchical tree structure H. This topology relies on three semantic layers: 1) Scene c for coarse-grained thematic clustering; 2) 
+
+Event e for temporal context segmentation; and (3) Atomic Memory Unit (AMU) o for fine-grained factual retention. Specifically, the distillation process transforms the input semantic block Tblock into this structure through a dual-path mechanism. On the generative front, we employ a unified instruction-tuned model fθ (·, ·) (Wu et al., 2024b) to per-form recursive summarization. Specifically, conditioned on a summarization instruction ρevt , the model first distills the block into a textual event summary e = fθ (Tblock , ρ evt ).This summary is subsequently abstracted into a higher-level scene category c = fθ (e, ρ scn ) using a classification prompt 
+
+ρscn . In parallel, to populate the atomic layer, we utilize GLiNER (Zaratiana et al., 2024) to parse the block into rela-tional triplets ϵ ∈ {E sub , R, Eobj } for a subject and an object. To further map these triplets into the tree structure, we treat the discrete subject and object entities as candidate AMU nodes o. Each candidate o is encoded via fEnc (·) into vo. o
+
+is attached as a child node under the corresponding Event ej
+
+only if it satisfies a strict novelty check against the existing atomic node set Oamu : max o′∈H cos( vo, v′
+
+> o
+
+) < θ concept for lightweight structure. Finally, the relation R is stored as a contextual attribute of these nodes, preserving the semantic dependencies of the original triplet to reconstruct evidence. 
+
+5.3. Adaptive Spatiotemporal Optimization 
+
+Streaming dialogues present a challenge of Online Budgeted Learning. As utterances arrive, the memory topology H
+
+must self-evolve to optimize efficiency for expected utility. Here, we maximize semantic retention under a strict capac-ity constraint Tmax . We formalize this process as a Recall Probability Maximization problem, aiming to minimize the expected regret of discarding retrieval-critical information. 
+
+Probabilistic Utility Formulation. Drawing on the Ratio-nal Analysis of Memory (Anderson, 2013), we posit that the optimal memory H∗ at time t contains nodes with the high-est posterior of future need. We model the “need probability” 
+
+p(v | h<t ) of a node v on the memory tree ( §5.2), spanning Scenes c, Events e, and AMUs o, given history h<t as a time-decaying Poisson process. We define the utility scalar 
+
+uv,t as a surrogate for the log-odds of this probability: 
+
+uv,t = α · log( fv,t + 1) 
+
+| {z }
+
+> Frequency Prior
+
++ β · exp 
+
+
+
+− ∆tv
+
+τ
+
+| {z }
+
+> Temporal Drift
+
+, (1) where fv,t denotes the cumulative access frequency, ∆tv is 5Submission and Formatting Instructions for ICML 2026 
+
+the recency, τ is the characteristic decay scale, and α, β are hyperparameters balancing the two terms. 
+
+Optimization Objective . Let st ∈ { 0, 1}|H t| be the state vector indicating retention at time t. The classic formula-tion assumes static values, but in our stream, the value of information decays. We define our objective as maximizing the cumulative discounted information gain over an infinite horizon subject to a dynamic capacity constraint: 
+
+max 
+
+> {st}∞
+> t=1
+> ∞
+
+X
+
+> t=1
+
+γt X
+
+> v∈H t
+
+sv,t · uv,t 
+
+s.t. X
+
+> v∈H t
+
+sv,t · cv ≤ T max , ∀t, 
+
+(2) where γ ∈ (0 , 1) is a discount factor and cv is the token cost. This is an instance of the Online Knapsack Problem with Decaying Value, known to be NP-hard (Hartmanis, 1982). 
+
+The ProStream Policy. We approximate the global op-timum via a Greedy Marginal-Utility Policy π. When the budget constraint is violated P cv > Tmax , π restores va-lidity through a synergistic three-stage process. First, it performs Least-Regret Pruning by iteratively discarding the node v∗ = arg min v∈H t (uv,t /c v ) with the minimal marginal utility density. This greedy heuristic theoretically offers a (1 − 1/e )-approximation guarantee assuming mono-tone submodularity of the information gain. Second, to compress the feature space without semantic loss, the policy applies Semantic Merging , collapsing node pairs {vi, v j }
+
+into a single centroid vnew , whenever their latent distance 
+
+d(vi, vj ) < θ sim . Finally, to ensure topological consistency, 
+
+Cascading Abstraction recursively prunes any parent node if it loses all supporting leaf nodes, thereby preventing dan-gling abstractions and maintaining a coherent hierarchy. 
+
+5.4. Probabilistic Evidence-Grounded Generation 
+
+To generate accurate responses, ProStream synthesizes a uni-fied context K = {B , Mpend , Mtree }, where B is the STSB, 
+
+Mpend acts as an intermediate buffer for distilled yet unfor-malized semantic representations, and Mtree comprises the top-k semantic paths retrieved from the hierarchical H.
+
+Hierarchical Retrieval . To construct Mtree , we employ a top-down traversal strategy. We first encode the ad-hoc query q into a dense vector vq = fEnc (q). Using this repre-sentation, the model recursively prunes irrelevant branches starting from the Scene level, drilling down to Event sum-maries and finally to AMUs . To ensure that retrieved evi-dence is both semantically relevant and structurally signif-icant, we compute a composite relevance score for each candidate AMU o: S(o) = cos( vq , vo) · uo,t , where uo,t 
+
+is the time-variant utility weight defined in Eq. 1. This mechanism effectively filters out low-utility noise to yield high-confidence evidence paths for memory recall. 
+
+Algorithm 1 ProStream Pipeline 
+
+1: Input: Stream S, Budget Tmax , Encoder fEnc , Generator fθ ,ASR Model fASR .2: Param: Instructions ρevt , ρ scn ; Thresholds τdrift , θ concept .3: Output: Response at, Bounded Hierarchy H.4: Initialize: H ← ∅ , Buffer B ← ∅ , vprev ← 0.5: for each input It in S do 
+
+6: if It is Interaction Unit Ut = {st, l t} then 
+
+7: // 1. Perception (§5.1) 
+
+8: Transcribe: Form xt ← [st; fASR (lt)] .9: Embed: Encode vt ← fEnc (xt); ψt ← cos( vt, vprev ).10: B ← B ∪ { xt}; vprev ← vt.11: if ψt < τ drift or IsFull( B) then 
+
+12: Tblock ← Flush (B) (retaining last WSTSB ). 13: // 2. Distillation (§5.2) 
+
+14: Gen: e ← fθ (Tblock , ρ evt ); c ← fθ (e, ρ scn ).15: Struct: Extract entities ϵ from GLiNER triplets. 16: Insert: Let candidate AMU o ← fEnc (ϵ).17: Add o to H if max o′∈H cos( vo, vo′ ) < θ concept .18: // 3. Optimization (§5.3) 
+
+19: Update uv,t ← Utility (fv , ∆tv ) via Eq.1 for v ∈ H .20: while Cost (H) > Tmax do 
+
+21: v∗ ← arg min v (uv,t /c v ); Prune (v∗). 22: Merge if sim > θ sim ; Cascade empty parents. 23: end while 
+
+24: end if 
+
+25: // 4. Response Generation (§5.4) 
+
+26: else if It is Question Probe Pt = {q, y } then 
+
+27: Retrieve: Encode vq ← fEnc (q);28: Get Mtree ← Search (H, q ) using S(o) (Eq. 6). 29: Synthesize: Context K ← {B , Mpend , Mtree }.30: Generate: at ← arg max a P (a | q, K).31: end if 
+
+32: end for 
+
+Generation . Given the functional context K, the model generates the final answer sequence a by maximizing P (a |
+
+q, K), optimized via the standard autoregressive objective: 
+
+J (θ) = 
+
+> |a|
+
+X
+
+> j=1
+
+log Pθ (yj | y<j , q, K), (3) where yj denotes the j-th output token of answer a. This formulation enforces strict evidence grounding across the full memory spectrum, balancing fidelity and coherence. 
+
+## 6. Experiment 
+
+6.1. Experimental Setting Implementation Details . For Proactive Semantic Stream Perception , we set drift threshold to 0.7, buffer capacity to 5, and WSTSB to 10. In Hierarchical Multi-Granular Dis-tillation , node instantiation enforces maximal granularity, with similarity thresholds of 0.85. For Adaptive Spatiotem-poral Optimization , utility weights α = 0 .6 for frequency, 
+
+β = 0 .4 for recency. For Probabilistic Evidence-Grounded Generation , retrieval selects top-5 scenes and top-10 events per scene. The final output includes top-3 AMUs based on a 6Submission and Formatting Instructions for ICML 2026 
+
+Table 2. Main comparison results on our STEM-Bench. Best results are bolded , second best are underlined . Metrics marked with ↑
+
+indicate higher is better, while ↓ denotes lower is better. For ablations (bottom), w/o indicates without.                                                                                                                                                               
+
+> Method The Big Bang Theory Friends The Office
+> Time ↓B-4 ↑R-L ↑B-S ↑Evid. ↑KEM ↑Gem ↑Time ↓B-4 ↑R-L ↑B-S ↑Evid. ↑KEM ↑Gem ↑Time ↓B-4 ↑R-L ↑B-S ↑Evid. ↑KEM ↑Gem ↑
+> RAG 0.957 0.068 0.247 0.781 0.355 0.508 0.331 0.923 0.061 0.231 0.768 0.345 0.502 0.309 0.918 0.074 0.271 0.778 0.322 0.524 0.385 RQ-RAG 5.149 0.051 0.201 0.770 0.275 0.460 0.329 5.098 0.043 0.184 0.758 0.372 0.439 0.313 1.058 0.072 0.270 0.780 0.466 0.535 0.376 RAPTOR 0.519 0.041 0.165 0.761 0.302 0.375 0.214 0.513 0.035 0.157 0.746 0.396 0.367 0.214 0.443 0.032 0.142 0.745 0.324 0.334 0.201 Full Context 7.333 0.065 0.249 0.737 0.250 0.710 0.521 4.870 0.057 0.241 0.732 0.360 0.706 0.505 4.776 0.066 0.266 0.742 0.292 0.731 0.574
+> Summary 2.001 0.049 0.200 0.783 0.296 0.407 0.278 2.352 0.042 0.180 0.762 0.334 0.385 0.246 1.641 0.048 0.201 0.770 0.365 0.397 0.272 GraphRAG 0.997 0.069 0.246 0.788 0.417 0.479 0.341 0.950 0.055 0.227 0.775 0.460 0.465 0.309 1.231 0.055 0.223 0.779 0.420 0.433 0.311 HippoRAG2 4.231 0.046 0.176 0.742 0.481 0.480 0.263 6.539 0.041 0.165 0.742 0.529 0.479 0.249 4.404 0.040 0.169 0.740 0.499 0.458 0.270 MemoRAG 7.498 0.049 0.193 0.791 0.551 0.366 0.265 4.146 0.043 0.178 0.771 0.575 0.355 0.242 5.922 0.036 0.171 0.773 0.568 0.345 0.225 A-Mem 1.301 0.057 0.204 0.755 0.370 0.371 0.272 1.290 0.053 0.200 0.742 0.386 0.376 0.266 1.272 0.059 0.220 0.753 0.353 0.377 0.295 MemGAS 5.711 0.013 0.070 0.528 0.402 0.768 0.508 7.982 0.012 0.072 0.530 0.433 0.749 0.466 7.694 0.006 0.039 0.592 0.547 0.417 0.285
+> ProStream 0.408 0.118 0.390 0.817 0.485 0.612 0.509 0.373 0.099 0.360 0.801 0.491 0.588 0.476 0.316 0.114 0.408 0.819 0.491 0.626 0.534 -w/o B0.409 0.049 0.182 0.783 0.071 0.369 0.255 0.469 0.034 0.149 0.750 0.276 0.364 0.202 0.452 0.030 0.138 0.758 0.191 0.336 0.193 -w/o Mtree 0.400 0.116 0.382 0.810 0.463 0.607 0.500 0.318 0.097 0.304 0.703 0.480 0.581 0.466 0.319 0.110 0.402 0.817 0.484 0.620 0.526 -w/o Mpend 0.401 0.115 0.380 0.810 0.475 0.602 0.489 0.320 0.090 0.356 0.704 0.482 0.580 0.473 0.304 0.111 0.401 0.817 0.487 0.617 0.528
+
+Figure 5. Average performance metrics (left) and latency (right) of varying LLM backbones. The numbers above are the percentage improvement of ProStream over the Full-Context baseline. 
+
+composite relevance score, filtered by a minimum similarity of 0.5. Detailed configurations are deferred to Appendix B. 
+
+Baseline Methods . To ensure a comprehensive assessment, we benchmark ProStream against a diverse suite of meth-ods spanning two distinct paradigms: (1) Traditional Re-trieval and Summarization Baselines : Standard RAG, Full-Context, Rolling Summary and advanced structure-enhanced variants, including RQ-RAG (Chan et al., 2024), RAPTOR (Sarthi et al., 2024), GraphRAG (Edge et al., 2024), and HippoRAG2 (Guti ´errez et al., 2025). (2) Agentic Memory Systems : MemoRAG (Qian et al., 2025), A-Mem (Xu et al., 2025b), and MemGAS (Xu et al., 2025a). 
+
+6.2. Experimental Results Main Results . We first examine the main comparisons in terms of accuracy and efficiency. Table 2 demonstrates that ProStream attains a Pareto-optimal balance of reasoning fi-delity and latency. Crucially, it outperforms the Full-Context oracle, challenging the “more context is better” assumption by demonstrating that proactive distillation effectively mit-igates cognitive overload. While ProStream leads in high-order reasoning (Gemini) and generation quality (BLEU-4), it occasionally trails retrieval-centric baselines like Mem-oRAG in surface-level metrics, such as Evidence Similarity. This validates our design trade-off: prioritizing semantic ab-straction over fetching raw, verbatim text. By distilling sig-nals into structured hierarchies, we accept marginal losses in lexical overlap to secure superior reasoning capabilities and scalability essential for real-time streaming. 
+
+Ablation Study . Given the overall perforamnce of ProStream, we further analyze the contribution of each com-ponent of it, with results in Table 2. Eliminating the Short-Term Sensing Buffer (-w/o B) leads to catastrophic degrada-tion, underscoring its essential role in preventing contextual fragmentation and hallucinations by grounding the model in recent cues. Conversely, removing the Hierarchical Tree (-w/o Mtree ) impairs global consistency and entity track-ing, demonstrating that long-term structured retention is indispensable for cross-temporal reasoning. Pending buffer (-w/o Mpend ) proves vital as a synchronization layer, ensur-ing seamless state transitions without information gaps. 
+
+6.3. Quantitative Analysis 
+
+While §6.2 shows an overall performance gain for ProStream, we further evaluate its robustness over varying scenarios. For accuracy, we average the relevant perfor-mance metrics; latency (in seconds) measures efficiency. 
+
+Varying Backbone Scales. We start by assessing the scal-ability of ProStream by deploying it across Qwen-3B, 7B, and 14B backbones and comparing performance against the Full-Context baseline, as shown in Figure 5. The re-sults reveal a positive scaling trend, with relative accuracy gains increasing consistently with model size. This indi-7Submission and Formatting Instructions for ICML 2026   
+
+> Figure 6. Average performance metrics (left) and latency (right) comparison across varying context complexity (entropy). The lines show the data distribution, with ProStream (green) exhibiting greater polarized context complexity than Full Context (red).
+
+cates that interpreting the highly condensed and structured knowledge provided by our method requires substantial rea-soning capacity. Smaller models likely struggle to parse this dense information effectively compared to redundant raw text, whereas larger backbones possess the requisite depth to leverage the organized topology for superior reasoning. Besides, ProStream exhibits a U-shaped inference latency profile, whereas the Full-Context baseline shows a gradu-ally longer latency as the backbone scales. Interestingly, ProStream-3B is less efficient than ProStream-7B. It might be due to the overhead required to digest structured contexts outweighs the inherent efficiency gains of smaller models. 
+
+Varying Context Complexity. We further examine ProStream’s sensitivity to context complexity, quantified by GPT-2 Cross-Entropy Loss (Salazar et al., 2020). The results are in Figure 6. First, the bars show that ProStream consistently outperforms the Full-Context baseline in both accuracy and efficiency across all complexity levels. Sec-ond, the distribution lines reveal that ProStream polarizes context complexity toward extremes of either low or high entropy. It implies that structured memory may inherently complicate certain contexts. These contexts may exacerbate overhead for the smaller 3B model, resulting in its lower efficiency compared to the 7B variant (shown in Figure 5). 
+
+6.4. Qualitative Analysis Case Study. Previous discussions have shown ProStream’s overall superiority. To provide more insight into this, Fig-ure 7 provides two examples to show ProStream’s ability to rectify localized contextual deficits through hierarchi-cal memory integration. In Example (a), while the short-term buffer presents an ambiguous signal “I almost died” ,ProStream resolves this uncertainty by retrieving the precise 
+
+“tire blowout” fact from its Hierarchical Tree, implying ro-bust contextual disambiguation, while long-term evidence clarifies immediate vagueness. Similarly, Example (b) illus-trates complementary augmentation. Although the STSB alone captures only the recent “eviction” incident, cou-pling it with the retrieved long-term “insult” and “apology” 
+
+events enables the model to reconstruct the full behavioral sequence. It enables that even when immediate observa-tions are fragmentary or incomplete, the structured topology provides the necessary distal context to answer correctly, instead of struggling with fragmented contexts like RAG. 
+
+Error Analysis. Finally, our error analysis identifies two primary limitations. The first is compliance legitimacy bias, reflecting an unresolved tension between instruction follow-ing and factual fidelity; for example, the model validates a fallacious “ sole creator ” claim despite contradictory evi-dence (Appendix Figure 8a). The second is a struggle with implicit context disentanglement, where dominant semantic noise obscures subtle cues. This causes intent misattribu-tion, such as when a high-density monologue overshadows crossword puzzle context (Appendix Figure 8b). Address-ing these failures necessitates future integration of explicit conflict detection and activity-aware attention. 
+
+## 7. Conclusion 
+
+This paper operationalizes the challenge of ad-hoc memory recall within infinite dialogue streams by introducing STEM-Bench and proposing ProStream , a framework that trans-forms memory into a proactive, bounded state machine via Adaptive Spatiotemporal Optimization. By synergizing hier-archical distillation with dynamic optimization, ProStream successfully resolves the fidelity-efficiency dilemma, de-coupling inference latency from stream length to achieve constant-time efficiency while validating that structured topology outperforms raw, noise-prone Full-Context inputs. Experimental results demonstrate that our ProStream out-performs baselines in both accuracy and efficiency. 
+
+## Impact Statement 
+
+This work advances efficient, long-horizon reasoning in streaming dialogues, providing significant utility for real-time applications such as assistive technologies and per-sonalized education, where maintaining stable latency is critical. While enhanced memory persistence could theo-retically increase privacy risks regarding the retention of sensitive information, our proposed bounded framework offers a distinct advantage: it transforms memory from an opaque, emergent behavior into an explicit and auditable mechanism. This bounded nature inherently restricts the infi-nite accumulation of raw data, facilitating more manageable data governance. We emphasize that real-world deployment must prioritize privacy safeguards, including controllable forgetting and user consent protocols. By formalizing mem-ory as an optimizable and transparent resource, this research promotes the development of conversational AI systems that are not only more capable but also more interpretable and 8Submission and Formatting Instructions for ICML 2026  
+
+> Figure 7. Qualitative comparison (Case Study) of the RAG method and our ProStream.
+
+ethically governed. 
+
+## References 
+
+Anderson, J. R. The adaptive character of thought . Psychol-ogy Press, 2013. Budzianowski, P., Wen, T.-H., Tseng, B.-H., Casanueva, I., Ultes, S., Ramadan, O., and Ga ˇsi ´c, M. MultiWOZ - a large-scale multi-domain Wizard-of-Oz dataset for task-oriented dialogue modelling. In Riloff, E., Chiang, D., Hockenmaier, J., and Tsujii, J. (eds.), Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , pp. 5016–5026, Brussels, Belgium, October-November 2018. Association for Computational Linguistics. doi: 10.18653/v1/D18-1547. URL https: //aclanthology.org/D18-1547/ .Chan, C.-M., Xu, C., Yuan, R., Luo, H., Xue, W., Guo, Y., and Fu, J. Rq-rag: Learning to refine queries for retrieval augmented generation. arXiv preprint arXiv:2404.00610 ,2024. Chen, J., Xiao, S., Zhang, P., Luo, K., Lian, D., and Liu, Z. M3-embedding: Multi-linguality, multi-functionality, multi-granularity text embeddings through self-knowledge distillation. In Findings of the Association for Computational Linguistics ACL 2024 , pp. 2318–2335, 2024. Chevalier, A., Wettig, A., Ajith, A., and Chen, D. Adapting language models to compress contexts. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 3829–3846, 2023. Cohen, J. A coefficient of agreement for nominal scales. 
+
+Educational and psychological measurement , 20(1):37– 46, 1960. Du, Y., Wang, H., Zhao, Z., Liang, B., Wang, B., Zhong, W., Wang, Z., and Wong, K.-F. Perltqa: A personal long-term memory dataset for memory classification, retrieval, and fusion in question answering. In Proceedings of the 10th SIGHAN Workshop on Chinese Language Processing (SIGHAN-10) , pp. 152–164, 2024. Edge, D., Trinh, H., Cheng, N., Bradley, J., Chao, A., Mody, A., Truitt, S., Metropolitansky, D., Ness, R. O., and Larson, J. From local to global: A graph rag ap-proach to query-focused summarization. arXiv preprint arXiv:2404.16130 , 2024. Fu, Y., Panda, R., Niu, X., Yue, X., Hajishirzi, H., Kim, Y., and Peng, H. Data engineering for scaling language models to 128k context. In Proceedings of the 41st In-ternational Conference on Machine Learning , pp. 14125– 14134, 2024. Gu, A. and Dao, T. Mamba: Linear-time sequence mod-eling with selective state spaces. In First conference on language modeling , 2024. Guti ´errez, B. J., Shu, Y., Qi, W., Zhou, S., and Su, Y. From rag to memory: Non-parametric continual learning for large language models. arXiv preprint arXiv:2502.14802 ,2025. Hartmanis, J. Computers and intractability: a guide to the theory of np-completeness (michael r. garey and david s. johnson). Siam Review , 24(1):90, 1982. Huang, Z., Tian, Z., Guo, Q., Zhang, F., Zhou, Y., Jiang, D., and Zhou, X. Licomemory: Lightweight and cognitive agentic memory for efficient long-term reasoning. arXiv preprint arXiv:2511.01448 , 2025. Jimenez Gutierrez, B., Shu, Y., Gu, Y., Yasunaga, M., and Su, Y. Hipporag: Neurobiologically inspired long-term memory for large language models. Advances in Neural Information Processing Systems , 37:59532–59569, 2024. Kasneci, E., Seßler, K., K ¨uchemann, S., Bannert, M., Dementieva, D., Fischer, F., Gasser, U., Groh, G., G ¨unnemann, S., H ¨ullermeier, E., et al. Chatgpt for good? on opportunities and challenges of large language models for education. Learning and individual differences , 103: 102274, 2023. 9Submission and Formatting Instructions for ICML 2026 
+
+Khuller, S., Moss, A., and Naor, J. S. The budgeted maxi-mum coverage problem. Information processing letters ,70(1):39–45, 1999. Kim, J., Chay, W., Hwang, H., Kyung, D., Chung, H., Cho, E., Jo, Y., and Choi, E. Dialsim: A real-time simula-tor for evaluating long-term dialogue understanding of conversational agents. arXiv e-prints , pp. arXiv–2406, 2024. Langley, P. Crafting papers on machine learning. In Langley, P. (ed.), Proceedings of the 17th International Conference on Machine Learning (ICML 2000) , pp. 1207–1216, Stan-ford, CA, 2000. Morgan Kaufmann. Li, F., Wang, Y., Xu, Y., Wang, S., Liang, J., Chen, Z., Liu, W., Feng, Q., Duan, T., Huang, Y., et al. Performance evaluations of large language models for customer ser-vice. International Journal of Machine Learning and Cybernetics , 16(5):2997–3017, 2025. Li, X. and Li, J. Angle-optimized text embeddings. arXiv preprint arXiv:2309.12871 , 2023. Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilac-qua, M., Petroni, F., and Liang, P. Lost in the mid-dle: How language models use long contexts. Trans-actions of the Association for Computational Linguistics ,12:157–173, 2024a. doi: 10.1162/tacl a 00638. URL 
+
+https://aclanthology.org/2024.tacl-1.9/ .Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua, M., Petroni, F., and Liang, P. Lost in the middle: How language models use long contexts. Transactions of the Association for Computational Linguistics , 12:157–173, 2024b. Maharana, A., Lee, D.-H., Tulyakov, S., Bansal, M., Barbi-eri, F., and Fang, Y. Evaluating very long-term conversa-tional memory of llm agents. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 13851–13870, 2024. Packer, C., Fang, V., Patil, S., Lin, K., Wooders, S., and Gonzalez, J. Memgpt: Towards llms as operating systems. 2023. Pakhomov, E., Nijkamp, E., and Xiong, C. Convomem benchmark: Why your first 150 conversations don’t need rag. arXiv preprint arXiv:2511.10523 , 2025. Press, O., Zhang, M., Min, S., Schmidt, L., Smith, N. A., and Lewis, M. Measuring and narrowing the composi-tionality gap in language models. In Findings of the As-sociation for Computational Linguistics: EMNLP 2023 ,pp. 5687–5711, 2023. Qian, H., Liu, Z., Zhang, P., Mao, K., Lian, D., Dou, Z., and Huang, T. Memorag: Boosting long context processing with global memory-enhanced retrieval augmentation. In 
+
+Proceedings of the ACM on Web Conference 2025 , pp. 2366–2377, 2025. Radford, A., Kim, J. W., Xu, T., Brockman, G., Mcleavey, C., and Sutskever, I. Robust speech recognition via large-scale weak supervision. In Krause, A., Brunskill, E., Cho, K., Engelhardt, B., Sabato, S., and Scarlett, J. (eds.), 
+
+Proceedings of the 40th International Conference on Ma-chine Learning , volume 202 of Proceedings of Machine Learning Research , pp. 28492–28518. PMLR, 23–29 Jul 2023. URL https://proceedings.mlr.press/v202/ radford23a.html .Salazar, J., Liang, D., Nguyen, T. Q., and Kirchhoff, K. Masked language model scoring. In Proceedings of the 58th annual meeting of the association for computational linguistics , pp. 2699–2712, 2020. Sarthi, P., Abdullah, S., Tuli, A., Khanna, S., Goldie, A., and Manning, C. D. Raptor: Recursive abstractive processing for tree-organized retrieval. In The Twelfth International Conference on Learning Representations , 2024. Tan, Z., Yan, J., Hsu, I.-H., Han, R., Wang, Z., Le, L., Song, Y., Chen, Y., Palangi, H., Lee, G., et al. In prospect and retrospect: Reflective memory management for long-term personalized dialogue agents. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 8416–8439, 2025. Wang, W., Wei, F., Dong, L., Bao, H., Yang, N., and Zhou, M. Minilm: Deep self-attention distillation for task-agnostic compression of pre-trained transformers. 
+
+Advances in neural information processing systems , 33: 5776–5788, 2020. Wang, W., Dong, L., Cheng, H., Liu, X., Yan, X., Gao, J., and Wei, F. Augmenting language models with long-term memory. Advances in Neural Information Processing Systems , 36:74530–74543, 2023. Wei, W., Le, Q., Dai, A., and Li, J. Airdialogue: An environ-ment for goal-oriented dialogue research. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , pp. 3844–3854, 2018. Wu, D., Wang, H., Yu, W., Zhang, Y., Chang, K.-W., and Yu, D. Longmemeval: Benchmarking chat assis-tants on long-term interactive memory. arXiv preprint arXiv:2410.10813 , 2024a. Wu, M., Waheed, A., Zhang, C., Abdul-Mageed, M., and Aji, A. F. Lamini-lm: A diverse herd of distilled models 10 Submission and Formatting Instructions for ICML 2026 
+
+from large-scale instructions. In Proceedings of the 18th Conference of the European Chapter of the Association for Computational Linguistics (Volume 1: Long Papers) ,pp. 944–964, 2024b. Wu, Y., Zhang, Y., Liang, S., and Liu, Y. Sgmem: Sentence graph memory for long-term conversational agents. arXiv preprint arXiv:2509.21212 , 2025. Xu, D., Wen, Y., Jia, P., Zhang, Y., Wang, Y., Guo, H., Tang, R., Zhao, X., Chen, E., Xu, T., et al. To-wards multi-granularity memory association and selec-tion for long-term conversational agents. arXiv preprint arXiv:2505.19549 , 2025a. Xu, F., Shi, W., and Choi, E. Recomp: Improving retrieval-augmented lms with compression and selective augmen-tation. arXiv preprint arXiv:2310.04408 , 2023. Xu, J., Szlam, A., and Weston, J. Beyond goldfish memory: Long-term open-domain conversation. In Proceedings of the 60th Annual Meeting of the Association for Computa-tional Linguistics (ACL) , pp. 5180–5197, 2022a. Xu, W., Liang, Z., Mei, K., Gao, H., Tan, J., and Zhang, Y. A-mem: Agentic memory for llm agents. arXiv preprint arXiv:2502.12110 , 2025b. Xu, X., Gou, Z., Wu, W., Niu, Z.-Y., Wu, H., Wang, H., and Wang, S. Long time no see! open-domain conver-sation with long-term persona memory. In Muresan, S., Nakov, P., and Villavicencio, A. (eds.), Findings of the Association for Computational Linguistics: ACL 2022 ,pp. 2639–2650, Dublin, Ireland, May 2022b. Association for Computational Linguistics. doi: 10.18653/v1/2022. findings-acl.207. URL https://aclanthology.org/ 2022.findings-acl.207/ .Zaratiana, U., Tomeh, N., Holat, P., and Charnois, T. Gliner: Generalist model for named entity recognition using bidi-rectional transformer. In Proceedings of the 2024 Confer-ence of the North American Chapter of the Association for Computational Linguistics: Human Language Tech-nologies (Volume 1: Long Papers) , pp. 5364–5376, 2024. Zhang, Z., Bo, X., Ma, C., Li, R., Chen, X., Dai, Q., Zhu, J., Dong, Z., and Wen, J.-R. A survey on the memory mechanism of large language model based agents. arXiv preprint arXiv:2404.13501 , 2024. Zhong, W., Guo, L., Gao, Q., Ye, H., and Wang, Y. Memo-rybank: Enhancing large language models with long-term memory. In Proceedings of the AAAI Conference on Arti-ficial Intelligence , volume 38, pp. 19724–19731, 2024. Zhou, S. A simple yet strong baseline for long-term conversational memory of llm agents. arXiv preprint arXiv:2511.17208 , 2025. 11 Submission and Formatting Instructions for ICML 2026 
+
+## A. Theoretical Analysis of Adaptive Spatiotemporal Optimization 
+
+In this section, we provide a formal mathematical grounding for the memory management mechanism in ProStream. We first define the memory retention problem as an Online Budgeted Optimization task, then prove that our greedy pruning strategy achieves a bounded approximation ratio, and finally demonstrate the system’s stability over infinite horizons. 
+
+A.1. Problem Formulation: The Dynamic Budgeted Maximization 
+
+We model the streaming dialogue memory retention as a variation of the Knapsack Problem with Time-Varying Utilities .
+
+Definition A.1 (Memory State and Budget) . Let S = {I1, I 2, . . . , I t, . . . } be an infinite dialogue stream. At any time step t,the system maintains a set of memory nodes Ht = {v1, v 2, . . . , v n}. Each node v has a static storage cost cv (token length) and a dynamic utility uv,t . The system must satisfy: 
+
+X
+
+> v∈H t
+
+cv ≤ T max (4) where Tmax is the fixed context window capacity of the underlying LLM. 
+
+Definition A.2 (The Optimization Objective) . The goal of ProStream is to find a subset H∗ 
+
+> t
+
+⊆ H candidate that maximizes the cumulative utility: 
+
+H∗ 
+
+> t
+
+= arg max 
+
+> H⊆H candidate
+
+X
+
+> v∈H
+
+uv,t s.t. X
+
+> v∈H
+
+cv ≤ T max (5) where Hcandidate = Ht−1 ∪ Distill (It) represents the union of historical memory and newly perceived information. The function Distill (·) serves as a semantic abstraction layer that transforms raw input tokens into a set of discrete memory nodes with associated utility scores and storage costs. 
+
+A.2. Rationality of the Utility Function 
+
+Our utility function uv,t = α · ft(v) + β · Recency (v) is not a heuristic but a first-order approximation of the optimal memory retrieval probability. 
+
+Proposition A.3 (Connection to Rational Analysis of Memory) . According to Anderson’s Rational Analysis of Memory (Anderson, 2013), the probability P that a memory trace v is needed follows: 
+
+log P
+
+1 − P ∝ History (v) + Context (v) (6) 
+
+By setting uv,t as a linear combination of frequency (History) and temporal proximity (Context), ProStream effectively maximizes the Expected Recall Probability under a strict resource constraint. 
+
+A.3. Proof of Approximation Guarantee 
+
+Since the 0/1 Knapsack problem is NP-Hard, ProStream employs a Greedy Marginal-Utility Pruning policy. We now prove its effectiveness. 
+
+Theorem A.4 (Approximation Ratio) . The greedy pruning strategy based on the marginal utility density ρv = uv,t /c v
+
+achieves at least a (1 − 1/e ) approximation of the optimal memory value for the modular objective function. Proof. Let F (H) = P 
+
+> v∈H
+
+uv,t be our objective function. F is a monotone submodular (specifically, modular) function. 1. The pruning process in ProStream is equivalent to a Reverse Greedy Algorithm . Starting from an over-filled candidate set 
+
+Hcandidate , we iteratively remove the node v∗ that minimizes the utility loss per unit cost: 
+
+v∗ = arg min 
+
+> v
+
+uv,t 
+
+cv
+
+(7) 2. According to the theory of Budgeted Maximum Coverage (Khuller et al., 1999), for a budget Tmax , the greedy selection (or pruning) ensures that the gap between the current utility and the optimal utility decreases exponentially. 3. Specifically, let Hgreedy be the set retained by ProStream and Hopt be the optimal subset. The following bound holds: 
+
+F (Hgreedy ) ≥ (1 − 1
+
+e )F (Hopt ) (8) 12 Submission and Formatting Instructions for ICML 2026 
+
+This ensures that even as the stream grows to infinity, our memory state remains high-fidelity relative to the theoretical upper bound. 
+
+A.4. Complexity and Convergence in Infinite Horizons 
+
+A crucial property for any streaming system is that its latency must not scale with the sequence length t.
+
+Theorem A.5 (Bounded Time Complexity) . The per-step computational complexity of ProStream is O(Tmax ), which is constant with respect to the total stream length T .Proof. Let Nt = |H t| be the number of memory nodes at time t. Due to the capacity constraint P cv ≤ T max , the number of nodes is strictly bounded by Nmax = ⌊T max /c min ⌋. Each memory update involves: (i) Utility recalculation: 
+
+O(Nmax ); (ii) Priority queue pruning: O(k log Nmax ), where k is the number of newly evicted nodes. Since Nmax is a fixed hyperparameter (the LLM’s context window limit), the execution time per turn Cstep = f (Nmax ) does not scale with the cumulative number of dialogue turns T . Thus, the complexity per interaction remains O(1) relative to T , ensuring the system’s viability for infinite-horizon deployment. This theoretical framework ensures that ProStream is both efficient (constant time) and effective (bounded optimality gap), providing a robust foundation for its performance on STEM-Bench. 
+
+## B. Implementation and Reproducibility Details 
+
+We provide the complete implementation and prompting configuration of ProStream to ensure reproducibility. 
+
+B.1. System Configuration 
+
+We implement ProStream with a unified configuration across all experiments. Audio streams are transcribed using Whisper large-v3 (Radford et al., 2023) at a 16kHz sampling rate with 1-second chunks. Dialogue units are embedded using ms-marco-MiniLM-L6-v2, a MiniLM variant (Wang et al., 2020), for semantic encoding and similarity computation. Proactive Semantic Stream Perception adopts a fixed drift threshold ( τdrift = 0 .7) with bounded buffering and a short leading context window to preserve cross-boundary dependencies. Hierarchical Multi-Granular Distillation enforces maximal granularity by disabling initial merging, and leverages LaMini-T5-738M for scene and event summarization and GLiNER for entity and relation extraction. Adaptive Spatiotemporal Optimization balances frequency and recency priors with fixed utility weights, while Probabilistic Evidence-Grounded Generation retrieves a small set of top-ranked scenes and events and produces final answers from the most relevant AMUs under a similarity constraint. All experiments are conducted using Qwen models for answer generation on NVIDIA GPUs with PyTorch memory optimization enabled. 
+
+B.2. Prompt Templates 
+
+This section provides the exact prompt templates used in hierarchical distillation and question answering. 
+
+1) Event Summarization Prompt ( ρevt )
+
+Summarize this conversation in one short phrase describing what happened. Speakers: {speaker list }.Event phrase: {text }
+
+2) Scene Classification Prompt ( ρscn )
+
+The scene classification prompt abstracts event summaries into higher-level scene categories. This prompt is applied after event generation: 
+
+Abstract this specific event into a broader, more general scene category (e.g., ’Work Discussion’, ’Social Chat’, ’Learning Session’). The scene should be a higher-level category that could contain multiple similar events. Event: {event summary }
+
+Scene category (broader abstraction): 
+
+13 Submission and Formatting Instructions for ICML 2026 
+
+3) Question Answering Prompt 
+
+The question answering prompt integrates multiple context sources for answer generation. The complete prompt structure is as follows: 
+
+Please carefully think about the following question and provide a direct, concise answer with key points only. Do NOT start your answer with phrases like "Based on..." or "According to...". Instead, directly state the answer. ## Short-term Memory: {stsb buffer content }
+
+## Pending Memory Buffer: {pending buffer content }
+
+## Long-term Memory: ** {scene 1 } > {event 1 }** ( {count } amu(s)): - {amu 1 } - {amu 2 } ... ** {scene 2 }
+
+> {event 2 }** ( {count } amu(s)): - {amu 1 } - {amu 2 } ... Question: {question text }
+
+Answer (provide key points directly, no introductory phrases): 
+
+Short-term Memory: Contains recent dialogue content from the STSB (Short-Term Sensing Buffer) that has not yet been flushed to long-term memory. This includes utterances that are still accumulating in the buffer. Pending Memory Buffer: 
+
+Contains memory items from the HCHT (Huffman Compressed Hierarchical Tree) buffer that have been processed (scene, event, and concept extracted) but not yet mounted to the hierarchical tree structure. Long-term Memory: Retrieved from the hierarchical tree using hierarchical search. The format groups concepts by their parent scene and event, showing the hierarchical relationship. Each memory path follows the structure: {scene } > {event } > {concept }.When using Qwen models, the following system message is prepended: 
+
+You are a helpful assistant that provides direct, concise answers. Always answer directly without starting with phrases like ’Based on...’ or ’According to...’. Provide key points only. 
+
+When no context is available, a simplified prompt is used: 
+
+Please answer the following question directly with key points only. Do NOT start your answer with phrases like "Based on..." or "According to...". Question: {question text }
+
+Answer: 
+
+B.3. Evaluation Metrics 
+
+We adopt a comprehensive evaluation protocol categorized into Performance and Efficiency metrics to rigorously assess ProStream’s capability in infinite-horizon streaming dialogues. 
+
+Performance Metrics. To ensure a multi-faceted assessment of response quality, we integrate lexical, semantic, and reasoning-based indicators. We employ BLEU-4 (B-4) and ROUGE-L (R-L) to measure surface-level n-gram precision and structural similarity, while BERTScore (B-S) is utilized to capture deep semantic equivalence using DeBERTa-v3-xlarge contextual embeddings: B-S = 1
+
+> M
+
+P 
+
+> i
+
+max j cos( eref ,i , ecand ,j ). For factual grounding, Key Entity Matching (KEM) serves as a binary validator for essential keywords K, and Evidence Similarity (Evid.) quantifies retrieval fidelity by computing the cosine similarity between generated context Cgen and ground-truth evidence Egt via a SentenceTransformer encoder. Furthermore, to bridge the gap between automated metrics and human-like reasoning, we implement a Reference-Guided LLM-as-a-Judge framework. Specifically, Gemini-2.5-Pro is employed as an expert evaluator to assign the accuracy score. Here comes the prompt template: 14 Submission and Formatting Instructions for ICML 2026 
+
+Table 3. Results of different embedding models on STEM-Bench. Metrics marked with ↑ indicate higher is better, while ↓ denotes lower is better.                                                   
+
+> Backbone Variant The Big Bang Theory Friends The Office
+> Time ↓B-4 ↑R-L ↑B-S ↑Evid. ↑KEM ↑Gem ↑Time ↓B-4 ↑R-L ↑B-S ↑Evid. ↑KEM ↑Gem ↑Time ↓B-4 ↑R-L ↑B-S ↑Evid. ↑KEM ↑Gem ↑
+> BGE RAG 0.814 0.087 0.301 0.796 0.583 0.572 0.413 0.814 0.081 0.296 0.785 0.621 0.576 0.399 0.801 0.094 0.339 0.796 0.647 0.611 0.413 0.393 0.116 0.383 0.816 0.460 0.623 0.498 0.442 0.097 0.354 0.802 0.464 0.597 0.469 0.516 0.114 0.407 0.819 0.484 0.622 0.498 UAE RAG 0.774 0.086 0.296 0.794 0.583 0.572 0.410 0.788 0.082 0.296 0.785 0.619 0.573 0.408 0.756 0.093 0.337 0.796 0.650 0.612 0.410 0.825 0.116 0.386 0.818 0.482 0.615 0.501 0.829 0.098 0.357 0.802 0.482 0.592 0.471 0.688 0.117 0.413 0.821 0.503 0.624 0.501 MiniLM RAG 1.225 0.064 0.240 0.781 0.389 0.500 0.331 1.162 0.060 0.237 0.774 0.424 0.497 0.309 1.067 0.072 0.269 0.781 0.466 0.533 0.331 0.408 0.118 0.390 0.817 0.485 0.612 0.509 0.373 0.099 0.360 0.801 0.491 0.588 0.476 0.316 0.114 0.408 0.819 0.491 0.626 0.509
+
+You are an expert evaluator for dialogue systems. Your task is to assess the accuracy of the generated answer relative to the ground truth. Input Data: - Question: {question }
+
+- Candidate Answer: {answer }
+
+- Ground Truth: {ground truth }
+
+Evaluation Criteria: Please carefully compare the Candidate Answer with the Ground Truth. Determine if they are semantically equivalent and accurate. Consider the following factors: 1. Core Information: Is the main point consistent? 2. Factual Accuracy: Are key facts (entities, numbers, events) correct? 3. Semantic Equivalence: Is the meaning preserved, even if phrased differently? 4. Critical Errors: Does it contain any hallucinations or conflicting information? Response Format: Strictly output the result in the following JSON format (no markdown, no extra text): 
+
+{
+
+"score": from 0 to 1, "reason": "Detailed reasoning explaining the score." 
+
+}
+
+Efficiency Metrics. To verify the operational feasibility of our framework under strict resource constraints, we monitor three key technical indicators. Time is recorded as the average wall-clock time required per query, reflecting real-time responsiveness. 
+
+## C. Analysis of Different Embedding Models 
+
+To verify the robustness of our framework, we extend our evaluation across three distinct embedding models with varying parameter sizes and capabilities: ms-marco-MiniLM-L6-v2 (Wang et al., 2020), UAE-Large-V1 (Li & Li, 2023), and bge-m3 (Chen et al., 2024). As presented in Table 3, ProStream consistently outperforms the standard RAG baseline across all metrics and datasets, independent of the underlying semantic encoder. While state-of-the-art models like UAE and BGE-M3 naturally yield higher absolute fidelity due to their superior representational capacity, our framework demonstrates remarkable resilience, achieving substantial reasoning gains even when utilizing the lightweight backbone. This establishes that the efficacy of ProStream stems from its proactive topological optimization and hierarchical distillation rather than reliance on high-dimensional vector redundancy alone. 15 Submission and Formatting Instructions for ICML 2026  
+
+> Figure 8. Two examples of error analysis.
+
+## D. Extended Error Analysis 
+
+To delineate the operational boundaries of ProStream, we perform a qualitative failure analysis, identifying two primary error modes as illustrated in Figure 8. 
+
+Instruction-Fidelity Tension. Figure 8(a) exposes a premise compliance bias”. When a user prompt contains a fallacious presupposition (e.g., claiming Alan was the sole creator” ), the model prioritizes following the user’s instruction over maintaining factual fidelity to the historical context. Despite the dialogue explicitly stating that Jan and Alan created the program together, the model fails to perform conflict detection, leading to a hallucinated validation of the user’s incorrect premise. 
+
+Semantic Noise and Intent Misattribution. Figure 8(b) highlights a struggle with implicit context disentanglement within dense dialogues. The model’s attention is captured by the high-density monologue regarding T-shirt ideas and quantum physics, causing it to overlook the subtle, fragmented cues of a crossword puzzle (e.g., “one across is 18...” ). This results in a failure to correctly attribute the character’s intent, misinterpreting active problem-solving as a continuation of the previous topic. These failure modes underscore the need for future integration of explicit contradiction-aware mechanisms and activity-centric attention to fortify the framework against semantic noise and misinformation. 16
