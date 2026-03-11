@@ -9,97 +9,85 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-03-10
-- 运行时间：2026-03-10 19:43:00 UTC
+- 最新运行日期：2026-03-11
+- 运行时间：2026-03-11 19:45:38 UTC
 - 运行状态：成功
-- 本次总论文数：25
-- 精读区：14
+- 本次总论文数：21
+- 精读区：10
 - 速读区：11
 
 ### 今日简报（AI）
-今日深度复盘 25 篇 AI 论文，聚焦智能体记忆机制与持续学习的底层逻辑突破。
-满分论文揭示了模块化记忆对持续学习的关键作用，并精准诊断出 LLM 记忆检索与利用的效能瓶颈。
-建议关注持久化工作记忆及安全智能体 Web 生态，探索 AI 在复杂个人上下文中的实战潜力。
-- 详情：[/202603/10/README](/202603/10/README)
+今日精选 21 篇前沿论文，深度解析通用 AI 助手与自进化智能体的架构革新。
+满分力作 IronEngine 与 AutoAgent 揭示了具备弹性记忆与认知演化能力的智能体新范式。
+建议优先研读这两篇满分论文，掌握智能体从单一工具向动态进化助手转变的核心逻辑。
+- 详情：[/202603/11/README](/202603/11/README)
 
 ### 精读区论文标签
-1. [Modular Memory is the Key to Continual Learning Agents](/202603/10/2603.01761v1-modular-memory-is-the-key-to-continual-learning-agents)  
+1. [IronEngine: Towards General AI Assistant](/202603/11/2603.08425v1-ironengine-towards-general-ai-assistant)  
    标签：评分：10.0/10、query:agimem
-   evidence：结合权重内学习和上下文学习的代理模块化记忆
-2. [Diagnosing Retrieval vs. Utilization Bottlenecks in LLM Agent Memory](/202603/10/2603.02473v1-diagnosing-retrieval-vs-utilization-bottlenecks-in-llm-agent-memory)  
+   evidence：具有多级巩固机制的分层存储架构
+2. [AutoAgent: Evolving Cognition and Elastic Memory Orchestration for Adaptive Agents](/202603/11/2603.09716v1-autoagent-evolving-cognition-and-elastic-memory-orchestration-for-adaptive-agents)  
    标签：评分：10.0/10、query:agimem
-   evidence：LLM智能体记忆检索与利用的诊断框架
-3. [SoK: Agentic Retrieval-Augmented Generation (RAG): Taxonomy, Architectures, Evaluation, and Research Directions](/202603/10/2603.07379v1-sok-agentic-retrieval-augmented-generation-rag-taxonomy-architectures-evaluation-and-research-directions)  
-   标签：评分：10.0/10、query:agimem
-   evidence：涵盖动态记忆管理和评估的智能体RAG综述
-4. [Memory for Autonomous LLM Agents:Mechanisms, Evaluation, and Emerging Frontiers](/202603/10/2603.07670v1-memory-for-autonomous-llm-agentsmechanisms-evaluation-and-emerging-frontiers)  
-   标签：评分：10.0/10、query:agimem
-   evidence：LLM智能体记忆机制与评估综述
-5. [PRAM-R: A Perception-Reasoning-Action-Memory Framework with LLM-Guided Modality Routing for Adaptive Autonomous Driving](/202603/10/2603.04222v1-pram-r-a-perception-reasoning-action-memory-framework-with-llm-guided-modality-routing-for-adaptive-autonomous-driving)  
+   evidence：用于长期经验学习的弹性记忆编排
+3. [VPWEM: Non-Markovian Visuomotor Policy with Working and Episodic Memory](/202603/11/2603.04910v1-vpwem-non-markovian-visuomotor-policy-with-working-and-episodic-memory)  
    标签：评分：9.0/10、query:agimem
-   evidence：用于自动驾驶长期适应的分层记忆模块
-6. [$τ$-Knowledge: Evaluating Conversational Agents over Unstructured Knowledge](/202603/10/2603.04370v1--knowledge-evaluating-conversational-agents-over-unstructured-knowledge)  
+   evidence：具备工作记忆和情境记忆的视觉运动策略
+4. [Empowering Locally Deployable Medical Agent via State Enhanced Logical Skills for FHIR-based Clinical Tasks](/202603/11/2603.06902v1-empowering-locally-deployable-medical-agent-via-state-enhanced-logical-skills-for-fhir-based-clinical-tasks)  
    标签：评分：9.0/10、query:agimem
-   evidence：在非结构化知识的长时程交互中评估智能体
-7. [A Dual-Helix Governance Approach Towards Reliable Agentic AI for WebGIS Development](/202603/10/2603.04390v1-a-dual-helix-governance-approach-towards-reliable-agentic-ai-for-webgis-development)  
+   evidence：用于提取临床轨迹的状态增强逻辑技能记忆
+5. [EvoScientist: Towards Multi-Agent Evolving AI Scientists for End-to-End Scientific Discovery](/202603/11/2603.08127v1-evoscientist-towards-multi-agent-evolving-ai-scientists-for-end-to-end-scientific-discovery)  
    标签：评分：9.0/10、query:agimem
-   evidence：跨会话遗忘与外部化知识基座
-8. [RoboMME: Benchmarking and Understanding Memory for Robotic Generalist Policies](/202603/10/2603.04639v1-robomme-benchmarking-and-understanding-memory-for-robotic-generalist-policies)  
+   evidence：多智能体框架中的持久记忆与自我进化
+6. [Adaptive Loops and Memory in Transformers: Think Harder or Know More?](/202603/11/2603.08391v2-adaptive-loops-and-memory-in-transformers-think-harder-or-know-more)  
    标签：评分：9.0/10、query:agimem
-   evidence：评估机器人通用策略记忆能力的基准
-9. [Bounded State in an Infinite Horizon: Proactive Hierarchical Memory for Ad-Hoc Recall over Streaming Dialogues](/202603/10/2603.04885v1-bounded-state-in-an-infinite-horizon-proactive-hierarchical-memory-for-ad-hoc-recall-over-streaming-dialogues)  
+   evidence：Transformer中用于额外学习存储的门控记忆库
+7. [MEMO: Memory-Augmented Model Context Optimization for Robust Multi-Turn Multi-Agent LLM Games](/202603/11/2603.09022v1-memo-memory-augmented-model-context-optimization-for-robust-multi-turn-multi-agent-llm-games)  
    标签：评分：9.0/10、query:agimem
-   evidence：流式记忆评估基准
-10. [Enhancing Web Agents with a Hierarchical Memory Tree](/202603/10/2603.07024v1-enhancing-web-agents-with-a-hierarchical-memory-tree)  
+   evidence：多智能体大模型中用于持久化记忆的增强记忆自博弈框架
+8. [The Missing Memory Hierarchy: Demand Paging for LLM Context Windows](/202603/11/2603.09023v1-the-missing-memory-hierarchy-demand-paging-for-llm-context-windows)  
    标签：评分：9.0/10、query:agimem
-   evidence：用于长周期Web任务的分层存储树
-11. [TempoFit: Plug-and-Play Layer-Wise Temporal KV Memory for Long-Horizon Vision-Language-Action Manipulation](/202603/10/2603.07647v1-tempofit-plug-and-play-layer-wise-temporal-kv-memory-for-long-horizon-vision-language-action-manipulation)  
+   evidence：将大模型上下文作为记忆层级的请求分页系统
+9. [TA-Mem: Tool-Augmented Autonomous Memory Retrieval for LLM in Long-Term Conversational QA](/202603/11/2603.09297v1-ta-mem-tool-augmented-autonomous-memory-retrieval-for-llm-in-long-term-conversational-qa)  
    标签：评分：9.0/10、query:agimem
-   evidence：用于长程任务的分层时间KV存储
-12. [CMMR-VLN: Vision-and-Language Navigation via Continual Multimodal Memory Retrieval](/202603/10/2603.07997v1-cmmr-vln-vision-and-language-navigation-via-continual-multimodal-memory-retrieval)  
+   evidence：用于长期问答的工具增强自主存储检索
+10. [PRECEPT: Planning Resilience via Experience, Context Engineering & Probing Trajectories A Unified Framework for Test-Time Adaptation with Compositional Rule Learning and Pareto-Guided Prompt Evolution](/202603/11/2603.09641v1-precept-planning-resilience-via-experience-context-engineering--probing-trajectories-a-unified-framework-for-test-time-adaptation-with-compositional-rule-learning-and-pareto-guided-prompt-evolution)  
    标签：评分：9.0/10、query:agimem
-   evidence：LLM智能体的结构化记忆与反思能力
-13. [Adaptive Loops and Memory in Transformers: Think Harder or Know More?](/202603/10/2603.08391v1-adaptive-loops-and-memory-in-transformers-think-harder-or-know-more)  
-   标签：评分：9.0/10、query:agimem
-   evidence：Transformer中用于学习存储的门控记忆库
-14. [RetroAgent: From Solving to Evolving via Retrospective Dual Intrinsic Feedback](/202603/10/2603.08561v1-retroagent-from-solving-to-evolving-via-retrospective-dual-intrinsic-feedback)  
-   标签：评分：9.0/10、query:agimem
-   evidence：代理演化的事后自我反思和经验学习
+   evidence：冲突感知记忆与规则失效策略
 
 ### 速读区论文标签
-1. [MetaState: Persistent Working Memory for Discrete Diffusion Language Models](/202603/10/2603.01331v1-metastate-persistent-working-memory-for-discrete-diffusion-language-models)  
+1. [LoGeR: Long-Context Geometric Reconstruction with Hybrid Memory](/202603/11/2603.03269v1-loger-long-context-geometric-reconstruction-with-hybrid-memory)  
    标签：评分：8.0/10、query:agimem
-   evidence：离散扩散语言模型的持久工作记忆
-2. [ASTRA-bench: Evaluating Tool-Use Agent Reasoning and Action Planning with Personal User Context](/202603/10/2603.01357v1-astra-bench-evaluating-tool-use-agent-reasoning-and-action-planning-with-personal-user-context)  
+   evidence：用于长上下文推理的混合记忆模块
+2. [AI4S-SDS: A Neuro-Symbolic Solvent Design System via Sparse MCTS and Differentiable Physics Alignment](/202603/11/2603.03686v1-ai4s-sds-a-neuro-symbolic-solvent-design-system-via-sparse-mcts-and-differentiable-physics-alignment)  
    标签：评分：8.0/10、query:agimem
-   evidence：评估具有随时间演变的个人上下文的智能体推理能力的基准
-3. [From Secure Agentic AI to Secure Agentic Web: Challenges, Threats, and Future Directions](/202603/10/2603.01564v1-from-secure-agentic-ai-to-secure-agentic-web-challenges-threats-and-future-directions)  
+   evidence：用于长程推理的稀疏状态存储机制
+3. [RAGNav: A Retrieval-Augmented Topological Reasoning Framework for Multi-Goal Visual-Language Navigation](/202603/11/2603.03745v1-ragnav-a-retrieval-augmented-topological-reasoning-framework-for-multi-goal-visual-language-navigation)  
    标签：评分：8.0/10、query:agimem
-   evidence：涵盖智能体持久化存储和存储攻击的综述
-4. [Recursive Models for Long-Horizon Reasoning](/202603/10/2603.02112v1-recursive-models-for-long-horizon-reasoning)  
+   evidence：导航代理的双基记忆系统
+4. [T2Nav Algebraic Topology Aware Temporal Graph Memory and Loop Detection for ZeroShot Visual Navigation](/202603/11/2603.06918v1-t2nav-algebraic-topology-aware-temporal-graph-memory-and-loop-detection-for-zeroshot-visual-navigation)  
    标签：评分：8.0/10、query:agimem
-   evidence：用于长程推理和上下文管理的递归模型
-5. [Quantifying Conversational Reliability of Large Language Models under Multi-Turn Interaction](/202603/10/2603.01423v1-quantifying-conversational-reliability-of-large-language-models-under-multi-turn-interaction)  
+   evidence：用于自主导航的时序图记忆和回环检测
+5. [Beyond Task Completion: Revealing Corrupt Success in LLM Agents through Procedure-Aware Evaluation](/202603/11/2603.03116v1-beyond-task-completion-revealing-corrupt-success-in-llm-agents-through-procedure-aware-evaluation)  
    标签：评分：7.0/10、query:agimem
-   evidence：量化多轮交互下的可靠性
-6. [Non-Markovian Long-Horizon Robot Manipulation via Keyframe Chaining](/202603/10/2603.01465v1-non-markovian-long-horizon-robot-manipulation-via-keyframe-chaining)  
+   evidence：针对智能体一致性和程序完整性的程序感知评估框架
+6. [Build, Judge, Optimize: A Blueprint for Continuous Improvement of Multi-Agent Consumer Assistants](/202603/11/2603.03565v1-build-judge-optimize-a-blueprint-for-continuous-improvement-of-multi-agent-consumer-assistants)  
    标签：评分：7.0/10、query:agimem
-   evidence：提取并链接关键历史帧以建模长程依赖关系
-7. [Reasoning as Gradient: Scaling MLE Agents Beyond Tree Search](/202603/10/2603.01692v1-reasoning-as-gradient-scaling-mle-agents-beyond-tree-search)  
+   evidence：多智能体消费助手的多维度评估准则
+7. [Evaluating the Search Agent in a Parallel World](/202603/11/2603.04751v1-evaluating-the-search-agent-in-a-parallel-world)  
    标签：评分：7.0/10、query:agimem
-   evidence：MLE智能体中将成功记忆映射为动量
-8. [LiveAgentBench: Comprehensive Benchmarking of Agentic Systems Across 104 Real-World Challenges](/202603/10/2603.02586v1-liveagentbench-comprehensive-benchmarking-of-agentic-systems-across-104-real-world-challenges)  
+   evidence：区分参数化记忆与搜索推理性能的评估
+8. [Jagarin: A Three-Layer Architecture for Hibernating Personal Duty Agents on Mobile](/202603/11/2603.05069v1-jagarin-a-three-layer-architecture-for-hibernating-personal-duty-agents-on-mobile)  
    标签：评分：7.0/10、query:agimem
-   evidence：跨现实世界挑战的代理系统综合基准测试
-9. [Understanding the Physics of Key-Value Cache Compression for LLMs through Attention Dynamics](/202603/10/2603.01426v1-understanding-the-physics-of-key-value-cache-compression-for-llms-through-attention-dynamics)  
+   evidence：具有结构化休眠机制的个人任务智能体三层架构
+9. [What Capable Agents Must Know: Selection Theorems for Robust Decision-Making under Uncertainty](/202603/11/2603.02491v1-what-capable-agents-must-know-selection-theorems-for-robust-decision-making-under-uncertainty)  
    标签：评分：6.0/10、query:agimem
-   evidence：长文本LLM中作为记忆瓶颈的KV缓存压缩
-10. [Cognitive Prosthetic: An AI-Enabled Multimodal System for Episodic Recall in Knowledge Work](/202603/10/2603.02072v1-cognitive-prosthetic-an-ai-enabled-multimodal-system-for-episodic-recall-in-knowledge-work)  
+   evidence：智能体决策的内部预测结构化状态
+10. [OrchMAS: Orchestrated Reasoning with Multi Collaborative Heterogeneous Scientific Expert Structured Agents](/202603/11/2603.03005v1-orchmas-orchestrated-reasoning-with-multi-collaborative-heterogeneous-scientific-expert-structured-agents)  
    标签：评分：6.0/10、query:agimem
-   evidence：情境回忆与结构化记忆记录
-11. [MA-CoNav: A Master-Slave Multi-Agent Framework with Hierarchical Collaboration and Dual-Level Reflection for Long-Horizon Embodied VLN](/202603/10/2603.03024v1-ma-conav-a-master-slave-multi-agent-framework-with-hierarchical-collaboration-and-dual-level-reflection-for-long-horizon-embodied-vln)  
+   evidence：在长程科学推理中修正早期决策
+11. [RAPO: Expanding Exploration for LLM Agents via Retrieval-Augmented Policy Optimization](/202603/11/2603.03078v1-rapo-expanding-exploration-for-llm-agents-via-retrieval-augmented-policy-optimization)  
    标签：评分：6.0/10、query:agimem
-   evidence：长程任务的分层智能体协作架构
+   evidence：用于代理探索的检索增强策略优化
 
 
 <div class="dpr-home-promo-card">

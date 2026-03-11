@@ -1,239 +1,8 @@
 {
-  "generated_at": "2026-03-10T19:39:35.881492+00:00",
-  "updated_date": "20260310",
+  "generated_at": "2026-03-11T19:41:48.954488+00:00",
+  "updated_date": "20260311",
   "carryover_days": 9,
   "items": [
-    {
-      "id": "2603.07375v1",
-      "title": "Multi-Agentic AI for Conflict-Aware rApp Policy Orchestration in Open RAN",
-      "abstract": "Open Radio Access Network (RAN) enables flexible, AI-driven control of mobile networks through disaggregated, multi-vendor components. In this architecture, xApps handle real-time functions, whereas rApps in the non-real-time controller generate strategic policies. However, current rApp development remains largely manual, brittle, and poorly scalable as xApp diversity proliferates. In this work, we propose a Multi-Agentic AI framework to automate rApp policy generation and orchestration. The architecture integrates three specialized large language model (LLM)-based agents, Perception, Reasoning, and Refinement, supported by retrieval-augmented generation (RAG) and memory-based analogical reasoning. These agents collectively analyze potential conflicts, synthesize intent-aligned control pipelines, and incrementally refine deployment decisions. Experiments across diverse deployment scenarios demonstrate that the proposed system achieves over 70% improvement in deployment accuracy and 95% reduction in reasoning cost compared to baseline methods, while maintaining zero-shot generalization to unseen intents. These results establish a scalable and conflict-aware solution for fully autonomous, zero-touch rApp orchestration in Open RAN.",
-      "authors": [
-        "Haiyuan Li",
-        "Yulei Wu",
-        "Dimitra Simeonidou"
-      ],
-      "primary_category": "eess.SY",
-      "categories": [
-        "eess.SY"
-      ],
-      "published": "2026-03-07T23:34:20+00:00",
-      "link": "https://arxiv.org/pdf/2603.07375v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "memory-based analogical reasoning in multi-agentic AI",
-      "llm_evidence_cn": "多智能体AI中的基于记忆的类比推理",
-      "llm_evidence": "多智能体AI中的基于记忆的类比推理",
-      "canonical_evidence": "多智能体AI中的基于记忆的类比推理",
-      "llm_tldr_en": "Proposes a multi-agent framework using memory-based reasoning to automate rApp policy orchestration in Open RAN.",
-      "llm_tldr_cn": "提出一种利用基于记忆的推理来自动化Open RAN中rApp策略编排的多智能体框架。",
-      "llm_tldr": "提出一种利用基于记忆的推理来自动化Open RAN中rApp策略编排的多智能体框架。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory mechanisms in autonomous AI agents",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.07375v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.03116v1",
-      "title": "Beyond Task Completion: Revealing Corrupt Success in LLM Agents through Procedure-Aware Evaluation",
-      "abstract": "Large Language Model (LLM)-based agents are increasingly adopted in high-stakes settings, but current benchmarks evaluate mainly whether a task was completed, not how. We introduce Procedure-Aware Evaluation (PAE), a framework that formalizes agent procedures as structured observations and exposes consistency relationships between what agents observe, communicate, and execute. PAE evaluates agents along complementary axes (Utility, Efficiency, Interaction Quality, Procedural Integrity) and applies multi-dimensional gating that categorically disqualifies corrupt outcomes. Evaluating state-of-the-art LLM agents on tau-bench yields findings at the axis, compliance, and benchmark levels. At the axis level, the dimensions capture non-redundant failure modes: utility masks reliability gaps, speed does not imply precision, and conciseness does not predict intent adherence. At the procedural compliance level, 27-78% of benchmark reported successes are corrupt successes concealing violations across interaction and integrity. Furthermore, gating substantially collapses Pass^4 rate and affects model rankings. The analysis of corrupt success cases reveals distinctive per-model failure signatures: GPT-5 spreads errors across policy, execution, and intent dimensions; Kimi-K2-Thinking concentrates 78% of violations in policy faithfulness and compliance; and Mistral-Large-3 is dominated by faithfulness failures. At the benchmark level, our analysis exposes structural flaws in the benchmark design, including task scope gaps, contradictory reward signals, and simulator artifacts that produce accidental successes.",
-      "authors": [
-        "Hongliu Cao",
-        "Ilias Driouich",
-        "Eoin Thomas"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI"
-      ],
-      "published": "2026-03-03T15:47:41+00:00",
-      "link": "https://arxiv.org/pdf/2603.03116v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "evaluation framework for agent procedural integrity and observations",
-      "llm_evidence_cn": "智能体程序完整性与观察的评估框架",
-      "llm_evidence": "智能体程序完整性与观察的评估框架",
-      "canonical_evidence": "智能体程序完整性与观察的评估框架",
-      "llm_tldr_en": "Introduces Procedure-Aware Evaluation to assess the consistency of agent observations and executions beyond task completion.",
-      "llm_tldr_cn": "引入程序感知评估（PAE），超越任务完成度来评估智能体观察与执行的一致性。",
-      "llm_tldr": "引入程序感知评估（PAE），超越任务完成度来评估智能体观察与执行的一致性。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
-      "matched_requirement_id": "req-6",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.03116v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.06918v1",
-      "title": "T2Nav Algebraic Topology Aware Temporal Graph Memory and Loop Detection for ZeroShot Visual Navigation",
-      "abstract": "Deploying autonomous agents in real world environments is challenging, particularly for navigation, where systems must adapt to situations they have not encountered before. Traditional learning approaches require substantial amounts of data, constant tuning, and, sometimes, starting over for each new task. That makes them hard to scale and not very flexible. Recent breakthroughs in foundation models, such as large language models and vision language models, enable systems to attempt new navigation tasks without requiring additional training. However, many of these methods only work with specific input types, employ relatively basic reasoning, and fail to fully exploit the details they observe or the structure of the spaces. Here, we introduce T2Nav, a zeroshot navigation system that integrates heterogeneous data and employs graph-based reasoning. By directly incorporating visual information into the graph and matching it to the environment, our approach enables the system to strike a good balance between exploration and goal attainment. This strategy allows robust obstacle avoidance, reliable loop closure detection, and efficient path planning while eliminating redundant exploration patterns. The system demonstrates flexibility by handling goals specified using reference images of target object instances, making it particularly suitable for scenarios in which agents must navigate to visually similar yet spatially distinct instances. Experiments demonstrate that our approach is efficient and adapts well to unknown environments, moving toward practical zero-shot instance-image navigation capabilities.",
-      "authors": [
-        "Quang-Anh N. D.",
-        "Duc Pham",
-        "Minh-Anh Nguyen",
-        "Tung Doan",
-        "Tuan Dang"
-      ],
-      "primary_category": "cs.RO",
-      "categories": [
-        "cs.RO"
-      ],
-      "published": "2026-03-06T22:35:58+00:00",
-      "link": "https://arxiv.org/pdf/2603.06918v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "temporal graph memory and loop detection for autonomous navigation",
-      "llm_evidence_cn": "用于自主导航的时序图记忆和回环检测",
-      "llm_evidence": "用于自主导航的时序图记忆和回环检测",
-      "canonical_evidence": "用于自主导航的时序图记忆和回环检测",
-      "llm_tldr_en": "Uses algebraic topology and temporal graph memory to improve zero-shot visual navigation for agents.",
-      "llm_tldr_cn": "利用代数拓扑和时序图记忆来改进智能体的零样本视觉导航。",
-      "llm_tldr": "利用代数拓扑和时序图记忆来改进智能体的零样本视觉导航。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory mechanisms in autonomous AI agents",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.06918v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.03745v1",
-      "title": "RAGNav: A Retrieval-Augmented Topological Reasoning Framework for Multi-Goal Visual-Language Navigation",
-      "abstract": "Vision-Language Navigation (VLN) is evolving from single-point pathfinding toward the more challenging Multi-Goal VLN. This task requires agents to accurately identify multiple entities while collaboratively reasoning over their spatial-physical constraints and sequential execution order. However, generic Retrieval-Augmented Generation (RAG) paradigms often suffer from spatial hallucinations and planning drift when handling multi-object associations due to the lack of explicit spatial modeling.To address these challenges, we propose RAGNav, a framework that bridges the gap between semantic reasoning and physical structure. The core of RAGNav is a Dual-Basis Memory system, which integrates a low-level topological map for maintaining physical connectivity with a high-level semantic forest for hierarchical environment abstraction. Building on this representation, the framework introduces an anchor-guided conditional retrieval and a topological neighbor score propagation mechanism. This approach facilitates the rapid screening of candidate targets and the elimination of semantic noise, while performing semantic calibration by leveraging the physical associations inherent in the topological neighborhood.This mechanism significantly enhances the capability of inter-target reachability reasoning and the efficiency of sequential planning. Experimental results demonstrate that RAGNav achieves state-of-the-art (SOTA) performance in complex multi-goal navigation tasks.",
-      "authors": [
-        "Ling Luo",
-        "Qiangian Bai"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI",
-        "cs.RO"
-      ],
-      "published": "2026-03-04T05:31:33+00:00",
-      "link": "https://arxiv.org/pdf/2603.03745v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "dual-basis memory system for navigation agents",
-      "llm_evidence_cn": "导航代理的双基记忆系统",
-      "llm_evidence": "导航代理的双基记忆系统",
-      "canonical_evidence": "导航代理的双基记忆系统",
-      "llm_tldr_en": "Develops a retrieval-augmented topological reasoning framework with a dual-basis memory for visual navigation.",
-      "llm_tldr_cn": "开发了一个具有双基记忆系统的检索增强拓扑推理框架，用于视觉导航。",
-      "llm_tldr": "开发了一个具有双基记忆系统的检索增强拓扑推理框架，用于视觉导航。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory mechanisms in autonomous AI agents",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.03745v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.08127v1",
-      "title": "EvoScientist: Towards Multi-Agent Evolving AI Scientists for End-to-End Scientific Discovery",
-      "abstract": "The increasing adoption of Large Language Models (LLMs) has enabled AI scientists to perform complex end-to-end scientific discovery tasks requiring coordination of specialized roles, including idea generation and experimental execution. However, most state-of-the-art AI scientist systems rely on static, hand-designed pipelines and fail to adapt based on accumulated interaction histories. As a result, these systems overlook promising research directions, repeat failed experiments, and pursue infeasible ideas. To address this, we introduce EvoScientist, an evolving multi-agent AI scientist framework that continuously improves research strategies through persistent memory and self-evolution. EvoScientist comprises three specialized agents: a Researcher Agent (RA) for scientific idea generation, an Engineer Agent (EA) for experiment implementation and execution, and an Evolution Manager Agent (EMA) that distills insights from prior interactions into reusable knowledge. EvoScientist contains two persistent memory modules: (i) an ideation memory, which summarizes feasible research directions from top-ranked ideas while recording previously unsuccessful directions; and (ii) an experimentation memory, which captures effective data processing and model training strategies derived from code search trajectories and best-performing implementations. These modules enable the RA and EA to retrieve relevant prior strategies, improving idea quality and code execution success rates over time. Experiments show that EvoScientist outperforms 7 open-source and commercial state-of-the-art systems in scientific idea generation, achieving higher novelty, feasibility, relevance, and clarity via automatic and human evaluation. EvoScientist also substantially improves code execution success rates through multi-agent evolution, demonstrating persistent memory's effectiveness for end-to-end scientific discovery.",
-      "authors": [
-        "Yougang Lyu",
-        "Xi Zhang",
-        "Xinhao Yi",
-        "Yuyue Zhao",
-        "Shuyu Guo",
-        "Wenxiang Hu",
-        "Jan Piotrowski",
-        "Jakub Kaliski",
-        "Jacopo Urbani",
-        "Zaiqiao Meng",
-        "Lun Zhou",
-        "Xiaohui Yan"
-      ],
-      "primary_category": "cs.CL",
-      "categories": [
-        "cs.CL"
-      ],
-      "published": "2026-03-09T09:07:19+00:00",
-      "link": "https://arxiv.org/pdf/2603.08127v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "persistent memory and self-evolution in multi-agent systems",
-      "llm_evidence_cn": "多智能体系统中的持久记忆与自我演化",
-      "llm_evidence": "多智能体系统中的持久记忆与自我演化",
-      "canonical_evidence": "多智能体系统中的持久记忆与自我演化",
-      "llm_tldr_en": "Introduces EvoScientist, a multi-agent framework using persistent memory to evolve research strategies.",
-      "llm_tldr_cn": "引入EvoScientist，一个利用持久记忆不断演化研究策略的多智能体框架。",
-      "llm_tldr": "引入EvoScientist，一个利用持久记忆不断演化研究策略的多智能体框架。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory consolidation and update strategies in LLM agents",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.08127v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.07236v1",
-      "title": "HY-WU (Part I): An Extensible Functional Neural Memory Framework and An Instantiation in Text-Guided Image Editing",
-      "abstract": "Foundation models are transitioning from offline predictors to deployed systems expected to operate over long time horizons. In real deployments, objectives are not fixed: domains drift, user preferences evolve, and new tasks appear after the model has shipped. This elevates continual learning and instant personalization from optional features to core architectural requirements. Yet most adaptation pipelines still follow a static weight paradigm: after training (or after any adaptation step), inference executes a single parameter vector regardless of user intent, domain, or instance-specific constraints. This treats the trained or adapted model as a single point in parameter space. In heterogeneous and continually evolving regimes, distinct objectives can induce separated feasible regions over parameters, forcing any single shared update into compromise, interference, or overspecialization. As a result, continual learning and personalization are often implemented as repeated overwriting of shared weights, risking degradation of previously learned behaviors. We propose HY-WU (Weight Unleashing), a memory-first adaptation framework that shifts adaptation pressure away from overwriting a single shared parameter point. HY-WU implements functional (operator-level) memory as a neural module: a generator that synthesizes weight updates on-the-fly from the instance condition, yielding instance-specific operators without test-time optimization.",
-      "authors": [
-        "Tencent HY Team"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-07T14:40:05+00:00",
-      "link": "https://arxiv.org/pdf/2603.07236v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "extensible functional neural memory for long time horizons",
-      "llm_evidence_cn": "面向长时程的可扩展功能性神经记忆框架",
-      "llm_evidence": "面向长时程的可扩展功能性神经记忆框架",
-      "canonical_evidence": "面向长时程的可扩展功能性神经记忆框架",
-      "llm_tldr_en": "Proposes a functional neural memory framework to handle domain drift and personalization over long time horizons.",
-      "llm_tldr_cn": "提出一种可扩展的功能性神经记忆框架，解决模型在长时程部署中的领域偏移和个性化需求。",
-      "llm_tldr": "提出一种可扩展的功能性神经记忆框架，解决模型在长时程部署中的领域偏移和个性化需求。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "long-term memory architectures for large language models",
-      "matched_requirement_id": "req-2",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.07236v1",
-      "carry_days": 1
-    },
     {
       "id": "2603.08086v1",
       "title": "From Reactive to Map-Based AI: Tuned Local LLMs for Semantic Zone Inference in Object-Goal Navigation",
@@ -253,13 +22,13 @@
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "hybrid topological-grid mapping system as spatial memory",
-      "llm_evidence_cn": "作为空间记忆的混合拓扑网格地图系统",
-      "llm_evidence": "作为空间记忆的混合拓扑网格地图系统",
-      "canonical_evidence": "作为空间记忆的混合拓扑网格地图系统",
-      "llm_tldr_en": "Integrates LLM reasoning with a hybrid mapping system to provide explicit spatial memory for navigation agents.",
-      "llm_tldr_cn": "将LLM推理与混合地图系统结合，为导航智能体提供显式的空间记忆以减少冗余探索。",
-      "llm_tldr": "将LLM推理与混合地图系统结合，为导航智能体提供显式的空间记忆以减少冗余探索。",
+      "llm_evidence_en": "Integrating LLM reasoning with hybrid topological-grid spatial memory",
+      "llm_evidence_cn": "将大模型推理与混合拓扑网格空间记忆相结合",
+      "llm_evidence": "将大模型推理与混合拓扑网格空间记忆相结合",
+      "canonical_evidence": "将大模型推理与混合拓扑网格空间记忆相结合",
+      "llm_tldr_en": "Transitions agents from reactive to map-based AI using explicit spatial memory for navigation.",
+      "llm_tldr_cn": "利用显式空间记忆将智能体从反应式转向基于地图的AI导航。",
+      "llm_tldr": "利用显式空间记忆将智能体从反应式转向基于地图的AI导航。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -288,13 +57,13 @@
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "episodic memory module for autonomous agent control and exploration",
-      "llm_evidence_cn": "用于自主智能体控制与探索的情节记忆模块",
-      "llm_evidence": "用于自主智能体控制与探索的情节记忆模块",
-      "canonical_evidence": "用于自主智能体控制与探索的情节记忆模块",
-      "llm_tldr_en": "Proposes an episodic memory system to help RL agents avoid past failures and improve long-horizon exploration.",
-      "llm_tldr_cn": "提出一种情节记忆系统，帮助强化学习智能体规避历史失败并提升长程探索能力。",
-      "llm_tldr": "提出一种情节记忆系统，帮助强化学习智能体规避历史失败并提升长程探索能力。",
+      "llm_evidence_en": "episodic memory module for storing failure experiences",
+      "llm_evidence_cn": "用于存储失败经验的情节记忆模块",
+      "llm_evidence": "用于存储失败经验的情节记忆模块",
+      "canonical_evidence": "用于存储失败经验的情节记忆模块",
+      "llm_tldr_en": "Uses episodic memory to store and retrieve failure experiences, preventing robots from repeating mistakes.",
+      "llm_tldr_cn": "利用情节记忆存储和检索失败经验，防止机器人重复错误。",
+      "llm_tldr": "利用情节记忆存储和检索失败经验，防止机器人重复错误。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -306,38 +75,167 @@
       "carry_days": 1
     },
     {
-      "id": "2603.06902v1",
-      "title": "Empowering Locally Deployable Medical Agent via State Enhanced Logical Skills for FHIR-based Clinical Tasks",
-      "abstract": "While Large Language Models demonstrate immense potential as proactive Medical Agents, their real-world deployment is severely bottlenecked by data scarcity under privacy constraints. To overcome this, we propose State-Enhanced Logical-Skill Memory (SELSM), a training-free framework that distills simulated clinical trajectories into entity-agnostic operational rules within an abstract skill space. During inference, a Query-Anchored Two-Stage Retrieval mechanism dynamically fetches these entity-agnostic logical priors to guide the agent's step-by-step reasoning, effectively resolving the state polysemy problem. Evaluated on MedAgentBench -- the only authoritative high-fidelity virtual EHR sandbox benchmarked with real clinical data -- SELSM substantially elevates the zero-shot capabilities of locally deployable foundation models (30B--32B parameters). Notably, on the Qwen3-30B-A3B backbone, our framework completely eliminates task chain breakdowns to achieve a 100\\% completion rate, boosting the overall success rate by an absolute 22.67\\% and significantly outperforming existing memory-augmented baselines. This study demonstrates that equipping models with a dynamically updatable, state-enhanced cognitive scaffold is a privacy-preserving and computationally efficient pathway for local adaptation of AI agents to clinical information systems. While currently validated on FHIR-based EHR interactions as an initial step, the entity-agnostic design of SELSM provides a principled foundation toward broader clinical deployment.",
+      "id": "2603.09835v1",
+      "title": "Chow-Liu Ordering for Long-Context Reasoning in Chain-of-Agents",
+      "abstract": "Sequential multi-agent reasoning frameworks such as Chain-of-Agents (CoA) handle long-context queries by decomposing inputs into chunks and processing them sequentially using LLM-based worker agents that read from and update a bounded shared memory. From a probabilistic perspective, CoA aims to approximate the conditional distribution corresponding to a model capable of jointly reasoning over the entire long context. CoA achieves this through a latent-state factorization in which only bounded summaries of previously processed evidence are passed between agents. The resulting bounded-memory approximation introduces a lossy information bottleneck, making the final evidence state inherently dependent on the order in which chunks are processed.   In this work, we study the problem of chunk ordering for long-context reasoning. We use the well-known Chow-Liu trees to learn a dependency structure that prioritizes strongly related chunks. Empirically, we show that a breadth-first traversal of the resulting tree yields chunk orderings that reduce information loss across agents and consistently outperform both default document-chunk ordering and semantic score-based ordering in answer relevance and exact-match accuracy across three long-context benchmarks.",
       "authors": [
-        "Wanrong Yang",
-        "Zhengliang Liu",
-        "Yuan Li",
-        "Bingjie Yan",
-        "Lingfang Li",
-        "Mingguang He",
-        "Dominik Wojtczak",
-        "Yalin Zheng",
-        "Danli Shi"
+        "Naman Gupta",
+        "Vaibhav Singh",
+        "Arun Iyer",
+        "Kirankumar Shiragur",
+        "Pratham Grover",
+        "Ramakrishna B. Bairi",
+        "Ritabrata Maiti",
+        "Sankarshan Damle",
+        "Shachee Mishra Gupta",
+        "Rishikesh Maurya",
+        "Vageesh D. C"
       ],
-      "primary_category": "cs.AI",
+      "primary_category": "cs.CL",
       "categories": [
-        "cs.AI"
+        "cs.CL"
       ],
-      "published": "2026-03-06T21:42:14+00:00",
-      "link": "https://arxiv.org/pdf/2603.06902v1",
+      "published": "2026-03-10T15:57:35+00:00",
+      "link": "https://arxiv.org/pdf/2603.09835v1",
       "tags": [
         "keyword:AGIMEM",
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "state-enhanced logical-skill memory for medical agents",
-      "llm_evidence_cn": "医疗智能体的状态增强逻辑技能记忆",
-      "llm_evidence": "医疗智能体的状态增强逻辑技能记忆",
-      "canonical_evidence": "医疗智能体的状态增强逻辑技能记忆",
-      "llm_tldr_en": "Proposes a training-free memory framework that distills clinical trajectories into abstract logical skills.",
-      "llm_tldr_cn": "提出了一种无需训练的记忆框架，将临床轨迹提取为抽象的逻辑技能。",
-      "llm_tldr": "提出了一种无需训练的记忆框架，将临床轨迹提取为抽象的逻辑技能。",
+      "llm_evidence_en": "Bounded shared memory architecture for long-context reasoning in multi-agent chains",
+      "llm_evidence_cn": "多智能体链中用于长上下文推理的有界共享记忆架构",
+      "llm_evidence": "多智能体链中用于长上下文推理的有界共享记忆架构",
+      "canonical_evidence": "多智能体链中用于长上下文推理的有界共享记忆架构",
+      "llm_tldr_en": "Proposes an ordering method for agents reading from and updating a shared memory in long-context tasks.",
+      "llm_tldr_cn": "提出了一种在长上下文任务中智能体读取和更新共享记忆的排序方法。",
+      "llm_tldr": "提出了一种在长上下文任务中智能体读取和更新共享记忆的排序方法。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.09835v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.08533v1",
+      "title": "SecAgent: Efficient Mobile GUI Agent with Semantic Context",
+      "abstract": "Mobile Graphical User Interface (GUI) agents powered by multimodal large language models have demonstrated promising capabilities in automating complex smartphone tasks. However, existing approaches face two critical limitations: the scarcity of high-quality multilingual datasets, particularly for non-English ecosystems, and inefficient history representation methods. To address these challenges, we present SecAgent, an efficient mobile GUI agent at 3B scale. We first construct a human-verified Chinese mobile GUI dataset with 18k grounding samples and 121k navigation steps across 44 applications, along with a Chinese navigation benchmark featuring multi-choice action annotations. Building upon this dataset, we propose a semantic context mechanism that distills history screenshots and actions into concise, natural language summaries, significantly reducing computational costs while preserving task-relevant information. Through supervised and reinforcement fine-tuning, SecAgent outperforms similar-scale baselines and achieves performance comparable to 7B-8B models on our and public navigation benchmarks. We will open-source the training dataset, benchmark, model, and code to advance research in multilingual mobile GUI automation.",
+      "authors": [
+        "Yiping Xie",
+        "Song Chen",
+        "Jingxuan Xing",
+        "Wei Jiang",
+        "Zekun Zhu",
+        "Yingyao Wang",
+        "Pi Bu",
+        "Jun Song",
+        "Yuning Jiang",
+        "Bo Zheng"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-09T16:04:08+00:00",
+      "link": "https://arxiv.org/pdf/2603.08533v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "semantic context mechanism that distills history representation",
+      "llm_evidence_cn": "提炼历史表示的语义上下文机制",
+      "llm_evidence": "提炼历史表示的语义上下文机制",
+      "canonical_evidence": "提炼历史表示的语义上下文机制",
+      "llm_tldr_en": "Introduces a semantic context mechanism to improve history representation efficiency in mobile GUI agents.",
+      "llm_tldr_cn": "引入语义上下文机制以提高移动GUI智能体中历史表示的效率。",
+      "llm_tldr": "引入语义上下文机制以提高移动GUI智能体中历史表示的效率。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.08533v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.07896v1",
+      "title": "SMGI: A Structural Theory of General Artificial Intelligence",
+      "abstract": "We introduce SMGI, a structural theory of general artificial intelligence, and recast the foundational problem of learning from the optimization of hypotheses within fixed environments to the controlled evolution of the learning interface itself. We formalize the Structural Model of General Intelligence (SMGI) via a typed meta-model $θ= (r,\\mathcal H,Π,\\mathcal L,\\mathcal E,\\mathcal M)$ that treats representational maps, hypothesis spaces, structural priors, multi-regime evaluators, and memory operators as explicitly typed, dynamic components. By enforcing a strict mathematical separation between this structural ontology ($θ$) and its induced behavioral semantics ($T_θ$), we define general artificial intelligence as a class of admissible coupled dynamics $(θ, T_θ)$ satisfying four obligations: structural closure under typed transformations, dynamical stability under certified evolution, bounded statistical capacity, and evaluative invariance across regime shifts. We prove a structural generalization bound that links sequential PAC-Bayes analysis and Lyapunov stability, providing sufficient conditions for capacity control and bounded drift under admissible task transformations. Furthermore, we establish a strict structural inclusion theorem demonstrating that classical empirical risk minimization, reinforcement learning, program-prior models (Solomonoff-style), and modern frontier agentic pipelines operate as structurally restricted instances of SMGI.",
+      "authors": [
+        "Aomar Osmani"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-03-09T02:31:31+00:00",
+      "link": "https://arxiv.org/pdf/2603.07896v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "memory operators as explicitly typed dynamic components in AGI theory",
+      "llm_evidence_cn": "通用人工智能理论中作为显式类型动态组件的记忆算子",
+      "llm_evidence": "通用人工智能理论中作为显式类型动态组件的记忆算子",
+      "canonical_evidence": "通用人工智能理论中作为显式类型动态组件的记忆算子",
+      "llm_tldr_en": "Formalizes a structural theory of AGI including memory operators as core dynamic components.",
+      "llm_tldr_cn": "形式化了通用人工智能的结构理论，将记忆算子作为核心动态组件。",
+      "llm_tldr": "形式化了通用人工智能的结构理论，将记忆算子作为核心动态组件。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.07896v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.08403v1",
+      "title": "SPIRAL: A Closed-Loop Framework for Self-Improving Action World Models via Reflective Planning Agents",
+      "abstract": "We introduce SPIRAL, a self-improving planning and iterative reflective action world modeling closed-loop framework that enables controllable long-horizon video generation conditioned on high-level semantic actions. Existing one-shot video generation models operate in open-loop, often resulting in incomplete action execution, weak semantic grounding, and temporal drift. SPIRAL formulates ActWM as a closed-loop think-act-reflect process, where generation proceeds step by step under explicit planning and feedback. A PlanAgent decomposes abstract actions into object-centric sub-actions, while a CriticAgent evaluates intermediate results and guides iterative refinement with long-horizon memory. This closed-loop design naturally supports RL evolving optimization, improving semantic alignment and temporal consistency over extended horizons. We further introduce the ActWM-Dataset and ActWM-Bench for training and evaluation. Experiments across multiple TI2V backbones demonstrate consistent gains on ActWM-Bench and mainstream video generation benchmarks, validating SPIRAL's effectiveness.",
+      "authors": [
+        "Yu Yang",
+        "Yue Liao",
+        "Jianbiao Mei",
+        "Baisen Wang",
+        "Xuemeng Yang",
+        "Licheng Wen",
+        "Jiangning Zhang",
+        "Xiangtai Li",
+        "Hanlin Chen",
+        "Botian Shi",
+        "Yong Liu",
+        "Shuicheng Yan",
+        "Gim Hee Lee"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-09T14:00:36+00:00",
+      "link": "https://arxiv.org/pdf/2603.08403v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "CriticAgent guides refinement with long-horizon memory",
+      "llm_evidence_cn": "批评智能体利用长程记忆引导优化",
+      "llm_evidence": "批评智能体利用长程记忆引导优化",
+      "canonical_evidence": "批评智能体利用长程记忆引导优化",
+      "llm_tldr_en": "A closed-loop framework using reflective agents and long-horizon memory for video generation.",
+      "llm_tldr_cn": "一个利用反思智能体和长程记忆进行视频生成的闭环框架。",
+      "llm_tldr": "一个利用反思智能体和长程记忆进行视频生成的闭环框架。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -345,7 +243,260 @@
       "matched_query_text": "architectures for long term and short term memory in AI agents",
       "matched_requirement_id": "req-7",
       "selection_source": "carryover_cache",
-      "paper_id": "2603.06902v1",
+      "paper_id": "2603.08403v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.09827v1",
+      "title": "MA-EgoQA: Question Answering over Egocentric Videos from Multiple Embodied Agents",
+      "abstract": "As embodied models become powerful, humans will collaborate with multiple embodied AI agents at their workplace or home in the future. To ensure better communication between human users and the multi-agent system, it is crucial to interpret incoming information from agents in parallel and refer to the appropriate context for each query. Existing challenges include effectively compressing and communicating high volumes of individual sensory inputs in the form of video and correctly aggregating multiple egocentric videos to construct system-level memory. In this work, we first formally define a novel problem of understanding multiple long-horizon egocentric videos simultaneously collected from embodied agents. To facilitate research in this direction, we introduce MultiAgent-EgoQA (MA-EgoQA), a benchmark designed to systemically evaluate existing models in our scenario. MA-EgoQA provides 1.7k questions unique to multiple egocentric streams, spanning five categories: social interaction, task coordination, theory-of-mind, temporal reasoning, and environmental interaction. We further propose a simple baseline model for MA-EgoQA named EgoMAS, which leverages shared memory across embodied agents and agent-wise dynamic retrieval. Through comprehensive evaluation across diverse baselines and EgoMAS on MA-EgoQA, we find that current approaches are unable to effectively handle multiple egocentric streams, highlighting the need for future advances in system-level understanding across the agents. The code and benchmark are available at https://ma-egoqa.github.io.",
+      "authors": [
+        "Kangsan Kim",
+        "Yanlai Yang",
+        "Suji Kim",
+        "Woongyeong Yeo",
+        "Youngwan Lee",
+        "Mengye Ren",
+        "Sung Ju Hwang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-03-10T15:48:35+00:00",
+      "link": "https://arxiv.org/pdf/2603.09827v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "constructing system-level memory from multiple egocentric videos",
+      "llm_evidence_cn": "从多个第一视角视频构建系统级记忆",
+      "llm_evidence": "从多个第一视角视频构建系统级记忆",
+      "canonical_evidence": "从多个第一视角视频构建系统级记忆",
+      "llm_tldr_en": "Proposes a method for multi-agent systems to aggregate sensory inputs into a shared long-horizon memory.",
+      "llm_tldr_cn": "提出一种多智能体系统将感官输入聚合为长程记忆的方法。",
+      "llm_tldr": "提出一种多智能体系统将感官输入聚合为长程记忆的方法。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.09827v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.09943v1",
+      "title": "PathMem: Toward Cognition-Aligned Memory Transformation for Pathology MLLMs",
+      "abstract": "Computational pathology demands both visual pattern recognition and dynamic integration of structured domain knowledge, including taxonomy, grading criteria, and clinical evidence. In practice, diagnostic reasoning requires linking morphological evidence with formal diagnostic and grading criteria. Although multimodal large language models (MLLMs) demonstrate strong vision language reasoning capabilities, they lack explicit mechanisms for structured knowledge integration and interpretable memory control. As a result, existing models struggle to consistently incorporate pathology-specific diagnostic standards during reasoning. Inspired by the hierarchical memory process of human pathologists, we propose PathMem, a memory-centric multimodal framework for pathology MLLMs. PathMem organizes structured pathology knowledge as a long-term memory (LTM) and introduces a Memory Transformer that models the dynamic transition from LTM to working memory (WM) through multimodal memory activation and context-aware knowledge grounding, enabling context-aware memory refinement for downstream reasoning. PathMem achieves SOTA performance across benchmarks, improving WSI-Bench report generation (12.8% WSI-Precision, 10.1% WSI-Relevance) and open-ended diagnosis by 9.7% and 8.9% over prior WSI-based models.",
+      "authors": [
+        "Jinyue Li",
+        "Yuci Liang",
+        "Qiankun Li",
+        "Xinheng Lyu",
+        "Jiayu Qian",
+        "Huabao Chen",
+        "Kun Wang",
+        "Zhigang Zeng",
+        "Anil Anthony Bharath",
+        "Yang Liu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-10T17:35:49+00:00",
+      "link": "https://arxiv.org/pdf/2603.09943v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "hierarchical memory process for structured knowledge integration",
+      "llm_evidence_cn": "用于结构化知识集成的分层记忆过程",
+      "llm_evidence": "用于结构化知识集成的分层记忆过程",
+      "canonical_evidence": "用于结构化知识集成的分层记忆过程",
+      "llm_tldr_en": "A memory-centric multimodal framework for pathology that mimics human hierarchical memory for diagnostic reasoning.",
+      "llm_tldr_cn": "一种病理学多模态框架，模拟人类分层记忆以进行诊断推理。",
+      "llm_tldr": "一种病理学多模态框架，模拟人类分层记忆以进行诊断推理。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.09943v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.09250v1",
+      "title": "Evoking User Memory: Personalizing LLM via Recollection-Familiarity Adaptive Retrieval",
+      "abstract": "Personalized large language models (LLMs) rely on memory retrieval to incorporate user-specific histories, preferences, and contexts. Existing approaches either overload the LLM by feeding all the user's past memory into the prompt, which is costly and unscalable, or simplify retrieval into a one-shot similarity search, which captures only surface matches. Cognitive science, however, shows that human memory operates through a dual process: Familiarity, offering fast but coarse recognition, and Recollection, enabling deliberate, chain-like reconstruction for deeply recovering episodic content. Current systems lack both the ability to perform recollection retrieval and mechanisms to adaptively switch between the dual retrieval paths, leading to either insufficient recall or the inclusion of noise. To address this, we propose RF-Mem (Recollection-Familiarity Memory Retrieval), a familiarity uncertainty-guided dual-path memory retriever. RF-Mem measures the familiarity signal through the mean score and entropy. High familiarity leads to the direct top-K Familiarity retrieval path, while low familiarity activates the Recollection path. In the Recollection path, the system clusters candidate memories and applies alpha-mix with the query to iteratively expand evidence in embedding space, simulating deliberate contextual reconstruction. This design embeds human-like dual-process recognition into the retriever, avoiding full-context overhead and enabling scalable, adaptive personalization. Experiments across three benchmarks and corpus scales demonstrate that RF-Mem consistently outperforms both one-shot retrieval and full-context reasoning under fixed budget and latency constraints. Our code can be found in the Reproducibility Statement.",
+      "authors": [
+        "Yingyi Zhang",
+        "Junyi Li",
+        "Wenlin Zhang",
+        "Penyue Jia",
+        "Xianneng Li",
+        "Yichao Wang",
+        "Derong Xu",
+        "Yi Wen",
+        "Huifeng Guo",
+        "Yong Liu",
+        "Xiangyu Zhao"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR"
+      ],
+      "published": "2026-03-10T06:31:44+00:00",
+      "link": "https://arxiv.org/pdf/2603.09250v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "long-term memory retrieval based on cognitive science",
+      "llm_evidence_cn": "基于认知科学的长期记忆检索",
+      "llm_evidence": "基于认知科学的长期记忆检索",
+      "canonical_evidence": "基于认知科学的长期记忆检索",
+      "llm_tldr_en": "Explores a dual-process memory retrieval mechanism to improve personalization in LLMs.",
+      "llm_tldr_cn": "探索一种双过程记忆检索机制，以提高大语言模型的个性化能力。",
+      "llm_tldr": "探索一种双过程记忆检索机制，以提高大语言模型的个性化能力。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.09250v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.09892v1",
+      "title": "MSSR: Memory-Aware Adaptive Replay for Continual LLM Fine-Tuning",
+      "abstract": "Continual fine-tuning of large language models (LLMs) is becoming increasingly crucial as these models are deployed in dynamic environments where tasks and data distributions evolve over time. While strong adaptability enables rapid acquisition of new knowledge, it also exposes LLMs to catastrophic forgetting, where previously learned skills degrade during sequential training. Existing replay-based strategies, such as fixed interleaved replay, accuracy-supervised, and loss-driven scheduling, remain limited: some depend on heuristic rules and provide only partial mitigation of forgetting, while others improve performance but incur substantial computational overhead. Motivated by retention dynamics under sequential fine-tuning, we propose Memory-Inspired Sampler and Scheduler Replay (MSSR), an experience replay framework that estimates sample-level memory strength and schedules rehearsal at adaptive intervals to mitigate catastrophic forgetting while maintaining fast adaptation. Extensive experiments across three backbone models and 11 sequential tasks show that MSSR consistently outperforms state-of-the-art replay baselines, with particularly strong gains on reasoning-intensive and multiple-choice benchmarks.",
+      "authors": [
+        "Yiyang Lu",
+        "Yu He",
+        "Jianlong Chen",
+        "Hongyuan Zha"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-03-10T16:49:44+00:00",
+      "link": "https://arxiv.org/pdf/2603.09892v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "memory-aware adaptive replay for continual LLM fine-tuning",
+      "llm_evidence_cn": "用于持续LLM微调的存储感知自适应重放",
+      "llm_evidence": "用于持续LLM微调的存储感知自适应重放",
+      "canonical_evidence": "用于持续LLM微调的存储感知自适应重放",
+      "llm_tldr_en": "Proposes a memory-inspired sampling strategy to mitigate catastrophic forgetting during sequential LLM training.",
+      "llm_tldr_cn": "提出一种受存储启发的采样策略，以减轻LLM顺序训练中的灾难性遗忘。",
+      "llm_tldr": "提出一种受存储启发的采样策略，以减轻LLM顺序训练中的灾难性遗忘。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory consolidation and update strategies in LLM agents",
+      "matched_requirement_id": "req-3",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.09892v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.09643v1",
+      "title": "MM-tau-p$^2$: Persona-Adaptive Prompting for Robust Multi-Modal Agent Evaluation in Dual-Control Settings",
+      "abstract": "Current evaluation frameworks and benchmarks for LLM powered agents focus on text chat driven agents, these frameworks do not expose the persona of user to the agent, thus operating in a user agnostic environment. Importantly, in customer experience management domain, the agent's behaviour evolves as the agent learns about user personality. With proliferation of real time TTS and multi-modal language models, LLM based agents are gradually going to become multi-modal. Towards this, we propose the MM-tau-p$^2$ benchmark with metrics for evaluating the robustness of multi-modal agents in dual control setting with and without persona adaption of user, while also taking user inputs in the planning process to resolve a user query. In particular, our work shows that even with state of-the-art frontier LLMs like GPT-5, GPT 4.1, there are additional considerations measured using metrics viz. multi-modal robustness, turn overhead while introducing multi-modality into LLM based agents. Overall, MM-tau-p$^2$ builds on our prior work FOCAL and provides a holistic way of evaluating multi-modal agents in an automated way by introducing 12 novel metrics. We also provide estimates of these metrics on the telecom and retail domains by using the LLM-as-judge approach using carefully crafted prompts with well defined rubrics for evaluating each conversation.",
+      "authors": [
+        "Anupam Purwar",
+        "Aditya Choudhary"
+      ],
+      "primary_category": "cs.ET",
+      "categories": [
+        "cs.ET",
+        "cs.AI"
+      ],
+      "published": "2026-03-10T13:18:02+00:00",
+      "link": "https://arxiv.org/pdf/2603.09643v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "benchmark and metrics for evaluating multi-modal agent persona adaptation",
+      "llm_evidence_cn": "评估多模态智能体人格适应的基准和指标",
+      "llm_evidence": "评估多模态智能体人格适应的基准和指标",
+      "canonical_evidence": "评估多模态智能体人格适应的基准和指标",
+      "llm_tldr_en": "Introduces MM-tau-p2 benchmark for evaluating multi-modal agents with persona-adaptive prompting.",
+      "llm_tldr_cn": "引入MM-tau-p2基准，用于评估具有人格自适应提示的多模态智能体。",
+      "llm_tldr": "引入MM-tau-p2基准，用于评估具有人格自适应提示的多模态智能体。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.09643v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.08754v1",
+      "title": "Hindsight Credit Assignment for Long-Horizon LLM Agents",
+      "abstract": "Large Language Model (LLM) agents often face significant credit assignment challenges in long-horizon, multi-step tasks due to sparse rewards. Existing value-free methods, such as Group Relative Policy Optimization (GRPO), encounter two fundamental bottlenecks: inaccurate step-level Q-value estimation and misaligned value baselines for intermediate states. To address these limitations, we introduce HCAPO, the first framework to integrate hindsight credit assignment into LLM agents. HCAPO leverages the LLM itself as a post-hoc critic to refine step-level Q-values through hindsight reasoning. Furthermore, HCAPO's multi-scale advantage mechanism effectively supplements the inaccurate value baselines at critical decision states. Evaluations across three challenging benchmarks, including WebShop and ALFWorld, demonstrate that HCAPO consistently outperforms state-of-the-art RL methods. Notably, HCAPO achieves a 7.7% improvement in success rate on WebShop and a 13.8% on ALFWorld over GRPO using the Qwen2.5-7B-Instruct model. These results indicate that HCAPO significantly enhances exploration efficiency, promotes concise decision-making, and ensures scalability in complex, long-horizon tasks.",
+      "authors": [
+        "Hui-Ze Tan",
+        "Xiao-Wen Yang",
+        "Hao Chen",
+        "Jie-Jing Shao",
+        "Yi Wen",
+        "Yuteng Shen",
+        "Weihong Luo",
+        "Xiku Du",
+        "Lan-Zhe Guo",
+        "Yu-Feng Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-07T06:05:20+00:00",
+      "link": "https://arxiv.org/pdf/2603.08754v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "hindsight credit assignment for refining step-level reasoning in agents",
+      "llm_evidence_cn": "用于优化智能体步骤级推理的后验信用分配",
+      "llm_evidence": "用于优化智能体步骤级推理的后验信用分配",
+      "canonical_evidence": "用于优化智能体步骤级推理的后验信用分配",
+      "llm_tldr_en": "Introduces HCAPO to improve long-horizon LLM agent performance via hindsight reasoning and credit assignment.",
+      "llm_tldr_cn": "引入HCAPO框架，通过后验推理和信用分配提升长程LLM智能体的性能。",
+      "llm_tldr": "引入HCAPO框架，通过后验推理和信用分配提升长程LLM智能体的性能。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory consolidation and update strategies in LLM agents",
+      "matched_requirement_id": "req-3",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.08754v1",
       "carry_days": 1
     }
   ]
