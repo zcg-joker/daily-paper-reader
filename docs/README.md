@@ -9,73 +9,73 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-03-12
-- 运行时间：2026-03-12 19:42:50 UTC
+- 最新运行日期：2026-03-13
+- 运行时间：2026-03-13 19:30:39 UTC
 - 运行状态：成功
 - 本次总论文数：17
 - 精读区：6
 - 速读区：11
 
 ### 今日简报（AI）
-今日精选 17 篇前沿论文，深度聚焦 AI 记忆系统，重点攻克 GUI 智能体自进化与大模型个性化检索。
-满分神作揭示了混合结构化记忆如何驱动 GUI 智能体自主进化，而自适应检索技术则让大模型更懂用户偏好。
-建议关注“记忆”如何让 AI 从静态工具转变为能从失败中学习、具备长期进化能力的智能助手。
-- 详情：[/202603/12/README](/202603/12/README)
+10.0) - Yes.
+    - Chow-Liu (9.0) - Yes.
+    - RetroAgent (
+- 详情：[/202603/13/README](/202603/13/README)
 
 ### 精读区论文标签
-1. [Hybrid Self-evolving Structured Memory for GUI Agents](/202603/12/2603.10291v1-hybrid-self-evolving-structured-memory-for-gui-agents)  
+1. [Governing Evolving Memory in LLM Agents: Risks, Mechanisms, and the Stability and Safety Governed Memory (SSGM) Framework](/202603/13/2603.11768v1-governing-evolving-memory-in-llm-agents-risks-mechanisms-and-the-stability-and-safety-governed-memory-ssgm-framework)  
    标签：评分：10.0/10、query:agimem
-   evidence：智能体长程工作流的图结构记忆
-2. [Evoking User Memory: Personalizing LLM via Recollection-Familiarity Adaptive Retrieval](/202603/12/2603.09250v1-evoking-user-memory-personalizing-llm-via-recollection-familiarity-adaptive-retrieval)  
+   evidence：LLM 智能体记忆风险与治理的综述
+2. [Chow-Liu Ordering for Long-Context Reasoning in Chain-of-Agents](/202603/13/2603.09835v1-chow-liu-ordering-for-long-context-reasoning-in-chain-of-agents)  
    标签：评分：9.0/10、query:agimem
-   evidence：具有熟悉度和回忆路径的双过程记忆检索
-3. [MM-tau-p$^2$: Persona-Adaptive Prompting for Robust Multi-Modal Agent Evaluation in Dual-Control Settings](/202603/12/2603.09643v2-mm-tau-p2-persona-adaptive-prompting-for-robust-multi-modal-agent-evaluation-in-dual-control-settings)  
+   evidence：智能体中的有界共享记忆与长上下文推理
+3. [When OpenClaw Meets Hospital: Toward an Agentic Operating System for Dynamic Clinical Workflows](/202603/13/2603.11721v1-when-openclaw-meets-hospital-toward-an-agentic-operating-system-for-dynamic-clinical-workflows)  
    标签：评分：9.0/10、query:agimem
-   evidence：评估人格自适应智能体的基准与指标
-4. [Multi-Agent Memory from a Computer Architecture Perspective: Visions and Challenges Ahead](/202603/12/2603.10062v1-multi-agent-memory-from-a-computer-architecture-perspective-visions-and-challenges-ahead)  
-   标签：评分：9.0/10、query:agimem
-   evidence：将多智能体记忆框架化为计算机体系结构问题
-5. [KernelSkill: A Multi-Agent Framework for GPU Kernel Optimization](/202603/12/2603.10085v1-kernelskill-a-multi-agent-framework-for-gpu-kernel-optimization)  
-   标签：评分：9.0/10、query:agimem
-   evidence：具有长期和短期记忆的双层记忆架构
-6. [Trajectory-Informed Memory Generation for Self-Improving Agent Systems](/202603/12/2603.10600v1-trajectory-informed-memory-generation-for-self-improving-agent-systems)  
-   标签：评分：9.0/10、query:agimem
-   evidence：从执行轨迹中提取可操作的学习成果用于上下文记忆检索
+   evidence：临床LLM代理中长期记忆机制不足的问题
+4. [Adaptive Loops and Memory in Transformers: Think Harder or Know More?](/202603/13/2603.08391v3-adaptive-loops-and-memory-in-transformers-think-harder-or-know-more)  
+   标签：评分：8.0/10、query:agimem
+   evidence：自适应循环与门控记忆库存储
+5. [SPIRAL: A Closed-Loop Framework for Self-Improving Action World Models via Reflective Planning Agents](/202603/13/2603.08403v1-spiral-a-closed-loop-framework-for-self-improving-action-world-models-via-reflective-planning-agents)  
+   标签：评分：8.0/10、query:agimem
+   evidence：具有长程记忆的迭代反思动作，用于自我改进的智能体
+6. [SecAgent: Efficient Mobile GUI Agent with Semantic Context](/202603/13/2603.08533v1-secagent-efficient-mobile-gui-agent-with-semantic-context)  
+   标签：评分：8.0/10、query:agimem
+   evidence：提炼历史表示的语义上下文机制
 
 ### 速读区论文标签
-1. [Learning From Failures: Efficient Reinforcement Learning Control with Episodic Memory](/202603/12/2603.07110v1-learning-from-failures-efficient-reinforcement-learning-control-with-episodic-memory)  
+1. [LycheeCluster: Efficient Long-Context Inference with Structure-Aware Chunking and Hierarchical KV Indexing](/202603/13/2603.08453v1-lycheecluster-efficient-long-context-inference-with-structure-aware-chunking-and-hierarchical-kv-indexing)  
    标签：评分：8.0/10、query:agimem
-   evidence：通过情境记忆模块显式存储短程失败经验
-2. [HY-WU (Part I): An Extensible Functional Neural Memory Framework and An Instantiation in Text-Guided Image Editing](/202603/12/2603.07236v1-hy-wu-part-i-an-extensible-functional-neural-memory-framework-and-an-instantiation-in-text-guided-image-editing)  
+   evidence：长上下文推理的高效 KV 缓存管理
+2. [RetroAgent: From Solving to Evolving via Retrospective Dual Intrinsic Feedback](/202603/13/2603.08561v2-retroagent-from-solving-to-evolving-via-retrospective-dual-intrinsic-feedback)  
    标签：评分：8.0/10、query:agimem
-   evidence：面向长时间跨度的可扩展功能性神经记忆框架
-3. [SMGI: A Structural Theory of General Artificial Intelligence](/202603/12/2603.07896v1-smgi-a-structural-theory-of-general-artificial-intelligence)  
+   evidence：事后自我反思和经验学习机制促进智能体进化
+3. [Semantic Level of Detail: Multi-Scale Knowledge Representation via Heat Kernel Diffusion on Hyperbolic Manifolds](/202603/13/2603.08965v1-semantic-level-of-detail-multi-scale-knowledge-representation-via-heat-kernel-diffusion-on-hyperbolic-manifolds)  
    标签：评分：8.0/10、query:agimem
-   evidence：通用人工智能理论中作为显式类型动态组件的记忆算子
-4. [Long-Short Term Agents for Pure-Vision Bronchoscopy Robotic Autonomy](/202603/12/2603.07909v1-long-short-term-agents-for-pure-vision-bronchoscopy-robotic-autonomy)  
+   evidence：通过热核扩散实现多尺度知识表示与记忆编排
+4. [MSSR: Memory-Aware Adaptive Replay for Continual LLM Fine-Tuning](/202603/13/2603.09892v1-mssr-memory-aware-adaptive-replay-for-continual-llm-fine-tuning)  
    标签：评分：8.0/10、query:agimem
-   evidence：用于导航的分层长短期智能体
-5. [Characterizing Faults in Agentic AI: A Taxonomy of Types, Symptoms, and Root Causes](/202603/12/2603.06847v1-characterizing-faults-in-agentic-ai-a-taxonomy-of-types-symptoms-and-root-causes)  
+   evidence：用于大模型持续微调的内存感知自适应重放，防止遗忘
+5. [Building AI Coding Agents for the Terminal: Scaffolding, Harness, Context Engineering, and Lessons Learned](/202603/13/2603.05344v1-building-ai-coding-agents-for-the-terminal-scaffolding-harness-context-engineering-and-lessons-learned)  
    标签：评分：7.0/10、query:agimem
-   evidence：智能体AI系统故障类型与根因的分类学
-6. [Multi-Agentic AI for Conflict-Aware rApp Policy Orchestration in Open RAN](/202603/12/2603.07375v1-multi-agentic-ai-for-conflict-aware-rapp-policy-orchestration-in-open-ran)  
+   evidence：防止上下文膨胀和推理退化的上下文管理
+6. [SPIRAL: A Closed-Loop Framework for Self-Improving Action World Models via Reflective Planning Agents](/202603/13/2603.08403v2-spiral-a-closed-loop-framework-for-self-improving-action-world-models-via-reflective-planning-agents)  
    标签：评分：7.0/10、query:agimem
-   evidence：多智能体AI框架中基于记忆的类比推理
-7. [From Reactive to Map-Based AI: Tuned Local LLMs for Semantic Zone Inference in Object-Goal Navigation](/202603/12/2603.08086v1-from-reactive-to-map-based-ai-tuned-local-llms-for-semantic-zone-inference-in-object-goal-navigation)  
+   evidence：具有长程记忆的迭代反思动作建模
+7. [RetroAgent: From Solving to Evolving via Retrospective Dual Intrinsic Feedback](/202603/13/2603.08561v3-retroagent-from-solving-to-evolving-via-retrospective-dual-intrinsic-feedback)  
    标签：评分：7.0/10、query:agimem
-   evidence：将LLM推理与空间记忆相结合
-8. [A Hierarchical Error-Corrective Graph Framework for Autonomous Agents with LLM-Based Action Generation](/202603/12/2603.08388v1-a-hierarchical-error-corrective-graph-framework-for-autonomous-agents-with-llm-based-action-generation)  
+   evidence：通过回顾性反馈进行持续适应和经验学习
+8. [Hindsight Credit Assignment for Long-Horizon LLM Agents](/202603/13/2603.08754v1-hindsight-credit-assignment-for-long-horizon-llm-agents)  
    标签：评分：7.0/10、query:agimem
-   evidence：智能体的任务质量与语义推理指标
-9. [The Controllability Trap: A Governance Framework for Military AI Agents](/202603/12/2603.03515v1-the-controllability-trap-a-governance-framework-for-military-ai-agents)  
+   evidence：长程推理中的事后信用分配
+9. [DualSpec: Accelerating Deep Research Agents via Dual-Process Action Speculation](/202603/13/2603.07416v1-dualspec-accelerating-deep-research-agents-via-dual-process-action-speculation)  
    标签：评分：6.0/10、query:agimem
-   evidence：智能体的可测量架构与控制质量得分
-10. [HyperParallel: A Supernode-Affinity AI Framework](/202603/12/2603.03731v1-hyperparallel-a-supernode-affinity-ai-framework)  
+   evidence：研究型智能体的双过程动作推测
+10. [AutoControl Arena: Synthesizing Executable Test Environments for Frontier AI Risk Evaluation](/202603/13/2603.07427v1-autocontrol-arena-synthesizing-executable-test-environments-for-frontier-ai-risk-evaluation)  
    标签：评分：6.0/10、query:agimem
-   evidence：智能体AI模型的自动化分层内存管理
-11. [Critic in the Loop: A Tri-System VLA Framework for Robust Long-Horizon Manipulation](/202603/12/2603.05185v1-critic-in-the-loop-a-tri-system-vla-framework-for-robust-long-horizon-manipulation)  
+   evidence：前沿AI风险评估和安全基准的自动化框架
+11. [Security Considerations for Multi-agent Systems](/202603/13/2603.09002v1-security-considerations-for-multi-agent-systems)  
    标签：评分：6.0/10、query:agimem
-   evidence：全局推理与反应式执行的分层架构
+   evidence：共享持久记忆的多智能体系统的安全性
 
 
 <div class="dpr-home-promo-card">

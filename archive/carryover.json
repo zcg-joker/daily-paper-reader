@@ -1,97 +1,8 @@
 {
-  "generated_at": "2026-03-12T19:40:36.679618+00:00",
-  "updated_date": "20260312",
+  "generated_at": "2026-03-13T19:27:14.877704+00:00",
+  "updated_date": "20260313",
   "carryover_days": 9,
   "items": [
-    {
-      "id": "2603.09835v1",
-      "title": "Chow-Liu Ordering for Long-Context Reasoning in Chain-of-Agents",
-      "abstract": "Sequential multi-agent reasoning frameworks such as Chain-of-Agents (CoA) handle long-context queries by decomposing inputs into chunks and processing them sequentially using LLM-based worker agents that read from and update a bounded shared memory. From a probabilistic perspective, CoA aims to approximate the conditional distribution corresponding to a model capable of jointly reasoning over the entire long context. CoA achieves this through a latent-state factorization in which only bounded summaries of previously processed evidence are passed between agents. The resulting bounded-memory approximation introduces a lossy information bottleneck, making the final evidence state inherently dependent on the order in which chunks are processed.   In this work, we study the problem of chunk ordering for long-context reasoning. We use the well-known Chow-Liu trees to learn a dependency structure that prioritizes strongly related chunks. Empirically, we show that a breadth-first traversal of the resulting tree yields chunk orderings that reduce information loss across agents and consistently outperform both default document-chunk ordering and semantic score-based ordering in answer relevance and exact-match accuracy across three long-context benchmarks.",
-      "authors": [
-        "Naman Gupta",
-        "Vaibhav Singh",
-        "Arun Iyer",
-        "Kirankumar Shiragur",
-        "Pratham Grover",
-        "Ramakrishna B. Bairi",
-        "Ritabrata Maiti",
-        "Sankarshan Damle",
-        "Shachee Mishra Gupta",
-        "Rishikesh Maurya",
-        "Vageesh D. C"
-      ],
-      "primary_category": "cs.CL",
-      "categories": [
-        "cs.CL"
-      ],
-      "published": "2026-03-10T15:57:35+00:00",
-      "link": "https://arxiv.org/pdf/2603.09835v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "sequential multi-agent reasoning with bounded shared memory",
-      "llm_evidence_cn": "具有有界共享内存的顺序多智能体推理",
-      "llm_evidence": "具有有界共享内存的顺序多智能体推理",
-      "canonical_evidence": "具有有界共享内存的顺序多智能体推理",
-      "llm_tldr_en": "Proposes a memory-efficient multi-agent framework for long-context reasoning using shared memory summaries.",
-      "llm_tldr_cn": "提出一种利用共享内存摘要进行长上下文推理的高效内存多智能体框架。",
-      "llm_tldr": "提出一种利用共享内存摘要进行长上下文推理的高效内存多智能体框架。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory mechanisms in autonomous AI agents",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.09835v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.08533v1",
-      "title": "SecAgent: Efficient Mobile GUI Agent with Semantic Context",
-      "abstract": "Mobile Graphical User Interface (GUI) agents powered by multimodal large language models have demonstrated promising capabilities in automating complex smartphone tasks. However, existing approaches face two critical limitations: the scarcity of high-quality multilingual datasets, particularly for non-English ecosystems, and inefficient history representation methods. To address these challenges, we present SecAgent, an efficient mobile GUI agent at 3B scale. We first construct a human-verified Chinese mobile GUI dataset with 18k grounding samples and 121k navigation steps across 44 applications, along with a Chinese navigation benchmark featuring multi-choice action annotations. Building upon this dataset, we propose a semantic context mechanism that distills history screenshots and actions into concise, natural language summaries, significantly reducing computational costs while preserving task-relevant information. Through supervised and reinforcement fine-tuning, SecAgent outperforms similar-scale baselines and achieves performance comparable to 7B-8B models on our and public navigation benchmarks. We will open-source the training dataset, benchmark, model, and code to advance research in multilingual mobile GUI automation.",
-      "authors": [
-        "Yiping Xie",
-        "Song Chen",
-        "Jingxuan Xing",
-        "Wei Jiang",
-        "Zekun Zhu",
-        "Yingyao Wang",
-        "Pi Bu",
-        "Jun Song",
-        "Yuning Jiang",
-        "Bo Zheng"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-09T16:04:08+00:00",
-      "link": "https://arxiv.org/pdf/2603.08533v1",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "semantic context mechanism that distills history representation",
-      "llm_evidence_cn": "提炼历史表示的语义上下文机制",
-      "llm_evidence": "提炼历史表示的语义上下文机制",
-      "canonical_evidence": "提炼历史表示的语义上下文机制",
-      "llm_tldr_en": "Introduces a semantic context mechanism to improve history representation efficiency in mobile GUI agents.",
-      "llm_tldr_cn": "引入语义上下文机制以提高移动GUI智能体中历史表示的效率。",
-      "llm_tldr": "引入语义上下文机制以提高移动GUI智能体中历史表示的效率。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "long-term memory architectures for large language models",
-      "matched_requirement_id": "req-2",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.08533v1",
-      "carry_days": 2
-    },
     {
       "id": "2603.09943v1",
       "title": "PathMem: Toward Cognition-Aligned Memory Transformation for Pathology MLLMs",
@@ -119,13 +30,13 @@
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "memory-centric multimodal framework with explicit mechanisms for structured knowledge integration",
-      "llm_evidence_cn": "具有显式结构化知识集成机制的以记忆为中心的多模态框架",
-      "llm_evidence": "具有显式结构化知识集成机制的以记忆为中心的多模态框架",
-      "canonical_evidence": "具有显式结构化知识集成机制的以记忆为中心的多模态框架",
-      "llm_tldr_en": "PathMem uses a hierarchical memory process to integrate diagnostic standards into MLLM reasoning.",
-      "llm_tldr_cn": "PathMem利用分层记忆过程将诊断标准整合到多模态大模型推理中。",
-      "llm_tldr": "PathMem利用分层记忆过程将诊断标准整合到多模态大模型推理中。",
+      "llm_evidence_en": "memory-centric multimodal framework with interpretable memory control",
+      "llm_evidence_cn": "具有可解释记忆控制的以记忆为中心的多模态框架",
+      "llm_evidence": "具有可解释记忆控制的以记忆为中心的多模态框架",
+      "canonical_evidence": "具有可解释记忆控制的以记忆为中心的多模态框架",
+      "llm_tldr_en": "Proposes PathMem, a hierarchical memory system for MLLMs to integrate structured domain knowledge in pathology.",
+      "llm_tldr_cn": "提出PathMem，一种为多模态大模型设计的层级记忆系统，用于整合病理学结构化知识。",
+      "llm_tldr": "提出PathMem，一种为多模态大模型设计的层级记忆系统，用于整合病理学结构化知识。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -168,13 +79,13 @@
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "CXL-based storage for Engram conditional memory in LLMs",
-      "llm_evidence_cn": "基于CXL的LLM Engram条件记忆存储",
-      "llm_evidence": "基于CXL的LLM Engram条件记忆存储",
-      "canonical_evidence": "基于CXL的LLM Engram条件记忆存储",
-      "llm_tldr_en": "Proposes a CXL-based memory pool to provide scalable, low-latency storage for LLM engram-based memory systems.",
-      "llm_tldr_cn": "提出基于CXL的内存池，为LLM的Engram记忆系统提供可扩展且低延迟的存储方案。",
-      "llm_tldr": "提出基于CXL的内存池，为LLM的Engram记忆系统提供可扩展且低延迟的存储方案。",
+      "llm_evidence_en": "Engram conditional memory for decoupling knowledge lookup from computation",
+      "llm_evidence_cn": "将知识查找与计算解耦的 Engram 条件记忆",
+      "llm_evidence": "将知识查找与计算解耦的 Engram 条件记忆",
+      "canonical_evidence": "将知识查找与计算解耦的 Engram 条件记忆",
+      "llm_tldr_en": "Explores using CXL memory pools for scalable and low-latency Engram storage in large language models.",
+      "llm_tldr_cn": "探索使用 CXL 内存池为大语言模型提供可扩展且低延迟的 Engram 存储。",
+      "llm_tldr": "探索使用 CXL 内存池为大语言模型提供可扩展且低延迟的 Engram 存储。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -183,88 +94,6 @@
       "matched_requirement_id": "req-2",
       "selection_source": "carryover_cache",
       "paper_id": "2603.10087v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.09827v2",
-      "title": "MA-EgoQA: Question Answering over Egocentric Videos from Multiple Embodied Agents",
-      "abstract": "As embodied models become powerful, humans will collaborate with multiple embodied AI agents at their workplace or home in the future. To ensure better communication between human users and the multi-agent system, it is crucial to interpret incoming information from agents in parallel and refer to the appropriate context for each query. Existing challenges include effectively compressing and communicating high volumes of individual sensory inputs in the form of video and correctly aggregating multiple egocentric videos to construct system-level memory. In this work, we first formally define a novel problem of understanding multiple long-horizon egocentric videos simultaneously collected from embodied agents. To facilitate research in this direction, we introduce MultiAgent-EgoQA (MA-EgoQA), a benchmark designed to systemically evaluate existing models in our scenario. MA-EgoQA provides 1.7k questions unique to multiple egocentric streams, spanning five categories: social interaction, task coordination, theory-of-mind, temporal reasoning, and environmental interaction. We further propose a simple baseline model for MA-EgoQA named EgoMAS, which leverages shared memory across embodied agents and agent-wise dynamic retrieval. Through comprehensive evaluation across diverse baselines and EgoMAS on MA-EgoQA, we find that current approaches are unable to effectively handle multiple egocentric streams, highlighting the need for future advances in system-level understanding across the agents. The code and benchmark are available at https://ma-egoqa.github.io.",
-      "authors": [
-        "Kangsan Kim",
-        "Yanlai Yang",
-        "Suji Kim",
-        "Woongyeong Yeo",
-        "Youngwan Lee",
-        "Mengye Ren",
-        "Sung Ju Hwang"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.AI"
-      ],
-      "published": "2026-03-10T15:48:35+00:00",
-      "link": "https://arxiv.org/pdf/2603.09827v2",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "aggregating multiple egocentric videos to construct system-level memory",
-      "llm_evidence_cn": "聚合多个第一视角视频以构建系统级记忆",
-      "llm_evidence": "聚合多个第一视角视频以构建系统级记忆",
-      "canonical_evidence": "聚合多个第一视角视频以构建系统级记忆",
-      "llm_tldr_en": "A study on constructing and querying system-level memory from multiple embodied agents' video inputs.",
-      "llm_tldr_cn": "研究如何从多个具身智能体的视频输入中构建和查询系统级记忆。",
-      "llm_tldr": "研究如何从多个具身智能体的视频输入中构建和查询系统级记忆。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory mechanisms in autonomous AI agents",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.09827v2",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.08391v3",
-      "title": "Adaptive Loops and Memory in Transformers: Think Harder or Know More?",
-      "abstract": "Chain-of-thought (CoT) prompting enables reasoning in language models but requires explicit verbalization of intermediate steps. Looped transformers offer an alternative by iteratively refining representations within hidden states. This parameter efficiency comes at a cost, as looped models lack the storage capacity of deeper models which use unique weights per layer. In this work, we investigate transformer models that feature both adaptive per-layer looping, where each transformer block learns to iterate its hidden state via a learned halting mechanism, and gated memory banks, that provide additional learned storage. We find that looping primarily benefits mathematical reasoning, while memory banks help recover performance on commonsense tasks compared to parameter and FLOP matched models. Combining both mechanisms yields a model that outperforms an iso-FLOP baseline, with three times the number of layers, across math benchmarks. Analysis of model internals reveals layer specialization: early layers learn to loop minimally and access memory sparingly, while later layers do both more heavily.",
-      "authors": [
-        "Markus Frey",
-        "Behzad Shomali",
-        "Ali Hamza Bashir",
-        "David Berghaus",
-        "Joachim Koehler",
-        "Mehdi Ali"
-      ],
-      "primary_category": "cs.CL",
-      "categories": [
-        "cs.CL"
-      ],
-      "published": "2026-03-09T13:49:03+00:00",
-      "link": "https://arxiv.org/pdf/2603.08391v3",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Gated memory banks for learned storage in transformer models",
-      "llm_evidence_cn": "Transformer模型中用于学习存储的门控记忆库",
-      "llm_evidence": "Transformer模型中用于学习存储的门控记忆库",
-      "canonical_evidence": "Transformer模型中用于学习存储的门控记忆库",
-      "llm_tldr_en": "Investigates adaptive looping and gated memory banks to enhance reasoning and storage in transformers.",
-      "llm_tldr_cn": "研究自适应循环和门控记忆库，以增强Transformer的推理和存储能力。",
-      "llm_tldr": "研究自适应循环和门控记忆库，以增强Transformer的推理和存储能力。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "long-term memory architectures for large language models",
-      "matched_requirement_id": "req-2",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.08391v3",
       "carry_days": 1
     },
     {
@@ -290,13 +119,13 @@
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "internalizing experience by distilling it into parameters instead of prompt-based memory",
-      "llm_evidence_cn": "通过将经验蒸馏到参数中而非依赖提示词内存来内化经验",
-      "llm_evidence": "通过将经验蒸馏到参数中而非依赖提示词内存来内化经验",
-      "canonical_evidence": "通过将经验蒸馏到参数中而非依赖提示词内存来内化经验",
-      "llm_tldr_en": "A self-finetuning framework for agents to learn continuously by updating model parameters as long-term memory.",
-      "llm_tldr_cn": "一种通过更新模型参数作为长期记忆，使智能体能够持续学习的自我微调框架。",
-      "llm_tldr": "一种通过更新模型参数作为长期记忆，使智能体能够持续学习的自我微调框架。",
+      "llm_evidence_en": "internalizing experience into parameters vs prompt-based memory",
+      "llm_evidence_cn": "将经验内化为参数而非依赖提示词记忆",
+      "llm_evidence": "将经验内化为参数而非依赖提示词记忆",
+      "canonical_evidence": "将经验内化为参数而非依赖提示词记忆",
+      "llm_tldr_en": "Proposes self-finetuning for agents to internalize long-term experience directly into model parameters.",
+      "llm_tldr_cn": "提出一种自微调框架，使智能体通过参数内化经验，解决长上下文记忆退化问题。",
+      "llm_tldr": "提出一种自微调框架，使智能体通过参数内化经验，解决长上下文记忆退化问题。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -308,75 +137,42 @@
       "carry_days": 1
     },
     {
-      "id": "2603.09513v1",
-      "title": "Beyond Short-Horizon: VQ-Memory for Robust Long-Horizon Manipulation in Non-Markovian Simulation Benchmarks",
-      "abstract": "The high cost of collecting real-robot data has made robotic simulation a scalable platform for both evaluation and data generation. Yet most existing benchmarks concentrate on simple manipulation tasks such as pick-and-place, failing to capture the non-Markovian characteristics of real-world tasks and the complexity of articulated object interactions. To address this limitation, we present RuleSafe, a new articulated manipulation benchmark built upon a scalable LLM-aided simulation framework. RuleSafe features safes with diverse unlocking mechanisms, such as key locks, password locks, and logic locks, which require different multi-stage reasoning and manipulation strategies. These LLM-generated rules produce non-Markovian and long-horizon tasks that require temporal modeling and memory-based reasoning. We further propose VQ-Memory, a compact and structured temporal representation that uses vector-quantized variational autoencoders (VQ-VAEs) to encode past proprioceptive states into discrete latent tokens. This representation filters low-level noise while preserving high-level task-phase context, providing lightweight yet robust temporal cues that are compatible with existing Vision-Language-Action models (VLA). Extensive experiments on state-of-the-art VLA models and diffusion policies show that VQ-Memory consistently improves long-horizon planning, enhances generalization to unseen configurations, and enables more efficient manipulation with reduced computational cost. Project page: vqmemory.github.io",
+      "id": "2603.10846v1",
+      "title": "Towards Cold-Start Drafting and Continual Refining: A Value-Driven Memory Approach with Application to NPU Kernel Synthesis",
+      "abstract": "Deploying Large Language Models to data-scarce programming domains poses significant challenges, particularly for kernel synthesis on emerging Domain-Specific Architectures where a \"Data Wall\" limits available training data. While models excel on data-rich platforms like CUDA, they suffer catastrophic performance drops on data-scarce ecosystems such as NPU programming. To overcome this cold-start barrier without expensive fine-tuning, we introduce EvoKernel, a self-evolving agentic framework that automates the lifecycle of kernel synthesis from initial drafting to continual refining. EvoKernel addresses this by formulating the synthesis process as a memory-based reinforcement learning task. Through a novel value-driven retrieval mechanism, it learns stage-specific Q-values that prioritize experiences based on their contribution to the current objective, whether bootstrapping a feasible draft or iteratively refining latency. Furthermore, by enabling cross-task memory sharing, the agent generalizes insights from simple to complex operators. By building an NPU variant of KernelBench and evaluating on it, EvoKernel improves frontier models' correctness from 11.0% to 83.0% and achieves a median speedup of 3.60x over initial drafts through iterative refinement. This demonstrates that value-guided experience accumulation allows general-purpose models to master the kernel synthesis task on niche hardware ecosystems. Our official page is available at https://evokernel.zhuo.li.",
       "authors": [
-        "Wang Honghui",
-        "Jing Zhi",
-        "Ao Jicong",
-        "Song Shiji",
-        "Li Xuelong",
-        "Huang Gao",
-        "Bai Chenjia"
+        "Yujie Zheng",
+        "Zhuo Li",
+        "Shengtao Zhang",
+        "Hanjing Wang",
+        "Junjie Sheng",
+        "Jiaqian Wang",
+        "Junchi Yan",
+        "Weinan Zhang",
+        "Ying Wen",
+        "Bo Tang",
+        "Muning Wen"
       ],
-      "primary_category": "cs.RO",
+      "primary_category": "cs.LG",
       "categories": [
-        "cs.RO"
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
       ],
-      "published": "2026-03-10T11:13:54+00:00",
-      "link": "https://arxiv.org/pdf/2603.09513v1",
+      "published": "2026-03-11T14:57:06+00:00",
+      "link": "https://arxiv.org/pdf/2603.10846v1",
       "tags": [
         "keyword:AGIMEM",
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "VQ-Memory for robust long-horizon manipulation in non-Markovian tasks",
-      "llm_evidence_cn": "用于非马尔可夫任务中稳健长程操作的VQ存储机制",
-      "llm_evidence": "用于非马尔可夫任务中稳健长程操作的VQ存储机制",
-      "canonical_evidence": "用于非马尔可夫任务中稳健长程操作的VQ存储机制",
-      "llm_tldr_en": "Introduces VQ-Memory to handle non-Markovian characteristics in long-horizon robotic manipulation tasks.",
-      "llm_tldr_cn": "引入VQ-Memory机制，以处理长程机器人操作任务中的非马尔可夫特性。",
-      "llm_tldr": "引入VQ-Memory机制，以处理长程机器人操作任务中的非马尔可夫特性。",
-      "llm_tags": [
-        "query:agimem"
-      ],
-      "matched_query_tag": "query:agimem",
-      "matched_query_text": "memory mechanisms in autonomous AI agents",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.09513v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.08561v2",
-      "title": "RetroAgent: From Solving to Evolving via Retrospective Dual Intrinsic Feedback",
-      "abstract": "Large language model (LLM)-based agents trained with reinforcement learning (RL) have shown strong potential on complex interactive tasks. However, standard RL paradigms favor static problem-solving over continuous adaptation: agents often converge to suboptimal strategies due to insufficient exploration, while learned knowledge remains implicit within parameters rather than explicitly retrievable, limiting effective experiential learning. To address these limitations, we introduce RetroAgent, an online RL framework that empowers agents to master complex interactive environments not just by solving, but by evolving. Concretely, RetroAgent features a hindsight self-reflection mechanism that produces dual intrinsic feedback: (1) intrinsic numerical feedback that that tracks incremental subtask completion relative to prior attempts, rewarding promising explorations, and (2) intrinsic language feedback that distills reusable lessons into a memory buffer, retrieved via our proposed Similarity & Utility-Aware Upper Confidence Bound (SimUtil-UCB) strategy balancing relevance, utility, and exploration to effectively leverage past experiences. Extensive experiments on two model families across four challenging agentic tasks demonstrate that RetroAgent significantly outperforms existing methods, achieving state-of-the-art results -- e.g., surpassing Group Relative Policy Optimization (GRPO)-trained agents by +18.3% on ALFWorld, +15.4% on WebShop, +27.1% on Sokoban, and +8.9% on MineSweeper -- while exhibiting strong test-time adaptation and generalization to out-of-distribution scenarios.",
-      "authors": [
-        "Xiaoying Zhang",
-        "Zichen Liu",
-        "Yipeng Zhang",
-        "Xia Hu",
-        "Wenqi Shao"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI"
-      ],
-      "published": "2026-03-09T16:23:33+00:00",
-      "link": "https://arxiv.org/pdf/2603.08561v2",
-      "tags": [
-        "keyword:AGIMEM",
-        "query:AGIMEM"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "hindsight self-reflection and explicit experiential learning",
-      "llm_evidence_cn": "事后自省与显式经验学习",
-      "llm_evidence": "事后自省与显式经验学习",
-      "canonical_evidence": "事后自省与显式经验学习",
-      "llm_tldr_en": "Introduces RetroAgent, using self-reflection for continuous adaptation and experiential learning.",
-      "llm_tldr_cn": "引入RetroAgent，利用自省机制实现持续适应和经验学习。",
-      "llm_tldr": "引入RetroAgent，利用自省机制实现持续适应和经验学习。",
+      "llm_evidence_en": "value-driven memory approach for continual refining in agents",
+      "llm_evidence_cn": "用于智能体持续优化的价值驱动记忆方法",
+      "llm_evidence": "用于智能体持续优化的价值驱动记忆方法",
+      "canonical_evidence": "用于智能体持续优化的价值驱动记忆方法",
+      "llm_tldr_en": "EvoKernel uses a memory-based RL approach for self-evolving synthesis and continual refinement.",
+      "llm_tldr_cn": "EvoKernel 采用基于记忆的强化学习方法，实现自我进化的合成与持续优化。",
+      "llm_tldr": "EvoKernel 采用基于记忆的强化学习方法，实现自我进化的合成与持续优化。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -384,35 +180,93 @@
       "matched_query_text": "memory consolidation and update strategies in LLM agents",
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
-      "paper_id": "2603.08561v2",
+      "paper_id": "2603.10846v1",
       "carry_days": 1
     },
     {
-      "id": "2603.08965v1",
-      "title": "Semantic Level of Detail: Multi-Scale Knowledge Representation via Heat Kernel Diffusion on Hyperbolic Manifolds",
-      "abstract": "AI memory systems increasingly organize knowledge into graph structures -- knowledge graphs, entity relations, community hierarchies -- yet lack a principled mechanism for continuous resolution control: where do the qualitative boundaries between abstraction levels lie, and how should an agent navigate them? We introduce Semantic Level of Detail (SLoD), a framework that answers both questions by defining a continuous zoom operator via heat kernel diffusion on the Poincaré ball $\\mathbb{B}^d$. At coarse scales ($σ\\to \\infty$), diffusion aggregates embeddings into high-level summaries; at fine scales ($σ\\to 0$), local semantic detail is preserved. We prove hierarchical coherence with bounded approximation error $O(σ)$ and $(1+\\varepsilon)$ distortion for tree-structured hierarchies under Sarkar embedding. Crucially, we show that spectral gaps in the graph Laplacian induce emergent scale boundaries -- scales where the representation undergoes qualitative transitions -- which can be detected automatically without manual resolution parameters. On synthetic hierarchies (HSBM), our boundary scanner recovers planted levels with ARI up to 1.00, with detection degrading gracefully near the information-theoretic Kesten-Stigum threshold. On the full WordNet noun hierarchy (82K synsets), detected boundaries align with true taxonomic depth ($τ= 0.79$), demonstrating that the method discovers meaningful abstraction levels in real-world knowledge graphs without supervision.",
+      "id": "2603.12180v1",
+      "title": "Strategic Navigation or Stochastic Search? How Agents and Humans Reason Over Document Collections",
+      "abstract": "Multimodal agents offer a promising path to automating complex document-intensive workflows. Yet, a critical question remains: do these agents demonstrate genuine strategic reasoning, or merely stochastic trial-and-error search? To address this, we introduce MADQA, a benchmark of 2,250 human-authored questions grounded in 800 heterogeneous PDF documents. Guided by Classical Test Theory, we design it to maximize discriminative power across varying levels of agentic abilities. To evaluate agentic behaviour, we introduce a novel evaluation protocol measuring the accuracy-effort trade-off. Using this framework, we show that while the best agents can match human searchers in raw accuracy, they succeed on largely different questions and rely on brute-force search to compensate for weak strategic planning. They fail to close the nearly 20% gap to oracle performance, persisting in unproductive loops. We release the dataset and evaluation harness to help facilitate the transition from brute-force retrieval to calibrated, efficient reasoning.",
       "authors": [
-        "Edward Izgorodin"
+        "Łukasz Borchmann",
+        "Jordy Van Landeghem",
+        "Michał Turski",
+        "Shreyansh Padarha",
+        "Ryan Othniel Kearns",
+        "Adam Mahdi",
+        "Niels Rogge",
+        "Clémentine Fourrier",
+        "Siwei Han",
+        "Huaxiu Yao",
+        "Artemis Llabrés",
+        "Yiming Xu",
+        "Dimosthenis Karatzas",
+        "Hao Zhang",
+        "Anupam Datta"
       ],
-      "primary_category": "cs.LG",
+      "primary_category": "cs.CL",
       "categories": [
-        "cs.LG",
+        "cs.CL",
         "cs.AI"
       ],
-      "published": "2026-03-09T21:54:08+00:00",
-      "link": "https://arxiv.org/pdf/2603.08965v1",
+      "published": "2026-03-12T17:11:22+00:00",
+      "link": "https://arxiv.org/pdf/2603.12180v1",
       "tags": [
         "keyword:AGIMEM",
         "query:AGIMEM"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "multi-scale knowledge representation and semantic detail control",
-      "llm_evidence_cn": "多尺度知识表示与语义细节控制",
-      "llm_evidence": "多尺度知识表示与语义细节控制",
-      "canonical_evidence": "多尺度知识表示与语义细节控制",
-      "llm_tldr_en": "A framework for hierarchical memory organization and navigation in AI systems.",
-      "llm_tldr_cn": "一种用于AI系统分层记忆组织和导航的框架。",
-      "llm_tldr": "一种用于AI系统分层记忆组织和导航的框架。",
+      "llm_evidence_en": "evaluation protocol measuring accuracy-effort trade-off in agents",
+      "llm_evidence_cn": "衡量智能体准确性与努力权衡的评估协议",
+      "llm_evidence": "衡量智能体准确性与努力权衡的评估协议",
+      "canonical_evidence": "衡量智能体准确性与努力权衡的评估协议",
+      "llm_tldr_en": "Introduces MADQA benchmark and a protocol to evaluate strategic reasoning versus stochastic search in agents.",
+      "llm_tldr_cn": "引入MADQA基准和协议，评估智能体的战略推理与随机搜索表现。",
+      "llm_tldr": "引入MADQA基准和协议，评估智能体的战略推理与随机搜索表现。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "performance metrics for agent memory and reasoning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.12180v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.10126v1",
+      "title": "AR-VLA: True Autoregressive Action Expert for Vision-Language-Action Models",
+      "abstract": "We propose a standalone autoregressive (AR) Action Expert that generates actions as a continuous causal sequence while conditioning on refreshable vision-language prefixes. In contrast to existing Vision-Language-Action (VLA) models and diffusion policies that reset temporal context with each new observation and predict actions reactively, our Action Expert maintains its own history through a long-lived memory and is inherently context-aware. This structure addresses the frequency mismatch between fast control and slow reasoning, enabling efficient independent pretraining of kinematic syntax and modular integration with heavy perception backbones, naturally ensuring spatio-temporally consistent action generation across frames. To synchronize these asynchronous hybrid V-L-A modalities, we utilize a re-anchoring mechanism that mathematically accounts for perception staleness during both training and inference. Experiments on simulated and real-robot manipulation tasks demonstrate that the proposed method can effectively replace traditional chunk-based action heads for both specialist and generalist policies. AR-VLA exhibits superior history awareness and substantially smoother action trajectories while maintaining or exceeding the task success rates of state-of-the-art reactive VLAs. Overall, our work introduces a scalable, context-aware action generation schema that provides a robust structural foundation for training effective robotic policies.",
+      "authors": [
+        "Yutong Hu",
+        "Jan-Nico Zaech",
+        "Nikolay Nikolov",
+        "Yuanqi Yao",
+        "Sombit Dey",
+        "Giuliano Albanese",
+        "Renaud Detry",
+        "Luc Van Gool",
+        "Danda Paudel"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI"
+      ],
+      "published": "2026-03-10T18:03:29+00:00",
+      "link": "https://arxiv.org/pdf/2603.10126v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "long-lived memory for context-aware action generation",
+      "llm_evidence_cn": "用于上下文感知动作生成的长效记忆",
+      "llm_evidence": "用于上下文感知动作生成的长效记忆",
+      "canonical_evidence": "用于上下文感知动作生成的长效记忆",
+      "llm_tldr_en": "Develops an Action Expert that maintains history through long-lived memory for consistent robot control.",
+      "llm_tldr_cn": "开发了一种通过长效记忆维持历史记录的动作专家，用于一致的机器人控制。",
+      "llm_tldr": "开发了一种通过长效记忆维持历史记录的动作专家，用于一致的机器人控制。",
       "llm_tags": [
         "query:agimem"
       ],
@@ -420,7 +274,83 @@
       "matched_query_text": "architectures for long term and short term memory in AI agents",
       "matched_requirement_id": "req-7",
       "selection_source": "carryover_cache",
-      "paper_id": "2603.08965v1",
+      "paper_id": "2603.10126v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.10779v1",
+      "title": "A Control-Theoretic Foundation for Agentic Systems",
+      "abstract": "This paper develops a control-theoretic framework for analyzing agentic systems embedded within feedback control loops. In such systems, an AI agent may adapt controller parameters, select among control strategies, invoke tools, reconfigure decision architectures, or modify control objectives during operation. We formalize these capabilities by interpreting agency as hierarchical decision authority over the control architecture. A unified dynamical representation is introduced that incorporates memory, learning, tool activation, interaction signals, and goal descriptors within a single closed-loop structure. Based on this representation, we define a five-level hierarchy of agency ranging from reactive rule-based control to the synthesis of control objectives and controller architectures. The framework is presented in both nonlinear and linear settings, allowing agentic behaviors to be interpreted using standard control-theoretic constructs such as feedback gains, switching signals, parameter adaptation laws, and quadratic cost functions. The analysis shows that increasing agency introduces dynamical mechanisms including time-varying adaptation, endogenous switching, decision-induced delays, and structural reconfiguration of the control pipeline. This perspective provides a mathematical foundation for analyzing stability, safety, and performance of AI-enabled control systems.",
+      "authors": [
+        "Ali Eslami",
+        "Jiangbo Yu"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-03-11T13:53:17+00:00",
+      "link": "https://arxiv.org/pdf/2603.10779v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "control-theoretic representation incorporating memory and learning in agents",
+      "llm_evidence_cn": "包含代理记忆和学习的控制理论表示",
+      "llm_evidence": "包含代理记忆和学习的控制理论表示",
+      "canonical_evidence": "包含代理记忆和学习的控制理论表示",
+      "llm_tldr_en": "Develops a control-theoretic foundation for agentic systems, formalizing memory and learning within feedback loops.",
+      "llm_tldr_cn": "为代理系统建立控制理论基础，将记忆和学习形式化为反馈循环结构。",
+      "llm_tldr": "为代理系统建立控制理论基础，将记忆和学习形式化为反馈循环结构。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.10779v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.12056v1",
+      "title": "XSkill: Continual Learning from Experience and Skills in Multimodal Agents",
+      "abstract": "Multimodal agents can now tackle complex reasoning tasks with diverse tools, yet they still suffer from inefficient tool use and inflexible orchestration in open-ended settings. A central challenge is enabling such agents to continually improve without parameter updates by learning from past trajectories. We identify two complementary forms of reusable knowledge essential for this goal: experiences, providing concise action-level guidance for tool selection and decision making, and skills, providing structured task-level guidance for planning and tool use. To this end, we propose XSkill, a dual-stream framework for continual learning from experience and skills in multimodal agents. XSkill grounds both knowledge extraction and retrieval in visual observations. During accumulation, XSkill distills and consolidates experiences and skills from multi-path rollouts via visually grounded summarization and cross-rollout critique. During inference, it retrieves and adapts this knowledge to the current visual context and feeds usage history back into accumulation to form a continual learning loop. Evaluated on five benchmarks across diverse domains with four backbone models, XSkill consistently and substantially outperforms both tool-only and learning-based baselines. Further analysis reveals that the two knowledge streams play complementary roles in influencing the reasoning behaviors of agents and show superior zero-shot generalization.",
+      "authors": [
+        "Guanyu Jiang",
+        "Zhaochen Su",
+        "Xiaoye Qu",
+        "Yi R.",
+        "Fung"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-03-12T15:25:57+00:00",
+      "link": "https://arxiv.org/pdf/2603.12056v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "continual learning from past trajectories as experiences and skills without parameter updates",
+      "llm_evidence_cn": "无需参数更新，从过去轨迹中作为经验和技能进行持续学习",
+      "llm_evidence": "无需参数更新，从过去轨迹中作为经验和技能进行持续学习",
+      "canonical_evidence": "无需参数更新，从过去轨迹中作为经验和技能进行持续学习",
+      "llm_tldr_en": "A dual-stream framework for multimodal agents to learn from past experiences and skills without parameter updates.",
+      "llm_tldr_cn": "一种双流框架，使多模态智能体无需参数更新即可从过去的经验和技能中学习。",
+      "llm_tldr": "一种双流框架，使多模态智能体无需参数更新即可从过去的经验和技能中学习。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory consolidation and update strategies in LLM agents",
+      "matched_requirement_id": "req-3",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.12056v1",
       "carry_days": 1
     }
   ]

@@ -1,0 +1,882 @@
+Title: SecAgent: Efficient Mobile GUI Agent with Semantic Context
+
+URL Source: https://arxiv.org/pdf/2603.08533v1
+
+Published Time: Tue, 10 Mar 2026 02:42:42 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# SecAgent: Efficient Mobile GUI Agent with Se mantic Context 
+
+## Yiping Xie *, Song Chen ∗, Jingxuan Xing ∗, Wei Jiang ∗, Zekun Zhu ∗,Yingyao Wang, Pi Bu, Jun Song, Yuning Jiang †
+
+## , Bo Zheng Taobao & Tmall Group of Alibaba 
+
+{yizhou.xyp, jingxuan.xjx, zekun.zhu, mengzhu.jyn }@alibaba-inc.com 
+
+## Abstract 
+
+Mobile Graphical User Interface (GUI) agents powered by multimodal large language models have demonstrated promising capabilities in automating complex smartphone tasks. However, existing approaches face two critical lim-itations: the scarcity of high-quality multilingual datasets, particularly for non-English ecosystems, and inefficient his-tory representation methods. To address these challenges, we present SecAgent, an efficient mobile GUI agent at 3B scale. We first construct a human-verified Chinese mobile GUI dataset with 18k grounding samples and 121k navi-gation steps across 44 applications, along with a Chinese navigation benchmark featuring multi-choice action anno-tations. Building upon this dataset, we propose a seman-tic context mechanism that distills history screenshots and actions into concise, natural language summaries, signifi-cantly reducing computational costs while preserving task-relevant information. Through supervised and reinforce-ment fine-tuning, SecAgent outperforms similar-scale base-lines and achieves performance comparable to 7B-8B mod-els on our and public navigation benchmarks. We will open-source the training dataset, benchmark, model, and code to advance research in multilingual mobile GUI automation. 
+
+## 1. Introduction 
+
+Mobile Graphical User Interface (GUI) agents powered by Large Language Models (LLMs) and Multimodal LLMs (MLLMs) have significantly evolved in recent years [22, 36]. Early text-based approaches [17, 40, 42, 43] rely on structured metadata such as accessibility trees, but face lim-itations, including dependency on platform-specific pars-ing and vulnerability to incomplete metadata. Recognizing these constraints, the community has shifted toward vision-based approaches that perceive interfaces directly through screenshots, mirroring human visual interaction [10, 14,                     
+
+> *Equal contribution.
+> †Corresponding author. CMGUI -Bench
+> GUIOdyssey AndroidControl
+> UI -R1 -3B Qwen2.5 -VL -7B
+> GUI -R1 -3B UI -TARS -7B
+> Qwen2.5 -VL -3B UI -Venus -Navi -7B
+> SecAgent -3B (Ours) AgentCPM -GUI -8B
+> SecAgent -3B achieves superior performance
+> (3B) and comparable performance (7B -8B)
+> 96.4
+> 74.3 69.5
+> 3B -size 7B -size 8B -size
+> 3B -size 7B -size 8B -size
+> 3B -size 7B -size 8B -size
+
+Figure 1. Performance comparison of various agent models on three representative navigation benchmarks. SecAgent-3B achieves superior performance to 3B models and comparable per-formance to 7B-8B models. 
+
+20]. These vision-based agents exhibit cross-platform com-patibility and can handle diverse UI designs without requir-ing structured metadata, demonstrating strong capabilities in element grounding and multi-step navigation. Despite these achievements, current mobile GUI agent research faces two critical limitations. First, existing work predominantly focuses on the English mobile ecosystem [13, 45], with limited attention devoted to non-English en-vironments. Building robust multilingual GUI agents fun-damentally requires diverse multilingual and cross-cultural data with ecosystem-specific knowledge, such as element functionality and interaction conventions. However, the scarcity of open-source non-English datasets poses a sub-stantial barrier. While several recent studies [37, 52, 57] have constructed large-scale Chinese mobile datasets, these datasets remain proprietary and inaccessible to the research community. To advance research on multilingual GUI agents, we introduce CMGUI , a large-scale Chinese mobile GUI dataset, which comprises 18k grounding samples and 29k navigation episodes with 121k navigation steps across 44 diverse applications. To ensure the data quality, the navigation step undergoes rigorous human verification with manual bounding box annotations. Building upon CMGUI, we further introduce CMGUI-Bench , a high-quality Chi-nese mobile navigation benchmark. To accommodate di-1                                            
+
+> arXiv:2603.08533v1 [cs.CV] 9 Mar 2026 Name Training Data Name Benchmark Data
+> Traj. Steps Apps CoT Human-Verified Open-Source Traj. Steps Apps Multi-Choice Mobile-Bench-v2 [47] 12,856 93,592 49 ✗✗✓Magic-RICH [37] -4,000 150 ✗
+> AgentCPM-GUI [57] 55k 470k 30 ✗✓✗CAGUI [57] 600 4,516 30 ✗
+> CMGUI (Ours) 29,711 121,265 44 ✓✓✓CMGUI-Bench (Ours) 390 2,574 44 ✓
+> Table 1. Comparison between our CMGUI dataset and existing Chinese mobile navigation datasets and benchmarks. We consider the scale (the number of trajectories and step annotations), diversity (the number of apps), whether each step includes a thought annotation, whether the dataset is verified by humans, whether it has been open-sourced, and whether the benchmark has multi-choice annotations. Note that Magic-RICH only contains step-level data.
+
+verse GUI manipulations, each step in CMGUI-Bench is annotated with multiple valid choices ( i.e ., actions) when available. Tab. 1 presents a comparison with existing Chi-nese datasets and benchmarks. Second, existing methods lack efficient history represen-tation for multi-step navigation [25, 29, 41]. Informed ac-tions at each step typically rely on historical information such as prior screenshots and actions. However, complete history, particularly screenshots, causes prohibitive com-putational overhead, with each screenshot being encoded into thousands of visual tokens [13]. Consequently, current approaches adopt simplified history representations: some methods [8, 20, 41] restrict the history window to recent steps ( e.g ., the last 5 steps), while others [12, 28, 45, 49] re-tain only action sequences. The former approach inevitably suffers from information loss, especially when the history window is small; the latter provides insufficient informa-tion, as parameterized actions ( e.g ., click coordinates) with-out their associated screenshots cannot convey meaningful historical progression. To address this challenge, we pro-pose the Semantic Context Mechanism , which presents the historical information as a semantic context, a concise natural language-based summary that records critical infor-mation from previous interactions. By dynamically main-taining the semantic context across navigation steps, the agent avoids accessing the entire history screenshots and ac-tions, significantly improving the computational efficiency while preserving completeness of the historical informa-tion. Furthermore, we present SecAgent based on the se-mantic context mechanism. Through supervised and rein-forcement fine-tuning, SecAgent achieves highly competi-tive performance as shown in Fig. 1. It outperforms prior methods on CMGUI-Bench and matches 7B-8B models on AndroidControl [18] and GUIOdyssey [25]. Our contributions are summarized as follows: • We introduce CMGUI, a large-scale high-quality Chinese mobile GUI dataset, and CMGUI-Bench, a navigation benchmark with multi-choice annotations (Sec. 3). • We propose the semantic context mechanism, which effi-ciently represents critical historical information (Sec. 4). • Extensive experiments demonstrate the superiority of SecAgent in both our and public benchmarks (Sec. 5). 
+
+## 2. Related Works 
+
+GUI Benchmarks and Datasets. Numerous benchmarks and datasets have been introduced to advance research on mobile GUI navigation. Some works [6, 33, 37, 38, 46, 48, 54, 55, 57] design benchmarks to comprehensively evaluate agents’ navigation capabilities, while others [4, 5, 18, 19, 21, 25, 32, 35, 39, 47, 49, 53, 56] curate datasets to enhance the perception, grounding, planning, and reasoning capabil-ities. However, existing studies primarily focus on the En-glish mobile ecosystem, and limited studies [37, 47, 57] fo-cus on the Chinese ecosystem. The comparison of our pro-posed CMGUI and CMGUI-Bench with existing Chinese mobile navigation datasets and benchmarks is summarized in Tab. 1. Notably, CMGUI features human verification to ensure data quality, and CMGUI-Bench with multi-action annotations accommodates diverse GUI manipulations. 
+
+GUI Agents. LLM-powered GUI agents generally fall into two paradigms: prompting-based and training-based. Prompting-based agents directly query existing general models [1, 2] to generate GUI actions with carefully con-structed prompts that contain the instruction, GUI state, and action space. For example, some works [17, 40, 42, 43] query LLMs with textual prompts, while others [26, 50, 54] incorporates visual inputs and query MLLMs. Training-based approaches fine-tune open-source foundation models [3, 9, 23] to obtain more proficient GUI agents. Through SFT on large-scale and multi-level datasets, the fine-tuned agents [10, 14, 20, 45] demonstrate superior grounding and navigation capabilities across diverse platforms. More re-cently, RFT, combining rule-based rewards with policy up-dates ( e.g ., GRPO [34]), is further incorporated to enhance agents’ reasoning and generalization capabilities [11, 24, 27, 58]. Our work also employs a two-stage paradigm, in-corporating SFT and RFT, but proposes a novel history rep-resentation mechanism that differs from existing methods. 
+
+## 3. CMGUI Dataset 
+
+In this section, we introduce the constructed CMGUI and the corresponding benchmark. An overview of the entire collection process is illustrated in Fig. 2. 1
+
+> 1In this and subsequent figures, Chinese text has been translated into English for presentation purposes.
+
+2Grounding                                                        
+
+> Instructions
+> Random
+> Walk
+> Mobile Device APPs
+> Generate
+> üScreenshot xxx.png
+> üInstruction :View the first post titled
+> “奥森桃花谷 ”.
+> üThought :The post titled "奥森桃花谷 "is
+> located near the top -left of the ...
+> üBbox :[22, 494, 304, 913]
+> Instruction :Open Bilibili, search for and play the documentary "History of China" .Step 1xxx
+> Step 2
+> üAction : {"action": "click", "coordinate": [649, 237]}
+> üBbox :[363, 190, 984, 296]
+> üAction Correctness : Y
+> üSemantic Context :
+> 1. Successfully opened the Bilibili app.
+> üThought : Now the Bilibili app has successfully
+> opened. The task I need to complete ... I should
+> click the search box at the top of the screen ...
+> Step Nxxx
+> Step 1 Step 2 Step 3 Step 4 Step 5 Step 6
+> Page Structures
+> from Random Episodes
+> Selected UI Elements
+> Navigation Data Collectio n
+> Navigation
+> Instructions
+> Navigation
+> Episodes
+> Annotated
+> Navigation
+> Episodes
+> Step Annotation Execute
+> Element Filtering
+> Heuristic Rules Samples Filtering
+> Heuristic Rules
+> üScreenshot xxx.png
+> üElement i-th bbox [22, 494, 304, 913]
+> üInstruction :View the first post titled
+> "奥森桃花谷 ".
+> Grounding
+> Samples
+> Grounding Data Collectio n
+> Human -written
+> Instructions Expand
+
+Figure 2. Collection pipeline of our CMGUI dataset. Grounding data: UI elements are selected from random walk episodes, with MLLMs generating instructions. Navigation data: episodes are collected using a hybrid human-agent strategy, then humans annotate action correct-ness and bounding boxes, while MLLMs annotate semantic context and thoughts. 
+
+3.1. Grounding Data Collection 
+
+The grounding data is designed to equip agents with the ability to localize and understand specific UI elements based on functional descriptions [29, 41, 57]. The collec-tion pipeline contains the following three stages: 
+
+Raw Data Acquisition. To populate the grounding data at scale, we perform the random walk strategy [44] to explore various system surfaces and apps. During this autonomous exploration, the executed action and the device state, com-prising the screenshot and the page structure data, are cap-tured at every step. Here, the page structure data provides a structured, hierarchical representation of the UI elements on the mobile screen, including bounding boxes and descrip-tive attributes for all potentially interactive UI elements. 
+
+UI Element Filtering. To ensure unambiguous and intent-aligned instructions, we implemented a rigorous pipeline for filtering UI elements. Elements are filtered based on geometric ( e.g ., area < 6,000 pixels, aspect ratio > 13.5, or occupying >15% of screen) and visual (near-uniform color) heuristics. Only leaf nodes in the page hierarchy are re-tained to enforce semantic atomicity. Spatial redundancy is controlled via reservoir sampling, where previously seen elements are downsampled to a 5% selection probability. 
+
+Instruction Generation. For each retained element, we overlay a visible marker on the screenshot and use GPT-4 to generate an imperative and unambiguous grounding in-struction, along with the rationale of the instruction. Then, a quality check is performed to filter out samples where the generated instructions are shorter than four words or their rationale is fewer than ten words. Finally, we ob-tain 18,887 high-quality grounding samples, encompassing eight widely used applications such as Taobao and Rednote. 
+
+3.2. Navigation Data Collection 
+
+The navigation data focuses on enhancing the multi-step planning ability of GUI agents, which is constructed using a hybrid human-agent collaboration strategy. 
+
+Action Space. Our action space contains CLICK , SWIPE ,
+
+TYPE , SYSTEM BUTTON , WAIT , and TERMINATE . De-tails are provided in the supplementary material. 
+
+Instruction Generation. We construct high-level instruc-tions through a hybrid human-LLM workflow. First, we prompt GPT-4 with app-specific functional descriptions to generate initial instruction candidates. Then, these candi-dates are rigorously reviewed and refined by human anno-tators to ensure feasibility, clarity, and realism. To increase linguistic diversity, we further apply paraphrasing and con-textual expansion using GPT-4, resulting in a rich and varied instruction pool. 
+
+Hybrid Instruction Execution. To reduce the cost of hu-man demonstration, we employ a hybrid human-agent col-laboration strategy to execute instructions. First, a subset of instructions is executed manually by annotators to generate successful navigation episodes with high-quality ground-truth. Subsequently, the annotated episodes are used to train an auxiliary agent by fine-tuning a compact MLLM (Qwen-2.5-VL-3B). It is then deployed to scale data collection through agent-driven execution of the remaining instruc-tions, limited by a maximum of 30 steps each instruction. Here, the auxiliary agent executes each instruction multi-ple times to increase the diversity of collected episodes. 
+
+Episode Annotation. We collect episodes executed by both humans and agents, followed by a step-by-step annotation 3Instruction: Save the Manus's posts, …                                        
+
+> a)
+> b)
+> Multi -choice action annotation
+> Instruction: search "adidas "
+> Choice 1: click the search bar
+> and input the text "adidas "
+> Choice 3: click the suggest
+> words of "阿迪达斯 adidas "
+> Choice 2: click the history
+> of “adidas "or "阿迪达斯 adidas "
+> Choice 1
+> Choice 2
+> Choice 3
+> c)
+> 🔍
+> 🔍
+> 🔍
+> 🔍
+> Too large
+> Instruction: Go to the Apps section …
+> Instruction: Open the Maps & Navigation …
+> Too small
+> Instruction: Open the Fliggy app ,search …
+> Human -Anno.
+> Human -Anno.
+
+Figure 3. a) Samples from the GUIOdyssey dataset [25], where SAM2 [31] is used to segment UI elements to obtain bounding boxes, inevitably leading to noise and errors ( e.g ., the red box is incorrectly sized). b) Samples from our CMGUI data. We employ well-trained annotators to conduct box-by-box annotation and im-plement a double-check mechanism to ensure precise bounding boxes. c) For our CMGUI-Bench, we conduct step-by-step and box-by-box annotation and consider all reasonable actions at each step, producing multi-choice action annotation. 
+
+process. Starting from the first step of each episode, annota-tors verify the correctness of actions until either termination or the first error is encountered. For each confirmed correct click action, annotators provide a precise bounding box. At the first incorrect step, the correct action and its bounding box are annotated. Notably, our human-annotated bound-ing boxes demonstrate higher precision compared to those generated by autonomous approaches ( e.g ., SAM2 [31] in GUIOdyssey [25]). Representative examples are illustrated in Fig. 3 (a)-(b). After human verification and correction, we use GPT-4o [15] to augment the annotated steps with two additional fields: (1) semantic context, summarizing critical information from previous steps, and (2) thought, describing the reasoning behind the action. Furthermore, for instructions with a low completion rate, a fallback hu-man execution phase is employed. To scale data collection efficiently, we adopted a data flywheel strategy: in each iteration, after collecting and an-notating a new batch of trajectories, we retrain the auxiliary agent, leveraging all previously accumulated data. The de-tailed training methodology is presented in Sec. 4. In total, we collect 29,711 trajectories comprising 192,666 steps, of which 121,265 steps are annotated. We train exclusively on annotated data; in particular, any step data following the first erroneous action is discarded from the training cor-pus. The training data covers 44 unique mobile applications across key functional domains such as e-commerce ( e.g ., Pinduoduo, JD), social media ( e.g ., Zhihu, Bilibili), and lo-cal services ( e.g ., Meituan, Ele.me). 
+
+3.3. CMGUI Benchmark 
+
+To evaluate the agent’s navigation capability in Chinese mo-bile applications, we introduce CMGUI-Bench from our curated navigation corpus. The benchmark includes only successful episodes with reliable ground truth. To ensure diversity, we filter episodes using a programming-distance criterion: each instruction must be at least six units distant from others, promoting broad coverage of user intents and interaction patterns while avoiding near-duplicates. CMGUI-Bench comprises 390 complete episodes and 2,574 steps, with an average episode length of 6.6, span-ning 44 widely used apps in the Chinese ecosystem. During curation, we observe that many steps admit multiple valid actions due to interface affordances and app-specific flows [7]. Typical cases include submitting a query by either tap-ping a search button or selecting a suggestion, and reaching a target page via either clicking a tag or swiping horizon-tally. Some examples are shown in Fig. 3 (c). We therefore recheck all steps and annotate alternative actions to accom-modate diverse GUI manipulations. Evaluation focuses on four actions: click, type, swipe, and terminate. A click is correct if it lands within the target bounding box, typed con-tent must match the ground truth, and swipes must align in the direction of the annotated intent. 
+
+## 4. Method: SecAgent 
+
+4.1. Formulation 
+
+We adopt an agent-based perspective [29, 41], where an agent is formalized as a parameterized policy that maps in-structions, context, and environment state to actions. At each timestep t, the agent follows the ReAct paradigm [51], iteratively reasoning, acting, and processing feedback. 
+
+Definitions. Instruction ( I) is the natural language task query prompting the agent. Action ( At) is the agent’s behavior at time t (e.g ., GUI manipulation, system com-mands). Screenshot ( Xt) is the environment state at time 
+
+t. Thought ( Ht) is the agent’s internal reasoning and plan-ning. Semantic context ( Ct) is a natural language summary of key prior operations, detailed in Sec. 4.2. A grounding sample is defined as (IG, X G, A G), where 
+
+IG is a low-level instruction ( e.g ., “click the search button”), 
+
+XG is the screenshot, and AG is the bounding box of the target area. A navigation episode is a sequence that com-pletes a high-level instruction: E = ( IN , {(Xt, A t)}Tt=1 ),where IN is the instruction ( e.g ., “set an alarm for 8 am to-morrow”) and T is the number of steps in the episode. The baseline agent [13] can be formalized as: 
+
+P (At | I, X t) (1) Furthermore, we can use historical screenshots and actions [25, 41] as follows: 
+
+P (At | I, X t, {Xt−i, A t−i}Ni=1 ) (2) 4Input Output 
+
+SecAgent               
+
+> Thought 𝐻 !Semantic Context 𝒞 !Action 𝐴 !
+> Instruction 𝐼
+> 1. Clicked on the Taobao app
+> icon on the home screen and
+> entered the Taobao homepage .
+> 2. Clicked on the search box,
+> and the search box was
+> activated .
+> According to the user's task, we
+> need to search for iphone16 products.
+> I have entered the Taobao app and
+> activated the search box . I should
+> input "iphone16" and then click the
+> search button to conduct the search.
+> {"action": "type",
+> "text": "iphone16"}
+> Screenshot
+> 𝑋 !"#
+> Semantic Context 𝒞 !"#
+> 1. Clicked on the Taobao app icon on
+> the home screen and entered the Taobao
+> homepage .
+> Screenshot
+> 𝑋 !
+> Action 𝐴 !"#
+> {"action": "click",
+> "coordinate":
+> [183, 67]}
+> Open Taobao, search for "iphone16", and
+> add the first item to the shopping cart
+
+a) 
+
+I Agent 𝐴 !𝑋 !
+
+b) 
+
+I Agent 𝐴 !𝐻 !𝑋 !
+
+e) 
+
+I Agent 𝐴 !𝐻 !𝐶 !𝐶 !"# 𝑋 !𝑋 !"# 𝐴 !"#
+
+d) 
+
+I Agent 𝐴 !𝑋 !
+
+.𝑋 !"# 𝐴 !"#
+
+> 𝑋 !"#
+> 𝑋 …
+> 𝐴 !"#
+> 𝐴 …
+
+c) 
+
+I Agent 𝐴 !𝐻 !𝑋 !𝐴 !"#
+
+> 𝐴 %"#
+> 𝐴 …
+
+Figure 4. Comparison of different methods. Left. a) Baseline: take the instruction and the current screenshot as input and directly output the action. b) AgentCPM [57] and UI-R1 [27] expect the model to have reasoning capabilities and thus introduce thought before output action. c) UI-Venus [29], GUI-R1 [28], and OS-Atlas [45] add history actions to the input. d) OdysseyAgent [25] uses both history actions and screenshots in the input. To ensure optimal results, it uses a large number of historical screenshots, for example, N = 5 . e) Our SecAgent records history information by maintaining a concise and natural language-based summary. Thanks to this, SecAgent can achieve good results using only a historical image and action. Right. A demonstration of SecAgent. 
+
+where N denotes the size of the history window. Addition-ally, we can incorporate thoughts to enhance the agent’s reasoning capability [27, 57]. The comparison of existing methods is illustrated in Fig. 4 (Left). 
+
+4.2. Architecture 
+
+The completion of GUI navigation tasks requires a pre-cise sequence of multi-step actions, whose correctness crit-ically depends on the historical information (e.g ., previous screenshots and actions). For instance, in GUI search tasks, clicking a search result depends on both the prior query and the history of visited pages and clicked links. However, incorporating all raw historical information incurs an effi-ciency challenge [16]. An action description requires only a handful of tokens, whereas an MLLM-embedded screen-shot occupies hundreds of tokens. Stacking all the raw his-torical information as shown in Eq. (2) leads to substan-tial computational overhead , resulting in increased training costs and detrimental real-time inference latency. To reduce the computational overhead caused by histor-ical information while preserving the essential context re-quired for task execution, we propose the Semantic Con-text Mechanism . A comparison of our proposed mecha-nism with existing history representation methods is illus-trated in Fig. 4 (Left). At each step t, we augment the input with a textual context Ct that summarizes critical in-formation from previous steps, and a thought Ht that pro-vides the rationale for adopting action At. The semantic context is maintained by the agent as a concise, natural language-based summary that records key operations from previous steps ( e.g ., clicked labels, typed inputs, searched outcomes). This textual representation efficiently carries the essential history without requiring the model to pro-cess all past screenshots. Due to this delicate design, we find that we can achieve good performance only using the last screenshot and action as historical information. That is, 
+
+N = 1 in Eq. (2). Additionally, we also adopt the CoT mechanism to enhance the agent’s reasoning and planning capabilities. Formally, our proposed SecAgent predicts the next GUI manipulation as: 
+
+P (Ct, H t, A t | I, X t, C t−1, X t−1, A t−1) (3) Specifically, SecAgent receives instruction I, current screenshot Xt, previous semantic context Ct−1, screenshot 
+
+Xt−1, and action At−1. It then autoregressively generates the updated semantic context Ct capturing critical events from the last interaction, Ht providing reasoning and plan-ning, and At representing the grounded GUI manipulation. An illustrative example is presented in Fig. 4 (Right). The semantic context offers three primary advantages. First, it only requires single-step historical information in-stead of the entire one, yielding superior computational effi-ciency. Second, the use of natural language to represent his-torical information provides a more effective mechanism for leveraging the world knowledge embedded within the LLM, which is pre-trained with large linguistic corpora. Finally, the semantic context is more informative than sequences of raw, parameterized historical actions ( e.g ., clicked coordi-nates), which lack semantic interpretability. Without the screenshots on which they are performed, raw actions alone 5Inst.: The search bar at the top of the page  
+
+> GT: [22, 94, 104, 314]
+> …
+
+Stage II: Reinforcement Fine -tuning           
+
+> Training
+> Cycle
+> Rules -based
+> Verification
+> Instruction
+> Last Screenshot
+> Last Action
+> Semantic Context
+> <Semantic Context> <Thought> <Action>
+> Update Rewards: [1, 0, 1]
+
+Stage I: Supervised Fine -tuning                                   
+
+> Inst.: Open Bilibili , search for and play the documentary
+> "History of China" .
+> Step1 GT: {"action": "click", "coordinate": [649, 237]}
+> …
+> Step5 GT: {"action": "type", "text": "History of China "}
+> Step6 GT: {"action": " terminate", "text": "Success"}
+> Inst.: The search bar at the top of the page
+> GT: {"action": "click", "coordinate": [63, 204]}
+> …
+> Tap the Ctrip app icon on …
+> Tap the Bilibili app icon …
+> Enter to the playback page …
+> I need to complete the tasks: …
+> I need to: 1, Click the Bilibili …
+> I need to search on China …
+> Click …
+> Click …
+> Type …
+> Grounding Style
+> Navigation Style
+> Rollout
+> Sampling
+
+Figure 5. The training framework of SecAgent. We observe that the original grounding and navigation datasets exhibit inherent biases. To mitigate this issue, we do not directly utilize the grounding data for SFT training as in prior work [53, 57]. Instead, we transform the grounding annotations into navigation-compatible format by treating the center point of each bounding box as the target click coordinate. 
+
+Model Step Acc. Task Acc. Action Acc. 
+
+Click Acc. Type Acc. Swipe Acc. Terminate Acc. 
+
+Closed-source Models 
+
+GPT-4o [15] 48.4 0.0 43.5 68.3 63.7 62.1 Claude-3-Sonnet [2] 81.4 25.8 91.1 30.0 81.3 53.4 
+
+Open-source Models (7B and 8B) 
+
+Qwen2.5-VL-7B [3] 83.8 35.6 89.0 75.9 4.4 79.0 UI-TARS-7B [29] 63.8 2.5 80.2 11.1 3.3 8.3 OS-Atlas-7B [45] 69.6 10.0 77.0 76.8 5.5 32.1 GUI-R1-7B [28] 70.5 7.9 84.2 45.5 5.5 8.7 UI-Venus-Navi-7B [29] 89.6 53.1 92.6 91.5 45.0 81.2 AgentCPM-GUI-8B [57] 84.9 39.0 85.8 93.8 54.9 81.2 Qwen3-VL-8B [30] 91.1 59.7 92.6 82.6 69.2 94.6 
+
+Open-source Models (3B and 4B) 
+
+Qwen2.5-VL-3B [3] 78.8 25.6 83.2 66.0 5.5 81.9 UI-R1-3B [27] 56.4 1.0 71.2 7.6 5.5 6.5 GUI-R1-3B [28] 45.2 0.5 57.1 8.0 2.2 4.3 Qwen3-VL-4B [30] 90.1 57.4 91.2 84.8 65.9 94.6 SecAgent-3B (Ours) 96.4 80.0 96.1 99.1 87.6 99.2 
+
+Table 2. Comparison of various models on the CMGUI benchmark. 
+
+are difficult to provide informative historical information. 
+
+4.3. Training 
+
+To enhance the perception and reasoning capabilities of SecAgent, we employ a two-stage training framework com-prising supervised and reinforcement fine-tuning, as illus-trated in Fig. 5. 
+
+Stage 1: Supervised Fine-Tuning (SFT). We observe that grounding and navigation tasks inherently require differ-ent action output formats: grounding tasks require bound-ing boxes defined by a pair of coordinates, whereas navi-gation tasks require only a single coordinate representing the click position. To address this inconsistency, we devi-ate from prior work [53, 57] that directly utilizes grounding data for SFT training without format alignment. Instead, we transform the grounding annotations into a navigation-compatible format by computing the center point of each bounding box as the target coordinate for click actions. This transformation unifies the action space, facilitating bet-ter knowledge transfer and generalization between ground-ing and navigation tasks. During the SFT stage, we train on both transformed grounding and navigation data. The model is optimized to output a structured triplet consisting of semantic context, thought, and action, using the next-token prediction loss. This stage enhances the agent’s abil-ity to recognize elements and enables it to imitate human-like decision-making processes. 
+
+Stage 2: Reinforcement Fine-Tuning (RFT). Following the SFT stage, we further enhance the agent’s reasoning capabilities and generalization performance through rein-forcement learning. In the RFT phase, the agent receives a reward for each generated output, and iteratively updates its policy ( i.e ., model parameters) to maximize the expected re-ward using the Group Relative Policy Optimization (GRPO) algorithm [34]. We adopt a rule-based reward comprising format reward and action reward. The format reward en-6Models AndroidControl GUIOdyssey                             
+
+> Closed-source Models
+> GPT-4o [15] 20.8 ∗29.3 Claude-3-Sonnet [2] 12.5 ∗46.5
+> Open-source Models (7B and 8B)
+> Qwen2.5-VL-7B [3] 62.9 ∗59.6 UI-TARS-7B [29] 74.4 ∗37.5 OS-Atlas-7B [45] 71.2 †65.2 GUI-R1-7B [28] 51.7 ‡41.9 UI-Venus-Navi-7B [29] 76.1 †71.1 AgentCPM-GUI-8B [57] 69.2 ∗79.2 Qwen3-VL-8B [30] 46.4 53.8
+> Open-source Models (3B and 4B)
+> Qwen2.5-VL-3B [3] 60.1 49.3 UI-R1-3B [27] 45.4 ‡32.7 GUI-R1-3B [28] 46.6 ‡34.6 Qwen3-VL-4B [30] 47.5 53.4 SecAgent-3B (Ours) 69.5 74.3
+
+Table 3. Performance comparison on two widely used English benchmarks. We report the step accuracies under high-level in-structions. Bold text indicates the best score among 3B and 4B models, and underlined text represents the best score among all baseline models. Superscripts ∗, † and ‡ indicate results from AgentCPM-GUI [57], UI-Venus [29], GUI-R1 [28], respectively. 
+
+courages structural correctness by assigning a value of 0.5 when the agent successfully generates the required triplet format (semantic context, thought, action), and 0 otherwise. The action reward evaluates functional correctness, provid-ing a reward of 1 for a correct action and 0 otherwise. 
+
+## 5. Experiments 
+
+5.1. Experimental Setup 
+
+Implementation Details. We employ Qwen2.5-VL-3B [3] as the base model to conduct the two-stage training. We adopt LoRA tuning for the SFT stage, and full-parameter tuning for the RFT stage. In addition to our CMGUI dataset, we incorporate data from AndroidControl [18] and GUIOdyssey [25] dataset to train our agent. More training details are provided in the supplementary material. 
+
+Baselines. We consider different types of models for comparison: (1) Closed-source Models: GPT-4o [15] and Claude-3-Sonnet [2]; (2) General Open-source Models: Qwen2.5-VL [3] and Qwen3-VL [30]; (3) GUI-specific SFT Models: OS-Atlas [45] and UI-TARS [29]; (4) GUI-specific RFT Models: AgentCPM-GUI [57], UI-Venus-Navi [29], UI-R1 [27], and GUI-R1 [28]. 
+
+Metrics. We mainly use two metrics to evaluate the naviga-tion performance of agents: Step Accuracy (SA) , defined as the proportion of correct actions, and Task Accuracy (TA) , defined as the proportion of episodes where the ac-tions are all correct.                                           
+
+> Settings SA TA ITC TTFT ↓TPS ↑
+> N=0 85.3 36.2 1537 0.07 145
+> N=1 94.8 72.8 2239 0.11 140
+> N=2 95.1 73.8 2760 0.14 134
+> N=5 95.5 74.1 3642 0.22 122
+> N=5 w/o SC 95.0 73.0 3507 0.22 124
+> N=1 w/o SC 90.6 56.4 2171 0.11 142
+> N=1 w/o thought 94.0 68.9 2207 0.11 141
+
+Table 4. Performance and efficiency comparison across different history window sizes ( N ), and the ablation of Semantic Context (SC) and thought. For efficiency evaluation, we report the Input Token Count (ITC), Time to First Token (TTFT), Tokens per Sec-ond (TPS), and training hours, following [25]. ITC includes both text and vision tokens. 
+
+5.2. Benchmark Results 
+
+CMGUI-Bench. Tab. 2 shows the comprehensive evalua-tion of representative GUI agents on our newly constructed CMGUI-Bench. The results unequivocally demonstrate the superior performance of our proposed SecAgent. SecAgent achieves a remarkable SA of 96 .4% and a dominant TA of 
+
+80 .0%, significantly outperforming all other closed-source and open-source baselines, regardless of their parameter size. Analyzing the action-specific metrics reveals the source of this performance gain: SecAgent achieves high accuracy on the frequently used CLICK action ( 96 .1%) and the challenging SWIPE action ( 87 .6%). This superior per-formance validates the high quality of the CMGUI dataset and its effectiveness for training agents in the Chinese mo-bile ecosystem. 
+
+AndroidControl and GUIOdyssey Benchmark. To ex-amine the effectiveness of our approach beyond the Chinese ecosystem, we further evaluate it on two widely adopted En-glish mobile navigation benchmarks: AndroidControl [18] and GUIOdyssey [25]. Note that GUIOdyssey has different evaluation versions. Thus, we use the updated evaluation set and randomly select 100 trajectories from it to evalu-ate all comparison methods. As shown in Tab. 3, SecA-gent achieves highly competitive results, securing a SA of 
+
+69 .5% on AndroidControl and 74 .3% on GUIOdyssey. Notably, our 3B model outperforms other baseline open-source models in its size category and demonstrates perfor-mance comparable to larger models, for instance, exceeding the performance of AgentCPM-GUI-8B on AndroidControl and UI-Venus-Navi-7B on GUIOdyssey. This highlights that the design of semantic context (even when approxi-mated) and the two-stage training scheme yield efficient and competitive navigation capabilities. 
+
+5.3. Ablation Studies 
+
+Performance and Efficiency Comparison. Tab. 4 exam-ines the impact of history window size N (i.e ., the number of historical screenshots and actions utilized) and key ar-7Training Data Training Method In-Domain Apps Out-of-Domain Apps Taobao                                                    
+
+> SA / TA
+> Kuaishou
+> SA / TA
+> Fliggy
+> SA / TA
+> JD
+> SA / TA
+> Rednote
+> SA / TA
+> Bilibili
+> SA / TA
+> Baidu Maps
+> SA / TA
+> Pinduoduo
+> SA / TA Partial SFT 91.2 / 56.9 89.1 / 44.8 91.9 / 58.3 91.9 / 61.1 91.7 / 54.5 88.4 / 45.8 86.6 / 41.7 94.4 / 66.7 SFT + RFT 94.5 / 70.8 90.1 / 48.3 96.0 / 79.2 93.5 / 61.1 96.4 / 80.0 90.2 / 45.8 91.3 / 62.5 97.6 / 83.3 Full SFT 94.5 / 70.8 91.2 / 58.6 96.1 / 79.2 92.9 / 61.1 97.3 / 87.3 96.3 / 79.2 96.9 /79.2 97.7 / 83.3 SFT + RFT 95.5 /73.8 93.2 /75.9 96.6 /79.2 97.6 /83.3 98.4 /89.1 97.6 /91.7 96.6 / 79.2 97.6 / 88.9
+
+Table 5. Performance comparison on in-domain and out-of-domain apps. The ‘Partial’ and ‘Full’ training data refer to the entire CMGUI dataset, excluding and including the four out-of-domain apps, respectively. For presentation conciseness, the results of four representative in-domain apps are presented.                    
+
+> Training Data Training Method SA TA
+> Navigation SFT 93.7 65.8 Grounding + Navigation SFT 94.4 69.2 Gr2Nav + Navigation SFT 94.8 72.8 Gr2Nav + Navigation RFT ∗95.2 75.9 Gr2Nav + Navigation SFT + RFT 96.4 80.0
+
+Table 6. Comparison of different training data and training methods. ‘Grounding’ denotes the original grounding data, and ‘Gr2Nav’ denotes the transformed grounding data with navigation-compatible format. ∗Direct RFT on the base model fails to converge; thus we apply a lightweight SFT with 1k navi-gation step data before RFT. 
+
+chitectural components ( i.e ., semantic context and thought) on SecAgent’s performance and efficiency. Expanding from no history ( N = 0 ) to a single-step history ( N = 1 ) yields substantial improvements: SA increases by 9.5% while TA nearly doubles, demonstrating that incorporating history is crucial for successful task completion, especially when some key steps are executed correctly, which can lead to a significant improvement in TA. However, further expanding the history window produces diminishing returns. Increas-ing N from 1 to 5 improves SA and TA by less than 2% ,while incurring substantial efficiency penalties: ITC grows by 62 .7% , TTFT doubles, and TPS declines by 12 .9% .These results indicate that N = 1 achieves a favorable bal-ance between performance and efficiency, and is therefore adopted as the default configuration for SecAgent. Further-more, N = 1 with SC achieves performance comparable to 
+
+N = 5 without SC , while exhibiting significantly higher ef-ficiency, which validates the effectiveness of our SC mech-anism. Ablation results at N = 1 reveal that both SC and thought mechanisms contribute to performance. Notably, removing SC causes substantial degradation while yielding negligible efficiency improvements. This demonstrates that the SC provides critical information concisely without sig-nificant computational overhead. 
+
+Training Data and Methods. Tab. 6 evaluates the im-pact of different training data compositions and methodolo-gies. First, incorporating grounding data (either original or transformed) improves the performance of SFT-trained agents, demonstrating the quality of our grounding data and its efficacy in enhancing the agent’s navigational ca-pabilities. Notably, Gr2Nav data provides greater improve-ment than the original data, validating the effectiveness of our grounding data transformation approach. Our designed transformation enables consistent alignment between the original grounding-style and navigation-style data. Sec-ond, the comparison between SFT and SFT-initialized RFT approaches demonstrates the potential of RFT, which im-proves TA by 3.1% . Finally, integrating RFT as a subse-quent stage following complete SFT yields the best perfor-mance, improving SA by 1.6% and TA by 7.2% over the SFT-only agent. These substantial gains validate the effi-cacy of our two-stage learning paradigm for achieving pro-ficiency in complex mobile GUI navigation tasks. 
+
+In-Domain (ID) and Out-of-Domain (OOD) Perfor-mance. Tab. 5 reveals the ID and OOD performance un-der different training data and methods. First, apps share transferable knowledge. When trained on partial data, the model achieves reasonable performance on unseen OOD apps, such as 97 .6% SA on Rednote with RFT-augmented training, demonstrating effective zero-shot generalization. Moreover, incorporating OOD data improves ID app per-formance, with Kuaishou TA increasing 13 .8% under SFT. Second, apps possess unique domain-specific knowledge that requires targeted training. Adding OOD data yields substantial improvements on OOD apps: Bilibili increases TA by 33 .4% and BaiduMaps by 37 .5% under SFT. These gains are attributed to the accomplishment of app-specific operations, such as “sending a danmaku” in the Bilibili App and “opening nearby tab” in the BaiduMaps App, which cannot be inferred from general knowledge alone. Third, when learning from partial data, the RFT-augmented ap-proach outperforms the SFT-only approach on all OOD apps, demonstrating superior generalization capability. 
+
+## 6. Conclusion 
+
+In this work, we introduce SecAgent, an efficient mobile GUI agent that addresses two critical challenges: the scarcity of multilingual datasets and inefficient history representation. We contribute a large-scale Chinese mobile GUI dataset and a high-quality navigation benchmark with multi-choice action annotations. Furthermore, we propose 8a novel semantic context mechanism that significantly enhances computational efficiency while preserving impor-tant historical information. Empirical results demonstrate that SecAgent outperforms 3B baselines and achieves performance comparable to 7B-8B models. We will open-source our dataset, benchmark, model, and code to facilitate future research in multilingual mobile GUI agents. 
+
+## References 
+
+[1] Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ah-mad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al. GPT-4 technical report. arXiv preprint arXiv:2303.08774 ,2023. 2 [2] Anthropic. Claude, 2024. 2, 6, 7 [3] Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, et al. Qwen2. 5-vl technical report. arXiv preprint arXiv:2502.13923 , 2025. 2, 6, 7 [4] Andrea Burns, Deniz Arsan, Sanjna Agrawal, Ranjitha Ku-mar, Kate Saenko, and Bryan A Plummer. Mobile app tasks with iterative feedback (motif): Addressing task fea-sibility in interactive visual environments. arXiv preprint arXiv:2104.08560 , 2021. 2 [5] Yuxiang Chai, Siyuan Huang, Yazhe Niu, Han Xiao, Liang Liu, Dingyu Zhang, Shuai Ren, and Hongsheng Li. Amex: Android multi-annotation expo dataset for mobile gui agents. 
+
+arXiv preprint arXiv:2407.17490 , 2024. 2 [6] Yuxiang Chai, Hanhao Li, Jiayu Zhang, Liang Liu, Guangyi Liu, Guozhi Wang, Shuai Ren, Siyuan Huang, and Hong-sheng Li. A3: Android agent arena for mobile gui agents. 
+
+arXiv preprint arXiv:2501.01149 , 2025. 2 [7] Liangyu Chen, Hanzhang Zhou, Chenglin Cai, Jianan Zhang, Panrong Tong, Quyu Kong, Xu Zhang, Chen Liu, Yuqi Liu, Wenxuan Wang, et al. Ui-ins: Enhancing gui grounding with multi-perspective instruction-as-reasoning. 
+
+arXiv preprint arXiv:2510.20286 , 2025. 4 [8] Wentong Chen, Junbo Cui, Jinyi Hu, Yujia Qin, Junjie Fang, Yue Zhao, Chongyi Wang, Jun Liu, Guirong Chen, Yupeng Huo, et al. Guicourse: From general vision language mod-els to versatile gui agents. arXiv preprint arXiv:2406.11317 ,2024. 2 [9] Zhe Chen, Jiannan Wu, Wenhai Wang, Weijie Su, Guo Chen, Sen Xing, Muyan Zhong, Qinglong Zhang, Xizhou Zhu, Lewei Lu, et al. Internvl: Scaling up vision foundation mod-els and aligning for generic visual-linguistic tasks. In CVPR ,2024. 2 [10] Kanzhi Cheng, Qiushi Sun, Yougang Chu, Fangzhi Xu, Yan-tao Li, Jianbing Zhang, and Zhiyong Wu. SeeClick: Har-nessing gui grounding for advanced visual gui agents. arXiv preprint arXiv:2401.10935 , 2024. 1, 2 [11] Jihao Gu, Qihang Ai, Yingyao Wang, Pi Bu, Jingxuan Xing, Zekun Zhu, Wei Jiang, Ziming Wang, Yingxiu Zhao, Ming-Liang Zhang, et al. Mobile-R1: Towards interactive rein-forcement learning for vlm-based mobile agent via task-level rewards. arXiv preprint arXiv:2506.20332 , 2025. 2 [12] Zhangxuan Gu, Zhengwen Zeng, Zhenyu Xu, Xingran Zhou, Shuheng Shen, Yunfei Liu, Beitong Zhou, Changhua Meng, Tianyu Xia, Weizhi Chen, et al. Ui-Venus technical report: Building high-performance ui agents with rft. arXiv preprint arXiv:2508.10833 , 2025. 2 [13] Wenyi Hong, Weihan Wang, Qingsong Lv, Jiazheng Xu, Wenmeng Yu, Junhui Ji, Yan Wang, Zihan Wang, Yuxiao Dong, Ming Ding, et al. Cogagent: A visual language model for gui agents. In CVPR , 2024. 1, 2, 4 [14] Zhiyuan Huang, Ziming Cheng, Junting Pan, Zhaohui Hou, and Mingjie Zhan. Spiritsight agent: Advanced gui agent with one look. In CVPR , 2025. 1, 2 [15] Aaron Hurst, Adam Lerer, Adam P Goucher, Adam Perel-man, Aditya Ramesh, Aidan Clark, AJ Ostrow, Akila Weli-hinda, Alan Hayes, Alec Radford, et al. Gpt-4o system card. 
+
+arXiv preprint arXiv:2410.21276 , 2024. 4, 6, 7 [16] Yangqin Jiang and Chao Huang. Lightagent: Mobile agentic foundation models. arXiv preprint arXiv:2510.22009 , 2025. 5[17] Sunjae Lee, Junyoung Choi, Jungjae Lee, Munim Hasan Wasi, Hojun Choi, Steven Y Ko, Sangeun Oh, and Insik Shin. Explore, select, derive, and recall: Augmenting llm with human-like memory for mobile task automation. arXiv preprint arXiv:2312.03003 , 2023. 1, 2 [18] Wei Li, William E Bishop, Alice Li, Christopher Rawles, Folawiyo Campbell-Ajala, Divya Tyamagundlu, and Oriana Riva. On the effects of data scale on ui control agents. 
+
+NeurIPS , 2024. 2, 7 [19] Yang Li, Jiacong He, Xin Zhou, Yuan Zhang, and Jason Baldridge. Mapping natural language instructions to mobile ui action sequences. In ACL , 2020. 2 [20] Kevin Qinghong Lin, Linjie Li, Difei Gao, Zhengyuan Yang, Shiwei Wu, Zechen Bai, Stan Weixian Lei, Lijuan Wang, and Mike Zheng Shou. Showui: One vision-language-action model for gui visual agent. In CVPR , 2025. 1, 2 [21] Guangyi Liu, Pengxiang Zhao, Liang Liu, Zhiming Chen, Yuxiang Chai, Shuai Ren, Hao Wang, Shibo He, and Wenchao Meng. Learnact: Few-shot mobile gui agent with a unified demonstration benchmark. arXiv preprint arXiv:2504.13805 , 2025. 2 [22] Guangyi Liu, Pengxiang Zhao, Liang Liu, Yaxuan Guo, Han Xiao, Weifeng Lin, Yuxiang Chai, Yue Han, Shuai Ren, Hao Wang, et al. Llm-powered gui agents in phone au-tomation: Surveying progress and prospects. arXiv preprint arXiv:2504.19838 , 2025. 1 [23] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. NeurIPS , 2023. 2 [24] Yuhang Liu, Pengxiang Li, Congkai Xie, Xavier Hu, Xi-aotian Han, Shengyu Zhang, Hongxia Yang, and Fei Wu. Infigui-r1: Advancing multimodal gui agents from re-active actors to deliberative reasoners. arXiv preprint arXiv:2504.14239 , 2025. 2 [25] Quanfeng Lu, Wenqi Shao, Zitao Liu, Lingxiao Du, Fanqing Meng, Boxuan Li, Botong Chen, Siyuan Huang, Kaipeng Zhang, and Ping Luo. Guiodyssey: A comprehensive dataset for cross-app gui navigation on mobile devices. pages 22404–22414, 2025. 2, 4, 5, 7 
+
+9[26] Yadong Lu, Jianwei Yang, Yelong Shen, and Ahmed Awadallah. Omniparser for pure vision based gui agent. 
+
+arXiv preprint arXiv:2408.00203 , 2024. 2 [27] Zhengxi Lu, Yuxiang Chai, Yaxuan Guo, Xi Yin, Liang Liu, Hao Wang, Han Xiao, Shuai Ren, Guanjing Xiong, and Hongsheng Li. Ui-r1: Enhancing efficient action predic-tion of gui agents by reinforcement learning. arXiv preprint arXiv:2503.21620 , 2025. 2, 5, 6, 7 [28] Run Luo, Lu Wang, Wanwei He, and Xiaobo Xia. Gui-r1: A generalist r1-style vision-language action model for gui agents. arXiv preprint arXiv:2504.10458 , 2025. 2, 5, 6, 7 [29] Yujia Qin, Yining Ye, Junjie Fang, Haoming Wang, Shihao Liang, Shizuo Tian, Junda Zhang, Jiahao Li, Yunxin Li, Shi-jue Huang, et al. Ui-tars: Pioneering automated gui inter-action with native agents. arXiv preprint arXiv:2501.12326 ,2025. 2, 3, 4, 5, 6, 7 [30] Qwen Team. Qwen3-VL: Sharper vision, deeper thought, broader action, 2025. 6, 7 [31] Nikhila Ravi, Valentin Gabeur, Yuan-Ting Hu, Ronghang Hu, Chaitanya Ryali, Tengyu Ma, Haitham Khedr, Roman R¨ adle, Chloe Rolland, Laura Gustafson, et al. Sam 2: Segment anything in images and videos. arXiv preprint arXiv:2408.00714 , 2024. 4 [32] Christopher Rawles, Alice Li, Daniel Rodriguez, Oriana Riva, and Timothy Lillicrap. Androidinthewild: A large-scale dataset for android device control. NeurIPS , 2023. 2 [33] Christopher Rawles, Sarah Clinckemaillie, Yifan Chang, Jonathan Waltz, Gabrielle Lau, Marybeth Fair, Alice Li, William Bishop, Wei Li, Folawiyo Campbell-Ajala, et al. Androidworld: A dynamic benchmarking environment for autonomous agents. arXiv preprint arXiv:2405.14573 , 2024. 2[34] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Yang Wu, et al. Deepseekmath: Pushing the limits of math-ematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. 2, 6, 1 [35] Liangtai Sun, Xingyu Chen, Lu Chen, Tianle Dai, Zichen Zhu, and Kai Yu. Meta-gui: Towards multi-modal conversa-tional agents on mobile gui. In EMNLP , 2022. 2 [36] Fei Tang, Haolei Xu, Hang Zhang, Siqi Chen, Xingyu Wu, Yongliang Shen, Wenqi Zhang, Guiyang Hou, Zeqi Tan, Yuchen Yan, et al. A survey on (m) llm-based gui agents. 
+
+arXiv preprint arXiv:2504.13865 , 2025. 1 [37] Liujian Tang, Shaokang Dong, Yijia Huang, Minqi Xiang, Hongtao Ruan, Bin Wang, Shuo Li, Zhiheng Xi, Zhihui Cao, Hailiang Pang, Heng Kong, He Yang, Mingxu Chai, Zhilin Gao, Xingyu Liu, Yingnan Fu, Jiaming Liu, Xuan-jing Huang, Yu-Gang Jiang, Tao Gui, Qi Zhang, Kang Wang, Yunke Zhang, and Yuran Wang. Magicgui: A foundational mobile gui agent with scalable data pipeline and reinforce-ment fine-tuning, 2025. 1, 2 [38] Daniel Toyama, Philippe Hamel, Anita Gergely, Gheorghe Comanici, Amelia Glaese, Zafarali Ahmed, Tyler Jackson, Shibl Mourad, and Doina Precup. Androidenv: A rein-forcement learning platform for android. arXiv preprint arXiv:2105.13231 , 2021. 2 [39] Sagar Gubbi Venkatesh, Partha Talukdar, and Srini Narayanan. Ugif: Ui grounded instruction following. arXiv preprint arXiv:2211.07615 , 2022. 2 [40] Bryan Wang, Gang Li, and Yang Li. Enabling conversational interaction with mobile ui using large language models. In 
+
+CHI , 2023. 1, 2 [41] Haoming Wang, Haoyang Zou, Huatong Song, Jiazhan Feng, Junjie Fang, Junting Lu, Longxiang Liu, Qinyu Luo, Shi-hao Liang, Shijue Huang, et al. Ui-tars-2 technical report: Advancing gui agent with multi-turn reinforcement learning. 
+
+arXiv preprint arXiv:2509.02544 , 2025. 2, 3, 4 [42] Hao Wen, Hongming Wang, Jiaxuan Liu, and Yuanchun Li. Droidbot-gpt: Gpt-powered ui automation for android. arXiv preprint arXiv:2304.07061 , 2023. 1, 2 [43] Hao Wen, Yuanchun Li, Guohong Liu, Shanhui Zhao, Tao Yu, Toby Jia-Jun Li, Shiqi Jiang, Yunhao Liu, Yaqin Zhang, and Yunxin Liu. Autodroid: Llm-powered task automation in android. In MobiCom , 2024. 1, 2 [44] Qinzhuo Wu, Weikai Xu, Wei Liu, Tao Tan, Jianfeng Liu, Ang Li, Jian Luan, Bin Wang, and Shuo Shang. Mobilevlm: A vision-language model for better intra-and inter-ui under-standing. arXiv preprint arXiv:2409.14818 , 2024. 3 [45] Zhiyong Wu, Zhenyu Wu, Fangzhi Xu, Yian Wang, Qiushi Sun, Chengyou Jia, Kanzhi Cheng, Zichen Ding, Liheng Chen, Paul Pu Liang, et al. Os-atlas: A foundation action model for generalist gui agents. arXiv preprint arXiv:2410.23218 , 2024. 1, 2, 5, 6, 7 [46] Mingzhe Xing, Rongkai Zhang, Hui Xue, Qi Chen, Fan Yang, and Zhen Xiao. Understanding the weakness of large language model agents within a complex android environ-ment. In SIGKDD , 2024. 2 [47] Weikai Xu, Zhizheng Jiang, Yuxuan Liu, Pengzhi Gao, Wei Liu, Jian Luan, Yuanchun Li, Yunxin Liu, Bin Wang, and Bo An. Mobile-Bench-v2: A more realistic and comprehen-sive benchmark for vlm-based mobile agents. arXiv preprint arXiv:2505.11891 , 2025. 2 [48] Yifan Xu, Xiao Liu, Xueqiao Sun, Siyi Cheng, Hao Yu, Hanyu Lai, Shudan Zhang, Dan Zhang, Jie Tang, and Yux-iao Dong. Androidlab: Training and systematic bench-marking of android autonomous agents. arXiv preprint arXiv:2410.24024 , 2024. 2 [49] Yiheng Xu, Zekun Wang, Junli Wang, Dunjie Lu, Tian-bao Xie, Amrita Saha, Doyen Sahoo, Tao Yu, and Caiming Xiong. Aguvis: Unified pure vision agents for autonomous gui interaction. In ICML , 2025. 2 [50] An Yan, Zhengyuan Yang, Wanrong Zhu, Kevin Lin, Lin-jie Li, Jianfeng Wang, Jianwei Yang, Yiwu Zhong, Julian McAuley, Jianfeng Gao, et al. Gpt-4v in wonderland: Large multimodal models for zero-shot smartphone gui navigation. 
+
+arXiv preprint arXiv:2311.07562 , 2023. 2 [51] Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R Narasimhan, and Yuan Cao. React: Synergizing reasoning and acting in language models. In ICLR , 2022. 4 [52] Zhixiong Zeng, Jing Huang, Liming Zheng, Wenkang Han, Yufeng Zhong, Lei Chen, Longrong Yang, Yingjie Chu, Yuzhi He, and Lin Ma. Uitron: Foundational gui agent with advanced perception and planning. arXiv preprint arXiv:2508.21767 , 2025. 1 
+
+10 [53] Bofei Zhang, Zirui Shang, Zhi Gao, Wang Zhang, Rui Xie, Xiaojian Ma, Tao Yuan, Xinxiao Wu, Song-Chun Zhu, and Qing Li. Tongui: Building generalized gui agents by learning from multimodal web tutorials. arXiv preprint arXiv:2504.12679 , 2025. 2, 6 [54] Chi Zhang, Zhao Yang, Jiaxuan Liu, Yanda Li, Yucheng Han, Xin Chen, Zebiao Huang, Bin Fu, and Gang Yu. Appa-gent: Multimodal agents as smartphone users. In CHI , 2025. 2[55] Danyang Zhang, Zhennan Shen, Rui Xie, Situo Zhang, Tian-bao Xie, Zihan Zhao, Siyuan Chen, Lu Chen, Hongshen Xu, Ruisheng Cao, et al. Mobile-env: Building qualified eval-uation benchmarks for llm-gui interaction. arXiv preprint arXiv:2305.08144 , 2023. 2 [56] Jiwen Zhang, Jihao Wu, Teng Yihua, Minghui Liao, Nuo Xu, Xiao Xiao, Zhongyu Wei, and Duyu Tang. Android in the zoo: Chain-of-action-thought for gui agents. In EMNLP ,2024. 2 [57] Zhong Zhang, Yaxi Lu, Yikun Fu, Yupeng Huo, Shenzhi Yang, Yesai Wu, Han Si, Xin Cong, Haotian Chen, Yankai Lin, et al. Agentcpm-gui: Building mobile-use agents with reinforcement fine-tuning. arXiv preprint arXiv:2506.01391 ,2025. 1, 2, 3, 5, 6, 7 [58] Yuqi Zhou, Sunhao Dai, Shuai Wang, Kaiwen Zhou, Qinglin Jia, and Jun Xu. Gui-g1: Understanding r1-zero-like train-ing for visual grounding in gui agents. arXiv preprint arXiv:2505.15810 , 2025. 2 
+
+11 SecAgent: Efficient Mobile GUI Agent with Se mantic Context 
+
+# Supplementary Material 
+
+## 7. Details of CMGUI 
+
+7.1. Action Space 
+
+The action space of CMGUI comprising the following ac-tions: CLICK , SWIPE , TYPE , SYSTEM BUTTON , WAIT ,and TERMINATE . The description and format of each ac-tion are presented in Tab. 8. 
+
+7.2. App Distribution 
+
+Tab. 9 presents the detailed breakdown of trajectory counts for each application in CMGUI. To ensure com-prehensive coverage of real-world mobile usage scenarios, CMGUI comprises 44 widely-used Chinese mobile applica-tions across diverse functional categories, including social media, e-commerce, entertainment, and productivity. 
+
+7.3. Examples 
+
+Fig. 6 presents examples of grounding data in CMGUI. To improve the utilization of screenshot resources, we gener-ate multiple grounding data from a single screenshot. To ensure consistency between grounding and navigation data in output format, we transform the grounding data into a single-step navigation data, with the ground-truth click co-ordinates corresponding to the bounding box center. Fig. 7 illustrates three evaluation trajectories with multi-choice annotations in CMGUI-Bench. Given the multi-feasible nature of GUI manipulations, a single step may have multiple correct actions that lead to the same goal. To address this, we manually examined each step and anno-tated all valid actions. 
+
+## 8. Experiment Details 
+
+8.1. Prompts 
+
+Fig. 8 shows the prompt used by SecAgent. The prompt in-cludes the action space specification, user instruction, pre-vious semantic context, current screenshot, and previous ac-tion as inputs. The agent is required to output the updated semantic context, its thought, and the action to take. For the baseline models, we strictly follow their respective official guidelines and prompt templates when available. The prompt used to generate grounding instructions is shown in Fig. 9. In the prompt, we specify the instruction format, require the agent to provide explanations for its gen-erated instructions, and provide descriptions of common UI elements and their meanings. 
+
+8.2. RFT Algorithm 
+
+Our RFT algorithm is built on the GRPO algorithm [34], which stabilizes and accelerates training by estimating the advantage of actions using group-normalized rewards with-out acquiring a reward model or critic model. We adopt two modifications to the GRPO algorithm: the token-level loss and different clipping ratios. Given a query q, the current policy πθold samples G responses {oi}Gi=1 . Each response is assigned a scalar reward {Ri}Gi=1 . Rewards are normalised within the group to produce variance-reduced advantages: 
+
+ˆAi,t = Ri − mean( {Ri}Gi=1 )std( {Ri}Gi=1 ) (4) The policy is then updated using a clipped objective with KL divergence penalty: 
+
+JGRPO (θ) = 1
+
+PGi=1 |oi|
+
+> G
+
+X
+
+> i=1
+> |oi|
+
+X
+
+> t=1
+
+n
+
+min 
+
+
+
+ri,t (θ) ˆAi,t ,
+
+clip ( ri,t (θ), 1 − ϵlow , 1 + ϵhight ) ˆAi,t 
+
+
+
+− βDKL [πθ ∥πref ]
+
+o
+
+(5) where ϵlow and ϵhight control the clipping range, β constrains policy divergence from the reference model πref , and ri,t (θ)
+
+is the probability ratio, calculated as: 
+
+ri,t (θ) = πθ (oi,t | q, o i,<t )
+
+πθold (oi,t | q, o i,<t ) (6) 
+
+8.3. Training Parameters 
+
+The hyperparameters used for training SecAgent during SFT and RFT are shown in Tab. 7. We use Qwen2.5-VL-3B as our base model, and set min pixels and 
+
+max pixels as 200 , 704 and 501 , 760 , respectively.              
+
+> Hyperparameter Value
+> Supervised Fine-tuning
+> Epoch 6Batch Size 2Learning Rate 2e-5 LoRA Rank 8LoRA Alpha 16
+> Reinforcement Fine-tuning
+> Epoch 2Batch Size 8Learning Rate 1e-6 KL Penalty 0.04 Number of Rollouts 16 Clip Range ϵlow , ϵ high 0.2, 0.28
+
+Table 7. The hyperparameters used for training SecAgent. 
+
+1Action Description Format 
+
+CLICK Click the point on the screen with coordinate (x, y). 
+
+{"name": "mobile use", "arguments": {"action": "click", "coordinate": [x, y] }} 
+
+SWIPE Swipe from the starting point with coordinate (x, y) to the end point with coordinates2 (x2, y2). 
+
+{"name": "mobile use", "arguments": {"action": "swipe", "coordinate": [x, y], "coordinate2": [x2, y2] }} 
+
+TYPE Input the specified text into the ac-tivated input box. 
+
+{"name": "mobile use", "arguments": {"action": "type", "text": "specified text" }} 
+
+SYSTEM BUTTON Press the specified system button (e.g ., “Back”, “Home”, “Menu”, “Enter”). 
+
+{"name": "mobile use", "arguments": {"action": "system button", "button": "specified button" }} 
+
+WAIT Wait specified seconds for the change to happen. 
+
+{"name": "mobile use", "arguments": {"action": "wait", "time": "specified seconds" }} 
+
+TERMINATE Terminate the current task and re-port its completion status (“suc-cess” or “failure”). 
+
+{"name": "mobile use", "arguments": {"action": "terminate", "status": "success" }} 
+
+Table 8. The action space of CMGUI. 
+
+#ID App Name #Traj. #ID App Name #Traj. #ID App Name #Traj. #ID App Name #Traj. 
+
+1 Taobao 4,722 2 Kuaishou 1,829 3 Rednote 1,341 4 Baidu Maps 1,213 5 Fliggy 1,184 6 Bilibili 1,157 7 WeChat 1145 8 JD 1,023 9 Pinduoduo 861 10 Weather 817 11 Meituan 777 12 Douyin 757 13 Calendar 741 14 Poizon 714 15 Aliyun Drive 693 16 Amap 686 17 Ele.me 640 18 Quark Browser 589 19 Toutiao 580 20 Tencent Maps 576 21 Calculator 541 22 Baidu 519 23 Tencent Meeting 499 24 Browser 496 25 Tomato Novel 492 26 Didi Chuxing 447 27 Notes 432 28 WeCom 429 29 Message 426 30 Contacts 401 31 DingTalk 393 32 Feishu 380 33 Baidu Netdisk 355 34 Cainiao 329 35 Ctrip 264 36 WPS Office 163 37 QQ 152 38 WeChat Reading 151 39 Weibo 149 40 Zhihu 130 41 Xianyu 129 42 Alipay 120 43 Zhuanzhuan 117 44 Luckin Coffee 48 
+
+Table 9. Our constructed CMGUI consists of 44 mainstream Chinese apps. The number of trajectories for each app is shown in the table. Instruction: 点击 "待付款 "标签 (Click the "Pending Payment" tab)            
+
+> Grounding bbox :[250, 330, 476, 430]
+> Navigation: {"action": "click", "coordinate": [363, 380]}
+> Instruction: 点击 "继续付款 "文字 (Click the "Continue Payment"
+> text)
+> Grounding bbox :[1074, 1289, 1388, 1417]
+> Navigation: {"action": "click", "coordinate": [1231, 1353]}
+> Instruction: 点击 "五常大米商品 "(Click on "Wuchang Rice
+> Products")
+> Grounding bbox :[27, 1559, 711, 2407]
+> Navigation: {"action": "click", "coordinate": [369, 1983]}
+
+…              
+
+> Instruction: 点击 "10+ 人刚刚抢购 "文字 (Click on the text "10+
+> people just snapped it up")
+> Grounding bbox :[189, 1030, 587, 1108]
+> Navigation: {"action": "click", "coordinate": [388, 1069]}
+> Instruction: 点击 "互相关注 "标签 (Click the "Mutual Follow" tab)
+> Grounding bbox :[258, 145, 428, 201]
+> Navigation: {"action": "click", "coordinate": [343, 173]}
+> Instruction: 点击 XR.T -Glow 的头像 (Click on XR.T -Glow's profile
+> picture)
+> Grounding bbox :[42, 1212, 198, 1356]
+> Navigation: {"action": "click", "coordinate": [120, 1284]}
+> Instruction: 点击 "小噜啦咧 "的文字 (Click on the text " 小噜啦咧 ")
+> Grounding bbox :[227, 2224, 435, 2264]
+> Navigation: {"action": "click", "coordinate": [331, 2244]}
+
+…     
+
+> Instruction: 点击 "搜索已关注的人 "搜索 框(Click the "Search people I
+> follow "search box )
+> Grounding bbox :[126, 280, 1012, 360]
+> Navigation: {"action": "click", "coordinate": [569, 320]}
+
+Figure 6. Examples of grounding data in CMGUI. For each screenshot, multiple grounding data can be synthesized and then converted into multiple single-step navigation data. 
+
+2Instruction: 打开淘宝，搜索 “小米家电洗衣机 ”，选择一个商品， 加入购物车 (Open Taobao, search for "Xiaomi washing machine", select a product, and add it to your shopping cart.) 
+
+Choice1 Choice2 Choice1 
+
+Choice2 
+
+Choice3: type 
+
+Instruction: 打开飞猪，搜索千岛湖，筛选一日游，选择智能排序 (Open Fliggy , search for Qiandao Lake, filter by day trips, and select smart sorting.) 
+
+Choice2 
+
+Choice1 
+
+Choice2 
+
+Choice1 
+
+Instruction: 打开携程旅行，搜索“北京到杭州动车票”，选择耗时最短路线 (Open Ctrip, search for "Beijing to Hangzhou high -speed train tickets", and select the route with the shortest travel time.) 
+
+Choice1 
+
+Choice2 Choice1 
+
+Choice2 
+
+Choice3 Figure 7. Example trajectories in CMGUI-Bench. The multi-choice annotations are explicitly drawn on the image. 
+
+3You are a mobile GUI agent. 
+
+You are provided with function signatures within <tools></tools> XML tags: 
+
+<tools> 
+
+{"type": "function", "function": {" name_for_human ": " mobile_use ", "name": " mobile_use ", "description": "Use a touchscreen to interact with 
+
+a mobile device, and take screenshots. \n* This is an interface to a mobile device with touchscreen. You can perform actions like clicking, 
+
+typing, swiping, etc. \n* Some applications may take time to start or process actions, so you may need to wait and take successiv e screenshots 
+
+to see the results of your actions. \n* The screen's resolution is <width>x<height>. \n* Make sure to click any buttons, links, ic ons, etc with the 
+
+cursor tip in the center of the element. Don't click boxes on their edges unless asked.", "parameters": {"properties": {"acti on" : {"description": 
+
+"The action to perform. The available actions are: \n* `key`: Perform a key event on the mobile device. \n - This supports adb's `keyevent `
+
+syntax. \n - Examples: " volume_up ", " volume_down ", "power", "camera", "clear". \n* `click`: Click the point on the screen with coordinate (x, 
+
+y). \n* ` long_press `: Press the point on the screen with coordinate (x, y) for specified seconds. \n* `swipe`: Swipe from the starting point with 
+
+coordinate (x, y) to the end point with coordinates2 (x2, y2). \n* `type`: Input the specified text into the activated input box. \n* 
+
+`system_button `: Press the system button. \n* `open`: Open an app on the device. \n* `wait`: Wait specified seconds for the change to 
+
+happen. \n* `terminate`: Terminate the current task and report its completion status.", " enum ": ["key", "click", " long_press ", "swipe", "type", 
+
+"system_button ", "open", "wait", "terminate"], "type": "string"}, "coordinate": {"description": "(x, y): The x (pixels from the left edge) and y
+
+(pixels from the top edge) coordinates to move the mouse to. Required only by `action=click`, `action= long_press `, and `action=swipe`.", 
+
+"type": "array"}, "coordinate2": {"description": "(x, y): The x (pixels from the left edge) and y (pixels from the top edge) coo rdinates to move 
+
+the mouse to. Required only by `action=swipe`.", "type": "array"}, "text": {"description": "Required only by `action=key`, `a cti on=type`, and 
+
+`action=open`.", "type": "string"}, "time": {"description": "The seconds to wait. Required only by `action= long_press ` and `action=wait`.", 
+
+"type": "number"}, "button": {"description": "Back means returning to the previous interface, Home means returning to the des kto p, Menu 
+
+means opening the application background menu, and Enter means pressing the enter. Required only by `action= system_button `", " enum ": 
+
+["Back", "Home", "Menu", "Enter"], "type": "string"}, "status": {"description": "The status of the task. Required only by `ac tio n=terminate`.", 
+
+"type": "string", " enum ": ["success", "failure"]}}, "required": ["action"], "type": "object"}, " args_format ": "Format the arguments as a JSON 
+
+object."}} 
+
+</tools> 
+
+For each function call, return a json object with function name and arguments within < tool_call ></ tool_call > XML tags: 
+
+<tool_call >
+
+{"name": <function -name>, "arguments": < args -json -object>} 
+
+</ tool_call >
+
+Note: 
+
+1, If previous screenshots and actions are available, first summarize what was done in the prior step based on the previous scre ens hot, the 
+
+corresponding action, and the current screenshot. Update this summary into a sequential list that records the progress of eac h s tep. Output the 
+
+updated summary within the <summary></summary> tags. If no prior screenshot or action exists, output None. 
+
+2, Provide the reasoning process within the < think ></ think > tags. Note that previously executed actions may not be correct. 
+
+3, Output the intended action to be performed within the < tool_call ></ tool_call > tags. 
+
+System Message 
+
+User 
+
+The user instruction: [ user _instruction ]
+
+The previous semantic context: [previous _semantic _context ]
+
+The previous screenshot : [previous_ screenshot ] (only exists when it is not the first step) 
+
+The previ ous action: [previous_action ] (only exists when it is not the first step) 
+
+The current screenshot: [current_ screensho t]
+
+Assistan t
+
+[semantic_context ]\n[ thought ]\n[ action ]Figure 8. The prompt used by SecAgent. We note that the Chinese text has been translated into English for presentation purposes. 
+
+4You are to act as a mobile application testing agent tasked with generating training data based on the following input: 
+
+1. Input: A screenshot of an app interface, where interactive elements are annotated with red and green bounding boxes. 
+
+Your task consists of the following steps: 
+
+1. Identify interactive elements within the red and green bounding boxes and generate corresponding instructions and reasoning: 
+
+1. If no interactive elements exist within the bounding box, or if multiple interactive elements are present, return an empty re spo nse. 
+
+2. If the content inside the bounding box is purely solid -colored (e.g., uniform color without semantic meaning), return an empty r esponse. 
+
+3. Focus exclusively on the content within the red and green bounding boxes; ignore surrounding regions. 
+
+2. Generate user action instructions based on the content of the bounding box: 
+
+1. The generated instruction must strictly refer only to the content within the red and green bounding boxes, not adjacent eleme nts .
+
+2. For a profile avatar enclosed in the bounding box, generate: "Click [User Name]'s avatar". 
+
+3. For text content alone, generate: "Click 'text' text". 
+
+4. Leverage global interface context and structured positional data to infer and produce detailed, natural -language user instructio ns. 
+
+5. Instructions should follow the format: "[Action verb] + [description of interactive element]". Use diverse action verbs such as "click", "enter", "open", "select", etc. 
+
+6. When multiple identical elements exist in the interface, disambiguate using ordinal indicators (e.g., "the Nth") or distincti ve features (e.g., text, icon). 
+
+7. When specific textual content is involved, wrap it in single quotes ' and append a descriptor indicating its type (e.g., post, c omment, icon). 
+
+8. Avoid colloquial phrasing; e.g., use "like [content]" instead of "give content a like". 
+
+9. Interpret high -level UI semantics correctly: do not generate "click the magnifying glass symbol"; instead, generate "click the s earch button" since such icons typically represent 
+
+search functionality. 
+
+10. For a light gray camera icon, the instruction should relate to photography, camera access, or image upload ( e.e. , "open the scanner"). 
+
+11. For a light gray or white three -line menu icon (hamburger menu), the instruction should reflect access to additional options (e. g., "open more settings"). 
+
+12. Ensure the instruction is grammatically correct, unambiguous, and semantically clear. 
+
+3. Generate a reasoning process ("thoughts"): 
+
+1. Simulate the cognitive process of an agent executing a user -intended task. Describe how the operation would be understood and co mpleted. 
+
+2. Reasoning may include: 
+
+3. How the target element is identified? 
+
+4. Typical location patterns of such elements? 
+
+5. Relationships between this element and others? 
+
+6. Functional or semantic interpretation of the element? 
+
+7. Do not include pixel coordinates, screen positions, or any numerical spatial references. 
+
+8. Do not explain how the instruction was generated; instead, explain how one would execute it. 
+
+4. Output format: 
+
+Return the result in JSON format with two fields: "instructions" and "thoughts". 
+
+1. "instructions": a string containing a single action instruction. 
+
+2. "thoughts": a string describing the reasoning process for executing the instruction. 
+
+3. Strictly adhere to the following JSON schema: 
+
+{
+
+"instructions": "specific instruction", 
+
+"thoughts": "reasoning process" 
+
+}
+
+4. Example: 
+
+{
+
+“instructions”: “Click ‘Login’ button”, 
+
+“thoughts”: “Locate the button labeled ‘Login’ on the interface. Such buttons are typically positioned in the center -right regi on of the screen and serve as the primary 
+
+entry point for user authentication. After confirming the button is visible and not obscured, perform the click action." 
+
+}
+
+5. Common UI Semantic Mappings: 
+
+The following table maps common UI elements to their typical functional interpretations. These should guide the generation of se mantically accurate instructions. 
+
+Rounded rectangle/circle with a line (possibly): Camera scan area, QR code scanning, scan function 
+
+Light gray camera icon: Take photo, open camera, upload image \n Magnifying glass: Search, find 
+
+House icon: Home screen, main page \n Envelope icon: Messages, email, private messages 
+
+Clock/alarm icon: Alarm, reminder, history \n Bell/speaker icon: Notifications, alerts 
+
+Plus (+) sign: Create, add, publish new content \n Three horizontal lines (hamburger menu): More options, side menu, settings 
+
+Three dots (...): More actions, additional menu \n Gear icon: Settings, system configuration 
+
+Back arrow: Return, go back to previous screen \n Paper airplane: Send, push message 
+
+Speech bubble: Comment, chat, conversation \n Heart icon: Like, favorite, bookmark 
+
+Trash can: Delete, remove \n Eye icon: View, show/hide, privacy -related 
+
+User avatar: Profile, personal center, user -related actions \n Calendar icon: Select date, schedule, event 
+
+Folder/file icon: Directory, category, management \n Shopping cart icon: Shopping, checkout, order 
+
+Bookmark/flag icon: Favorite, tag \n Upload/download arrows: Upload, download, transfer 
+
+Share arrow: Share, forward, export \n Map/location pin: Location, map, find nearby 
+
+Volume icon: Volume control, mute, sound settings \n Refresh symbol: Refresh, update, reload 
+
+Question mark: Help, hint, support \n Lock/unlock icon: Security, privacy, encryption, unlock 
+
+QR code/scanning icon: Scan QR code, payment, identification \n Zoom in/out (+/ - or magnifier with +): Zoom in, zoom out, view details 
+
+Scissors/clipboard: Cut, copy, paste \n Pencil/edit icon: Edit, rename, modify 
+
+Document with plus: Create new document, new file \n Lock/unlock icon: Lock operation, authorization, security 
+
+Star symbol: Favorite, mark as important, rate \n Tear -drop/checkmark/x: Selection, selected, read, completed, pending, error 
+
+Cloud with upload/download: Cloud sync, upload to cloud, download locally \n Rotating arrow/bidirectional arrow: Rotate, switch orientation, toggle view (landscape/portrait) 
+
+Sort/filter icon (three vertical lines, with dots/arrows): Sort, filter, change display mode \n Shopping bag: Purchase, place order 
+
+Gift box/red envelope: Give gift, promotion, reward \n Globe/world map icon: Multilingual, international version 
+
+U-shield/key/shield: Authentication, security, protection, permission \n Undo/redo arrow: Undo, redo 
+
+Clock with search icon: Search history \n Book/lecture notes: Learning, reading, tutorial 
+
+Cloud with lightning: Download/update failure, sync warning \n Image + cloud/upload arrow: Upload image/avatar 
+
+Settings panel/slider: Customize, preferences \n Article/news (newspaper/text lines): News, announcement, information 
+
+Play/pause/fast -forward symbols: Play, pause, resume, skip \n Microphone: Voice input, record audio 
+
+Speaker/headphone: Audio output, speaker, mute \n Chain/link: Connect, copy link, hyperlink 
+
+Flame symbol: Popular, trending, hot list \n Flag/target icon: Task, goal, milestone 
+
+Moon/sun: Dark/light mode, eye protection, brightness \n Alarm/clock/sandglass: Timer, alarm, countdown 
+
+Progress ring/circle: Progress, loading, waiting \n Arrow with file (import/export): Import, export 
+
+Bubble with plus / chat with plus: Start new chat, create new conversation \n Info/exclamation mark/alert box: Notice, warning, notification 
+
+Business card: Contact info, share contact \n Crown: Membership, VIP, premium 
+
+Fireworks/firecrackers: Event, celebration, achievement unlocked \n Remote control/device icon: Remote control, hardware pairing Figure 9. The prompt used to generate grounding instructions. We note that the Chinese text has been translated into English for presenta-tion purposes. 
+
+5
