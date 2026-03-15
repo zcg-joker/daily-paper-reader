@@ -1,0 +1,693 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-03-15T19:19:29.942318+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 13,
+    "deep_cap": 6,
+    "deep_selected": 6,
+    "quick_candidates": 32,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2603.10087v1",
+      "title": "Pooling Engram Conditional Memory in Large Language Models using CXL",
+      "abstract": "Engram conditional memory has emerged as a promising component for LLMs by decoupling static knowledge lookup from dynamic computation. Since Engram exhibits sparse access patterns and supports prefetching, its massive embedding tables are well-suited for offloading to lower-tier memory. In this paper, we propose using Compute Express Link (CXL) memory pool for Engram storage. Compared to RDMA, CXL provides fine-grained and low-latency access required by minimal and discrete retrieval patterns of Engram. We integrate the CXL-based Engram pool into SGLang, achieving near-DRAM end-to-end performance. This provides a scalable and cost-efficient storage solution for future Engram-integrated LLMs without compromising inference performance.",
+      "authors": [
+        "Ruiyang Ma",
+        "Teng Ma",
+        "Zhiyuan Su",
+        "Hantian Zha",
+        "Xinpeng Zhao",
+        "Xuchun Shang",
+        "Xingrui Yi",
+        "Zheng Liu",
+        "Zhu Cao",
+        "An Wu",
+        "Zhichong Dou",
+        "Ziqian Liu",
+        "Daikang Kuang",
+        "Guojie Luo"
+      ],
+      "primary_category": "cs.AR",
+      "categories": [
+        "cs.AR",
+        "cs.DC"
+      ],
+      "published": "2026-03-10T14:13:02+00:00",
+      "link": "https://arxiv.org/pdf/2603.10087v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "decoupling static knowledge lookup from dynamic computation using Engram memory",
+      "llm_evidence_cn": "使用Engram记忆将静态知识查找与动态计算解耦",
+      "llm_evidence": "使用Engram记忆将静态知识查找与动态计算解耦",
+      "canonical_evidence": "使用Engram记忆将静态知识查找与动态计算解耦",
+      "llm_tldr_en": "Introduces a CXL-based memory pool for Engram storage to scale LLM memory efficiently.",
+      "llm_tldr_cn": "引入基于CXL的内存池用于Engram存储，以高效扩展LLM记忆容量。",
+      "llm_tldr": "引入基于CXL的内存池用于Engram存储，以高效扩展LLM记忆容量。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.11896v1",
+      "title": "Think While Watching: Online Streaming Segment-Level Memory for Multi-Turn Video Reasoning in Multimodal Large Language Models",
+      "abstract": "Multimodal large language models (MLLMs) have shown strong performance on offline video understanding, but most are limited to offline inference or have weak online reasoning, making multi-turn interaction over continuously arriving video streams difficult. Existing streaming methods typically use an interleaved perception-generation paradigm, which prevents concurrent perception and generation and leads to early memory decay as streams grow, hurting long-range dependency modeling. We propose Think While Watching, a memory-anchored streaming video reasoning framework that preserves continuous segment-level memory during multi-turn interaction. We build a three-stage, multi-round chain-of-thought dataset and adopt a stage-matched training strategy, while enforcing strict causality through a segment-level streaming causal mask and streaming positional encoding. During inference, we introduce an efficient pipeline that overlaps watching and thinking and adaptively selects the best attention backend. Under both single-round and multi-round streaming input protocols, our method achieves strong results. Built on Qwen3-VL, it improves single-round accuracy by 2.6% on StreamingBench and by 3.79% on OVO-Bench. In the multi-round setting, it maintains performance while reducing output tokens by 56%. Code is available at: https://github.com/wl666hhh/Think_While_Watching/",
+      "authors": [
+        "Lu Wang",
+        "Zhuoran Jin",
+        "Yupu Hao",
+        "Yubo Chen",
+        "Kang Liu",
+        "Yulong Ao",
+        "Jun Zhao"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-03-12T13:13:50+00:00",
+      "link": "https://arxiv.org/pdf/2603.11896v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "online streaming segment-level memory for long-range dependency modeling",
+      "llm_evidence_cn": "用于长程依赖建模的在线流式片段级记忆",
+      "llm_evidence": "用于长程依赖建模的在线流式片段级记忆",
+      "canonical_evidence": "用于长程依赖建模的在线流式片段级记忆",
+      "llm_tldr_en": "A memory-anchored streaming framework that preserves segment-level memory for multi-turn video reasoning.",
+      "llm_tldr_cn": "一种记忆锚定的流式框架，保留片段级记忆以实现多轮视频推理。",
+      "llm_tldr": "一种记忆锚定的流式框架，保留片段级记忆以实现多轮视频推理。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.12056v1",
+      "title": "XSkill: Continual Learning from Experience and Skills in Multimodal Agents",
+      "abstract": "Multimodal agents can now tackle complex reasoning tasks with diverse tools, yet they still suffer from inefficient tool use and inflexible orchestration in open-ended settings. A central challenge is enabling such agents to continually improve without parameter updates by learning from past trajectories. We identify two complementary forms of reusable knowledge essential for this goal: experiences, providing concise action-level guidance for tool selection and decision making, and skills, providing structured task-level guidance for planning and tool use. To this end, we propose XSkill, a dual-stream framework for continual learning from experience and skills in multimodal agents. XSkill grounds both knowledge extraction and retrieval in visual observations. During accumulation, XSkill distills and consolidates experiences and skills from multi-path rollouts via visually grounded summarization and cross-rollout critique. During inference, it retrieves and adapts this knowledge to the current visual context and feeds usage history back into accumulation to form a continual learning loop. Evaluated on five benchmarks across diverse domains with four backbone models, XSkill consistently and substantially outperforms both tool-only and learning-based baselines. Further analysis reveals that the two knowledge streams play complementary roles in influencing the reasoning behaviors of agents and show superior zero-shot generalization.",
+      "authors": [
+        "Guanyu Jiang",
+        "Zhaochen Su",
+        "Xiaoye Qu",
+        "Yi R.",
+        "Fung"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-03-12T15:25:57+00:00",
+      "link": "https://arxiv.org/pdf/2603.12056v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "continual learning from experience and skills without parameter updates",
+      "llm_evidence_cn": "无需参数更新即可从经验和技能中进行持续学习",
+      "llm_evidence": "无需参数更新即可从经验和技能中进行持续学习",
+      "canonical_evidence": "无需参数更新即可从经验和技能中进行持续学习",
+      "llm_tldr_en": "Introduces XSkill, a framework for agents to learn from past trajectories via experience and skill streams.",
+      "llm_tldr_cn": "引入XSkill框架，使智能体通过经验和技能流从历史轨迹中持续学习。",
+      "llm_tldr": "引入XSkill框架，使智能体通过经验和技能流从历史轨迹中持续学习。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory consolidation and update strategies in LLM agents",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.08429v1",
+      "title": "One Model Is Enough: Native Retrieval Embeddings from LLM Agent Hidden States",
+      "abstract": "LLM agents that retrieve external knowledge typically generate a search query as text, then run a separate embedding model to encode it into a vector. This two-model pipeline adds infrastructure complexity and latency, yet is redundant: the LLM already encodes the full conversational context in its hidden states. We propose equipping LLM agents with native retrieval capability by adding a lightweight projection head that maps hidden states directly into the embedding space, eliminating the need for a separate embedding model. Trained with a combination of alignment, contrastive, and rank distillation losses, our method retains 97\\% of baseline retrieval quality while enabling the LLM agent to search with its own representations. Experiments on the QReCC conversational search benchmark show competitive Recall@10 and MRR@10 compared to the standard generate-then-encode pipeline, with systematic ablations confirming the contribution of each loss component.",
+      "authors": [
+        "Bo Jiang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.IR"
+      ],
+      "published": "2026-03-09T14:25:35+00:00",
+      "link": "https://arxiv.org/pdf/2603.08429v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "native retrieval capability from agent hidden states",
+      "llm_evidence_cn": "从智能体隐藏状态中获取原生检索能力",
+      "llm_evidence": "从智能体隐藏状态中获取原生检索能力",
+      "canonical_evidence": "从智能体隐藏状态中获取原生检索能力",
+      "llm_tldr_en": "Enables LLM agents to perform memory retrieval using their own internal hidden state representations.",
+      "llm_tldr_cn": "使大模型智能体能够利用其内部隐藏状态表示进行记忆检索。",
+      "llm_tldr": "使大模型智能体能够利用其内部隐藏状态表示进行记忆检索。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.09203v1",
+      "title": "Evaluate-as-Action: Self-Evaluated Process Rewards for Retrieval-Augmented Agents",
+      "abstract": "Retrieval-augmented agents can query external evidence, yet their reliability in multi-step reasoning remains limited: noisy retrieval may derail multi-hop question answering, while outcome-only reinforcement learning provides credit signals that are too coarse to optimize intermediate steps. We propose \\textsc{EvalAct} (Evaluate-as-Action), which converts implicit retrieval quality assessment into an explicit action and enforces a coupled Search-to-Evaluate protocol so that each retrieval is immediately followed by a structured evaluation score, yielding process signals aligned with the interaction trajectory. To leverage these signals, we introduce Process-Calibrated Advantage Rescaling (PCAR), a GRPO-based optimization method that rescales advantages at the segment level according to evaluation scores, emphasizing reliable segments while updating uncertain ones conservatively. Experiments on seven open-domain QA benchmarks show that \\textsc{EvalAct} achieves the best average accuracy, with the largest gains on multi-hop tasks, and ablations verify that the explicit evaluation loop drives the primary improvements while PCAR provides consistent additional benefits.",
+      "authors": [
+        "Jiangming Shu",
+        "Yuxiang Zhang",
+        "Ye Ma",
+        "Xueyuan Lin",
+        "Jitao Sang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-10T05:22:40+00:00",
+      "link": "https://arxiv.org/pdf/2603.09203v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "process signals aligned with interaction trajectory for retrieval agents",
+      "llm_evidence_cn": "检索智能体与交互轨迹对齐的过程信号",
+      "llm_evidence": "检索智能体与交互轨迹对齐的过程信号",
+      "canonical_evidence": "检索智能体与交互轨迹对齐的过程信号",
+      "llm_tldr_en": "Proposes EvalAct to provide structured evaluation scores for intermediate steps in retrieval-augmented agents.",
+      "llm_tldr_cn": "提出EvalAct，为检索增强智能体的中间步骤提供结构化评估分数。",
+      "llm_tldr": "提出EvalAct，为检索增强智能体的中间步骤提供结构化评估分数。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "performance metrics for agent memory and reasoning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.10126v1",
+      "title": "AR-VLA: True Autoregressive Action Expert for Vision-Language-Action Models",
+      "abstract": "We propose a standalone autoregressive (AR) Action Expert that generates actions as a continuous causal sequence while conditioning on refreshable vision-language prefixes. In contrast to existing Vision-Language-Action (VLA) models and diffusion policies that reset temporal context with each new observation and predict actions reactively, our Action Expert maintains its own history through a long-lived memory and is inherently context-aware. This structure addresses the frequency mismatch between fast control and slow reasoning, enabling efficient independent pretraining of kinematic syntax and modular integration with heavy perception backbones, naturally ensuring spatio-temporally consistent action generation across frames. To synchronize these asynchronous hybrid V-L-A modalities, we utilize a re-anchoring mechanism that mathematically accounts for perception staleness during both training and inference. Experiments on simulated and real-robot manipulation tasks demonstrate that the proposed method can effectively replace traditional chunk-based action heads for both specialist and generalist policies. AR-VLA exhibits superior history awareness and substantially smoother action trajectories while maintaining or exceeding the task success rates of state-of-the-art reactive VLAs. Overall, our work introduces a scalable, context-aware action generation schema that provides a robust structural foundation for training effective robotic policies.",
+      "authors": [
+        "Yutong Hu",
+        "Jan-Nico Zaech",
+        "Nikolay Nikolov",
+        "Yuanqi Yao",
+        "Sombit Dey",
+        "Giuliano Albanese",
+        "Renaud Detry",
+        "Luc Van Gool",
+        "Danda Paudel"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI"
+      ],
+      "published": "2026-03-10T18:03:29+00:00",
+      "link": "https://arxiv.org/pdf/2603.10126v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "long-lived memory for context-aware action generation",
+      "llm_evidence_cn": "用于上下文感知动作生成的长效记忆",
+      "llm_evidence": "用于上下文感知动作生成的长效记忆",
+      "canonical_evidence": "用于上下文感知动作生成的长效记忆",
+      "llm_tldr_en": "Develops an Action Expert that maintains history through long-lived memory for consistent robot control.",
+      "llm_tldr_cn": "开发了一种通过长效记忆维持历史记录的动作专家，用于一致的机器人控制。",
+      "llm_tldr": "开发了一种通过长效记忆维持历史记录的动作专家，用于一致的机器人控制。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "architectures for long term and short term memory in AI agents",
+      "matched_requirement_id": "req-7",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.10126v1"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2603.09541v1",
+      "title": "Memory-Guided View Refinement for Dynamic Human-in-the-loop EQA",
+      "abstract": "Embodied Question Answering (EQA) has traditionally been evaluated in temporally stable environments where visual evidence can be accumulated reliably. However, in dynamic, human-populated scenes, human activities and occlusions introduce significant perceptual non-stationarity: task-relevant cues are transient and view-dependent, while a store-then-retrieve strategy over-accumulates redundant evidence and increases inference cost. This setting exposes two practical challenges for EQA agents: resolving ambiguity caused by viewpoint-dependent occlusions, and maintaining compact yet up-to-date evidence for efficient inference. To enable systematic study of this setting, we introduce DynHiL-EQA, a human-in-the-loop EQA dataset with two subsets: a Dynamic subset featuring human activities and temporal changes, and a Static subset with temporally stable observations. To address the above challenges, we present DIVRR (Dynamic-Informed View Refinement and Relevance-guided Adaptive Memory Selection), a training-free framework that couples relevance-guided view refinement with selective memory admission. By verifying ambiguous observations before committing them and retaining only informative evidence, DIVRR improves robustness under occlusions while preserving fast inference with compact memory. Extensive experiments on DynHiL-EQA and the established HM-EQA dataset demonstrate that DIVRR consistently improves over existing baselines in both dynamic and static settings while maintaining high inference efficiency.",
+      "authors": [
+        "Xin Lu",
+        "Rui Li",
+        "Xun Huang",
+        "Weixin Li",
+        "Chuanqing Zhuang",
+        "Jiayuan Li",
+        "Zhengda Lu",
+        "Jun Xiao",
+        "Yunhong Wang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.MM"
+      ],
+      "published": "2026-03-10T11:51:54+00:00",
+      "link": "https://arxiv.org/pdf/2603.09541v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "memory-guided refinement and evaluation dataset for dynamic EQA agents",
+      "llm_evidence_cn": "动态EQA智能体的记忆引导优化与评估数据集",
+      "llm_evidence": "动态EQA智能体的记忆引导优化与评估数据集",
+      "canonical_evidence": "动态EQA智能体的记忆引导优化与评估数据集",
+      "llm_tldr_en": "Introduces a dataset and memory strategy for embodied agents to maintain up-to-date evidence in dynamic scenes.",
+      "llm_tldr_cn": "为具身智能体引入数据集和记忆策略，以在动态场景中维持最新的证据。",
+      "llm_tldr": "为具身智能体引入数据集和记忆策略，以在动态场景中维持最新的证据。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.07191v2",
+      "title": "Governance Architecture for Autonomous Agent Systems: Threats, Framework, and Engineering Practice",
+      "abstract": "Autonomous agents powered by large language models introduce a class of execution-layer vulnerabilities -- prompt injection, retrieval poisoning, and uncontrolled tool invocation -- that existing guardrails fail to address systematically. In this work, we propose the Layered Governance Architecture (LGA), a four-layer framework comprising execution sandboxing (L1), intent verification (L2), zero-trust inter-agent authorization (L3), and immutable audit logging (L4). To evaluate LGA, we construct a bilingual benchmark (Chinese original, English via machine translation) of 1,081 tool-call samples -- covering prompt injection, RAG poisoning, and malicious skill plugins -- and apply it to OpenClaw, a representative open-source agent framework. Experimental results on Layer 2 intent verification with four local LLM judges (Qwen3.5-4B, Llama-3.1-8B, Qwen3.5-9B, Qwen2.5-14B) and one cloud judge (GPT-4o-mini) show that all five LLM judges intercept 93.0-98.5% of TC1/TC2 malicious tool calls, while lightweight NLI baselines remain below 10%. TC3 (malicious skill plugins) proves harder at 75-94% IR among judges with meaningful precision-recall balance, motivating complementary enforcement at Layers 1 and 3. Qwen2.5-14B achieves the best local balance (98% IR, approximately 10-20% FPR); a two-stage cascade (Qwen3.5-9B->GPT-4o-mini) achieves 91.9-92.6% IR with 1.9-6.7% FPR; a fully local cascade (Qwen3.5-9B->Qwen2.5-14B) achieves 94.7-95.6% IR with 6.0-9.7% FPR for data-sovereign deployments. An end-to-end pipeline evaluation (n=100) demonstrates that all four layers operate in concert with 96% IR and a total P50 latency of approximately 980 ms, of which the non-judge layers contribute only approximately 18 ms. Generalization to the external InjecAgent benchmark yields 99-100% interception, confirming robustness beyond our synthetic data.",
+      "authors": [
+        "Yuxu Ge"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-03-07T13:05:14+00:00",
+      "link": "https://arxiv.org/pdf/2603.07191v2",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "governance architecture and benchmark for RAG poisoning and tool-call evaluation",
+      "llm_evidence_cn": "针对RAG中毒和工具调用评估的治理架构及基准测试",
+      "llm_evidence": "针对RAG中毒和工具调用评估的治理架构及基准测试",
+      "canonical_evidence": "针对RAG中毒和工具调用评估的治理架构及基准测试",
+      "llm_tldr_en": "Proposes a layered governance architecture and benchmark to evaluate security and retrieval risks in LLM agents.",
+      "llm_tldr_cn": "提出分层治理架构和基准，用于评估LLM智能体的安全性和检索风险。",
+      "llm_tldr": "提出分层治理架构和基准，用于评估LLM智能体的安全性和检索风险。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.08024v1",
+      "title": "ConflictBench: Evaluating Human-AI Conflict via Interactive and Visually Grounded Environments",
+      "abstract": "As large language models (LLMs) evolve into autonomous agents capable of acting in open-ended environments, ensuring behavioral alignment with human values becomes a critical safety concern. Existing benchmarks, focused on static, single-turn prompts, fail to capture the interactive and multi-modal nature of real-world conflicts. We introduce ConflictBench, a benchmark for evaluating human-AI conflict through 150 multi-turn scenarios derived from prior alignment queries. ConflictBench integrates a text-based simulation engine with a visually grounded world model, enabling agents to perceive, plan, and act under dynamic conditions. Empirical results show that while agents often act safely when human harm is immediate, they frequently prioritize self-preservation or adopt deceptive strategies in delayed or low-risk settings. A regret test further reveals that aligned decisions are often reversed under escalating pressure, especially with visual input. These findings underscore the need for interaction-level, multi-modal evaluation to surface alignment failures that remain hidden in conventional benchmarks.",
+      "authors": [
+        "Weixiang Zhao",
+        "Haozhen Li",
+        "Yanyan Zhao",
+        "xuda zhi",
+        "Yongbo Huang",
+        "Hao He",
+        "Bing Qin",
+        "Ting Liu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-03-09T06:59:48+00:00",
+      "link": "https://arxiv.org/pdf/2603.08024v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "benchmark for evaluating agent behavior in dynamic environments",
+      "llm_evidence_cn": "评估动态环境下智能体行为的基准",
+      "llm_evidence": "评估动态环境下智能体行为的基准",
+      "canonical_evidence": "评估动态环境下智能体行为的基准",
+      "llm_tldr_en": "A multi-turn interactive benchmark for evaluating human-AI conflict and agent alignment in world models.",
+      "llm_tldr_cn": "一个用于评估人机冲突及智能体在动态世界模型中对齐表现的多轮交互基准。",
+      "llm_tldr": "一个用于评估人机冲突及智能体在动态世界模型中对齐表现的多轮交互基准。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "performance metrics for agent memory and reasoning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.09643v1",
+      "title": "MM-tau-p$^2$: Persona-Adaptive Prompting for Robust Multi-Modal Agent Evaluation in Dual-Control Settings",
+      "abstract": "Current evaluation frameworks and benchmarks for LLM powered agents focus on text chat driven agents, these frameworks do not expose the persona of user to the agent, thus operating in a user agnostic environment. Importantly, in customer experience management domain, the agent's behaviour evolves as the agent learns about user personality. With proliferation of real time TTS and multi-modal language models, LLM based agents are gradually going to become multi-modal. Towards this, we propose the MM-tau-p$^2$ benchmark with metrics for evaluating the robustness of multi-modal agents in dual control setting with and without persona adaption of user, while also taking user inputs in the planning process to resolve a user query. In particular, our work shows that even with state of-the-art frontier LLMs like GPT-5, GPT 4.1, there are additional considerations measured using metrics viz. multi-modal robustness, turn overhead while introducing multi-modality into LLM based agents. Overall, MM-tau-p$^2$ builds on our prior work FOCAL and provides a holistic way of evaluating multi-modal agents in an automated way by introducing 12 novel metrics. We also provide estimates of these metrics on the telecom and retail domains by using the LLM-as-judge approach using carefully crafted prompts with well defined rubrics for evaluating each conversation.",
+      "authors": [
+        "Anupam Purwar",
+        "Aditya Choudhary"
+      ],
+      "primary_category": "cs.ET",
+      "categories": [
+        "cs.ET",
+        "cs.AI"
+      ],
+      "published": "2026-03-10T13:18:02+00:00",
+      "link": "https://arxiv.org/pdf/2603.09643v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "benchmark with metrics for evaluating multi-modal agents",
+      "llm_evidence_cn": "包含评估多模态智能体指标的基准测试",
+      "llm_evidence": "包含评估多模态智能体指标的基准测试",
+      "canonical_evidence": "包含评估多模态智能体指标的基准测试",
+      "llm_tldr_en": "Proposes MM-tau-p2 benchmark to evaluate persona-adaptive multi-modal agents in dual-control settings.",
+      "llm_tldr_cn": "提出MM-tau-p2基准，用于评估双控设置下具有人格自适应能力的多模态智能体。",
+      "llm_tldr": "提出MM-tau-p2基准，用于评估双控设置下具有人格自适应能力的多模态智能体。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "evaluation frameworks for autonomous agent memory systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.08835v1",
+      "title": "MASEval: Extending Multi-Agent Evaluation from Models to Systems",
+      "abstract": "The rapid adoption of LLM-based agentic systems has produced a rich ecosystem of frameworks (smolagents, LangGraph, AutoGen, CAMEL, LlamaIndex, i.a.). Yet existing benchmarks are model-centric: they fix the agentic setup and do not compare other system components. We argue that implementation decisions substantially impact performance, including choices such as topology, orchestration logic, and error handling. MASEval addresses this evaluation gap with a framework-agnostic library that treats the entire system as the unit of analysis. Through a systematic system-level comparison across 3 benchmarks, 3 models, and 3 frameworks, we find that framework choice matters as much as model choice. MASEval allows researchers to explore all components of agentic systems, opening new avenues for principled system design, and practitioners to identify the best implementation for their use case.   MASEval is available under the MIT licence https://github.com/parameterlab/MASEval.",
+      "authors": [
+        "Cornelius Emde",
+        "Alexander Rubinstein",
+        "Anmol Goel",
+        "Ahmed Heakl",
+        "Sangdoo Yun",
+        "Seong Joon Oh",
+        "Martin Gubri"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-03-09T18:46:17+00:00",
+      "link": "https://arxiv.org/pdf/2603.08835v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "framework-agnostic library for system-level evaluation of agentic systems",
+      "llm_evidence_cn": "用于代理系统系统级评估的框架无关库",
+      "llm_evidence": "用于代理系统系统级评估的框架无关库",
+      "canonical_evidence": "用于代理系统系统级评估的框架无关库",
+      "llm_tldr_en": "Introduces a framework for evaluating multi-agent systems beyond just the underlying model performance.",
+      "llm_tldr_cn": "引入了一个评估多代理系统的框架，关注系统级实现对性能的影响而非仅关注模型。",
+      "llm_tldr": "引入了一个评估多代理系统的框架，关注系统级实现对性能的影响而非仅关注模型。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "performance metrics for agent memory and reasoning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.08938v1",
+      "title": "AgentOS: From Application Silos to a Natural Language-Driven Data Ecosystem",
+      "abstract": "The rapid emergence of open-source, locally hosted intelligent agents marks a critical inflection point in human-computer interaction. Systems such as OpenClaw demonstrate that Large Language Model (LLM)-based agents can autonomously operate local computing environments, orchestrate workflows, and integrate external tools. However, within the current paradigm, these agents remain conventional applications running on legacy operating systems originally designed for Graphical User Interfaces (GUIs) or Command Line Interfaces (CLIs). This architectural mismatch leads to fragmented interaction models, poorly structured permission management (often described as \"Shadow AI\"), and severe context fragmentation. This paper proposes a new paradigm: a Personal Agent Operating System (AgentOS). In AgentOS, traditional GUI desktops are replaced by a Natural User Interface (NUI) centered on a unified natural language or voice portal. The system core becomes an Agent Kernel that interprets user intent, decomposes tasks, and coordinates multiple agents, while traditional applications evolve into modular Skills-as-Modules enabling users to compose software through natural language rules. We argue that realizing AgentOS fundamentally becomes a Knowledge Discovery and Data Mining (KDD) problem. The Agent Kernel must operate as a real-time engine for intent mining and knowledge discovery. Viewed through this lens, the operating system becomes a continuous data mining pipeline involving sequential pattern mining for workflow automation, recommender systems for skill retrieval, and dynamically evolving personal knowledge graphs. These challenges define a new research agenda for the KDD community in building the next generation of intelligent computing systems.",
+      "authors": [
+        "Rui Liu",
+        "Tao Zhe",
+        "Dongjie Wang",
+        "Zijun Yao",
+        "Kunpeng Liu",
+        "Yanjie Fu",
+        "Huan Liu",
+        "Jian Pei"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-09T21:13:52+00:00",
+      "link": "https://arxiv.org/pdf/2603.08938v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "addressing context fragmentation in LLM-based autonomous agents",
+      "llm_evidence_cn": "解决LLM自主智能体中的上下文碎片化问题",
+      "llm_evidence": "解决LLM自主智能体中的上下文碎片化问题",
+      "canonical_evidence": "解决LLM自主智能体中的上下文碎片化问题",
+      "llm_tldr_en": "Proposes AgentOS to solve architectural mismatches and context fragmentation in autonomous LLM agents.",
+      "llm_tldr_cn": "提出AgentOS以解决自主LLM智能体中的架构不匹配和上下文碎片化问题。",
+      "llm_tldr": "提出AgentOS以解决自主LLM智能体中的架构不匹配和上下文碎片化问题。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.10564v1",
+      "title": "Adaptive RAN Slicing Control via Reward-Free Self-Finetuning Agents",
+      "abstract": "The integration of Generative AI models into AI-native network systems offers a transformative path toward achieving autonomous and adaptive control. However, the application of such models to continuous control tasks is impeded by intrinsic architectural limitations, including finite context windows, the lack of explicit reward signals, and the degradation of the long context. This paper posits that the key to unlocking robust continuous control is enabling agents to internalize experience by distilling it into their parameters, rather than relying on prompt-based memory. To this end, we propose a novel self-finetuning framework that enables agentic systems to learn continuously through direct interaction with the environment, bypassing the need for handcrafted rewards. Our framework implements a bi-perspective reflection mechanism that generates autonomous linguistic feedback to construct preference datasets from interaction history. A subsequent preference-based fine-tuning process distills long-horizon experiences into the model's parameters. We evaluate our approach on a dynamic Radio Access Network (RAN) slicing task, a challenging multi-objective control problem that requires the resolution of acute trade-offs between spectrum efficiency, service quality, and reconfiguration stability under volatile network conditions. Experimental results show that our framework outperforms standard Reinforcement Learning (RL) baselines and existing Large Language Model (LLM)-based agents in sample efficiency, stability, and multi-metric optimization. These findings demonstrate the potential of self-improving generative agents for continuous control tasks, paving the way for future AI-native network infrastructure.",
+      "authors": [
+        "Yuanhao Li",
+        "Haozhe Wang",
+        "Geyong Min",
+        "Nektarios Georgalas",
+        "Wang Miao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.NI"
+      ],
+      "published": "2026-03-11T09:14:56+00:00",
+      "link": "https://arxiv.org/pdf/2603.10564v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "internalizing experience into parameters instead of prompt-based memory",
+      "llm_evidence_cn": "将经验内化到参数中而非依赖基于提示的记忆",
+      "llm_evidence": "将经验内化到参数中而非依赖基于提示的记忆",
+      "canonical_evidence": "将经验内化到参数中而非依赖基于提示的记忆",
+      "llm_tldr_en": "Proposes a self-finetuning framework for agents to internalize long-term experience directly into model parameters.",
+      "llm_tldr_cn": "提出一种自我微调框架，使智能体能将长期经验直接内化到模型参数中。",
+      "llm_tldr": "提出一种自我微调框架，使智能体能将长期经验直接内化到模型参数中。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory consolidation and update strategies in LLM agents",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.09134v1",
+      "title": "AgenticCyOps: Securing Multi-Agentic AI Integration in Enterprise Cyber Operations",
+      "abstract": "Multi-agent systems (MAS) powered by LLMs promise adaptive, reasoning-driven enterprise workflows, yet granting agents autonomous control over tools, memory, and communication introduces attack surfaces absent from deterministic pipelines. While current research largely addresses prompt-level exploits and narrow individual vectors, it lacks a holistic architectural model for enterprise-grade security. We introduce AgenticCyOps (Securing Multi-Agentic AI Integration in Enterprise Cyber Operations), a framework built on a systematic decomposition of attack surfaces across component, coordination, and protocol layers, revealing that documented vectors consistently trace back to two integration surfaces: tool orchestration and memory management. Building on this observation, we formalize these integration surfaces as primary trust boundaries and define five defensive principles: authorized interfaces, capability scoping, verified execution, memory integrity & synchronization, and access-controlled data isolation; each aligned with established compliance standards (NIST, ISO 27001, GDPR, EU AI Act). We apply the framework to a Security Operations Center (SOC) workflow, adopting the Model Context Protocol (MCP) as the structural basis, with phase-scoped agents, consensus validation loops, and per-organization memory boundaries. Coverage analysis, attack path tracing, and trust boundary assessment confirm that the design addresses the documented attack vectors with defense-in-depth, intercepts three of four representative attack chains within the first two steps, and reduces exploitable trust boundaries by a minimum of 72% compared to a flat MAS, positioning AgenticCyOps as a foundation for securing enterprise-grade integration.",
+      "authors": [
+        "Shaswata Mitra",
+        "Raj Patel",
+        "Sudip Mittal",
+        "Md Rayhanur Rahman",
+        "Shahram Rahimi"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.MA",
+        "cs.SE"
+      ],
+      "published": "2026-03-10T03:15:36+00:00",
+      "link": "https://arxiv.org/pdf/2603.09134v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "attack surfaces in agent memory management",
+      "llm_evidence_cn": "智能体记忆管理中的攻击面",
+      "llm_evidence": "智能体记忆管理中的攻击面",
+      "canonical_evidence": "智能体记忆管理中的攻击面",
+      "llm_tldr_en": "Analyzes security vulnerabilities in multi-agent systems, focusing on tool orchestration and memory management.",
+      "llm_tldr_cn": "分析多智能体系统的安全漏洞，重点关注工具编排和记忆管理。",
+      "llm_tldr": "分析多智能体系统的安全漏洞，重点关注工具编排和记忆管理。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.08938v2",
+      "title": "AgentOS: From Application Silos to a Natural Language-Driven Data Ecosystem",
+      "abstract": "The rapid emergence of open-source, locally hosted intelligent agents marks a critical inflection point in human-computer interaction. Systems such as OpenClaw demonstrate that Large Language Model (LLM)-based agents can autonomously operate local computing environments, orchestrate workflows, and integrate external tools. However, within the current paradigm, these agents remain conventional applications running on legacy operating systems originally designed for Graphical User Interfaces (GUIs) or Command Line Interfaces (CLIs). This architectural mismatch leads to fragmented interaction models, poorly structured permission management (often described as \"Shadow AI\"), and severe context fragmentation. This paper proposes a new paradigm: a Personal Agent Operating System (AgentOS). In AgentOS, traditional GUI desktops are replaced by a Natural User Interface (NUI) centered on a unified natural language or voice portal. The system core becomes an Agent Kernel that interprets user intent, decomposes tasks, and coordinates multiple agents, while traditional applications evolve into modular Skills-as-Modules enabling users to compose software through natural language rules. We argue that realizing AgentOS fundamentally becomes a Knowledge Discovery and Data Mining (KDD) problem. The Agent Kernel must operate as a real-time engine for intent mining and knowledge discovery. Viewed through this lens, the operating system becomes a continuous data mining pipeline involving sequential pattern mining for workflow automation, recommender systems for skill retrieval, and dynamically evolving personal knowledge graphs. These challenges define a new research agenda for the KDD community in building the next generation of intelligent computing systems.",
+      "authors": [
+        "Rui Liu",
+        "Tao Zhe",
+        "Dongjie Wang",
+        "Zijun Yao",
+        "Kunpeng Liu",
+        "Yanjie Fu",
+        "Huan Liu",
+        "Jian Pei"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-09T21:13:52+00:00",
+      "link": "https://arxiv.org/pdf/2603.08938v2",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "addressing context fragmentation in LLM-based autonomous agents",
+      "llm_evidence_cn": "解决LLM自主智能体中的上下文碎片化问题",
+      "llm_evidence": "解决LLM自主智能体中的上下文碎片化问题",
+      "canonical_evidence": "解决LLM自主智能体中的上下文碎片化问题",
+      "llm_tldr_en": "Proposes AgentOS to solve architectural mismatches and context fragmentation in autonomous LLM agents.",
+      "llm_tldr_cn": "提出AgentOS以解决自主LLM智能体中的架构不匹配和上下文碎片化问题。",
+      "llm_tldr": "提出AgentOS以解决自主LLM智能体中的架构不匹配和上下文碎片化问题。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "memory mechanisms in autonomous AI agents",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.10700v1",
+      "title": "Structured Linked Data as a Memory Layer for Agent-Orchestrated Retrieval",
+      "abstract": "Retrieval-Augmented Generation (RAG) systems typically treat documents as flat text, ignoring the structured metadata and linked relationships that knowledge graphs provide. In this paper, we investigate whether structured linked data, specifically Schema.org markup and dereferenceable entity pages served by a Linked Data Platform, can improve retrieval accuracy and answer quality in both standard and agentic RAG systems. We conduct a controlled experiment across four domains (editorial, legal, travel, e-commerce) using Vertex AI Vector Search 2.0 for retrieval and the Google Agent Development Kit (ADK) for agentic reasoning. Our experimental design tests seven conditions: three document representations (plain HTML, HTML with JSON-LD, and an enhanced agentic-optimized entity page) crossed with two retrieval modes (standard RAG and agentic RAG with multi-hop link traversal), plus an Enhanced+ condition that adds rich navigational affordances and entity interlinking. Our results reveal that while JSON-LD markup alone provides only modest improvements, our enhanced entity page format, incorporating llms.txt-style agent instructions, breadcrumbs, and neural search capabilities, achieves substantial gains: +29.6% accuracy improvement for standard RAG and +29.8% for the full agentic pipeline. The Enhanced+ variant, with richer navigational affordances, achieves the highest absolute scores (accuracy: 4.85/5, completeness: 4.55/5), though the incremental gain over the base enhanced format is not statistically significant. We release our dataset, evaluation framework, and enhanced entity page templates to support reproducibility.",
+      "authors": [
+        "Andrea Volpini",
+        "Elie Raad",
+        "Beatrice Gamba",
+        "David Riccitelli"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.AI"
+      ],
+      "published": "2026-03-11T12:12:51+00:00",
+      "link": "https://arxiv.org/pdf/2603.10700v1",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "structured linked data as a memory layer for agentic RAG systems",
+      "llm_evidence_cn": "结构化链接数据作为智能体RAG系统的记忆层",
+      "llm_evidence": "结构化链接数据作为智能体RAG系统的记忆层",
+      "canonical_evidence": "结构化链接数据作为智能体RAG系统的记忆层",
+      "llm_tldr_en": "Investigates using structured linked data as a memory layer to improve retrieval in agentic systems.",
+      "llm_tldr_cn": "研究使用结构化链接数据作为记忆层以提升智能体系统的检索质量。",
+      "llm_tldr": "研究使用结构化链接数据作为记忆层以提升智能体系统的检索质量。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "long-term memory architectures for large language models",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.09203v2",
+      "title": "Evaluate-as-Action: Self-Evaluated Process Rewards for Retrieval-Augmented Agents",
+      "abstract": "Retrieval-augmented agents can query external evidence, yet their reliability in multi-step reasoning remains limited: noisy retrieval may derail multi-hop question answering, while outcome-only reinforcement learning provides credit signals that are too coarse to optimize intermediate steps. We propose \\textsc{EvalAct} (Evaluate-as-Action), which converts implicit retrieval quality assessment into an explicit action and enforces a coupled Search-to-Evaluate protocol so that each retrieval is immediately followed by a structured evaluation score, yielding process signals aligned with the interaction trajectory. To leverage these signals, we introduce Process-Calibrated Advantage Rescaling (PCAR), a GRPO-based optimization method that rescales advantages at the segment level according to evaluation scores, emphasizing reliable segments while updating uncertain ones conservatively. Experiments on seven open-domain QA benchmarks show that \\textsc{EvalAct} achieves the best average accuracy, with the largest gains on multi-hop tasks, and ablations verify that the explicit evaluation loop drives the primary improvements while PCAR provides consistent additional benefits.",
+      "authors": [
+        "Jiangming Shu",
+        "Yuxiang Zhang",
+        "Ye Ma",
+        "Xueyuan Lin",
+        "Jitao Sang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-10T05:22:40+00:00",
+      "link": "https://arxiv.org/pdf/2603.09203v2",
+      "tags": [
+        "keyword:AGIMEM",
+        "query:AGIMEM"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "self-evaluated process rewards and interaction trajectory signals for agents",
+      "llm_evidence_cn": "智能体的自我评估过程奖励与交互轨迹信号",
+      "llm_evidence": "智能体的自我评估过程奖励与交互轨迹信号",
+      "canonical_evidence": "智能体的自我评估过程奖励与交互轨迹信号",
+      "llm_tldr_en": "Proposes an explicit evaluation action to provide process-level rewards for retrieval-augmented agents.",
+      "llm_tldr_cn": "为检索增强智能体提出一种显式评估动作，以提供过程级奖励信号。",
+      "llm_tldr": "为检索增强智能体提出一种显式评估动作，以提供过程级奖励信号。",
+      "llm_tags": [
+        "query:agimem"
+      ],
+      "matched_query_tag": "query:agimem",
+      "matched_query_text": "performance metrics for agent memory and reasoning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

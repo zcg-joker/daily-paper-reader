@@ -1,0 +1,291 @@
+Title: One Model Is Enough: Native Retrieval Embeddings from LLM Agent Hidden States
+
+URL Source: https://arxiv.org/pdf/2603.08429v1
+
+Published Time: Tue, 10 Mar 2026 02:23:33 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# One Model Is Enough: Native Retrieval Embeddings from LLM Agent Hidden States 
+
+Bo Jiang 
+
+Temple University 
+
+bo.jiang@temple.edu 
+
+Abstract 
+
+LLM agents that retrieve external knowledge typically generate a search query as text, then run a separate embedding model to encode it into a vector. This two-model pipeline adds infrastructure complexity and latency, yet is redundant: the LLM already encodes the full conversational context in its hidden states. We propose equipping LLM agents with native re-trieval capability by adding a lightweight pro-jection head that maps hidden states directly into the embedding space, eliminating the need for a separate embedding model. Trained with a combination of alignment, contrastive, and rank distillation losses, our method retains 97% of baseline retrieval quality while enabling the LLM agent to search with its own representa-tions. Experiments on the QReCC conversa-tional search benchmark show competitive Re-call@10 and MRR@10 compared to the stan-dard generate-then-encode pipeline, with sys-tematic ablations confirming the contribution of each loss component. 
+
+1 Introduction 
+
+Retrieval-augmented generation (RAG; Lewis et al., 2020) has become the standard approach for grounding large language model (LLM) agents in external knowledge. When an LLM agent deter-mines that it needs to search, the typical pipeline operates in two stages: the LLM first generates a search query as natural language text, and then a separate embedding model encodes that text into a dense vector for retrieval against a document index. This two-model architecture is the dominant paradigm, yet it introduces a fundamental redun-dancy. The LLM has already processed the full con-versational context—user intent, dialogue history, and task requirements—and encoded this under-standing in its hidden states. The generated query text is merely a lossy, discrete projection of this rich internal representation. A second model must then re-process this text from scratch, recovering semantic information that the LLM already pos-sessed. In effect, the pipeline discards the LLM’s internal understanding only to approximate it again with a separate encoder. We argue that this redundancy is unnecessary. If the LLM’s hidden states already capture the infor-mation needed for retrieval, a lightweight learned projection should be able to map them directly into the embedding space—giving the LLM agent a na-tive retrieval capability without requiring a second model. We propose a simple approach: attach a small projection head to the LLM that transforms its hid-den states into vectors compatible with an existing embedding space. The projection head is trained via knowledge distillation (Hinton et al., 2015) from the embedding model using three comple-mentary objectives: (1) an alignment loss that min-imizes the distance between projected vectors and teacher embeddings, (2) a contrastive loss that pre-serves the relative structure among queries, and (3) a rank distillation loss that transfers the teacher’s document ranking preferences. Once trained, the embedding model is no longer needed at inference time—the LLM agent searches using its own repre-sentations. We evaluate our method on the QReCC conver-sational search benchmark (Anantha et al., 2021) in a same-family setting (Qwen3-8B as the LLM agent, Qwen3-Embedding-8B as the teacher). Our best configuration retains 97% of the baseline’s retrieval quality while completely eliminating the embedding model from the inference pipeline. Sys-tematic ablations across 12 configurations confirm that all three loss components contribute, and that extended training with lower learning rates is the most effective recipe. Our contributions are: • We identify and formalize the redundancy in the standard two-model retrieval pipeline for 1
+
+> arXiv:2603.08429v1 [cs.CL] 9 Mar 2026
+
+LLM agents, and propose native retrieval via hidden state projection as an alternative. • We design a three-loss training objective com-bining alignment, contrastive, and rank distil-lation losses for projecting LLM hidden states into an embedding space. • We provide comprehensive experiments with 12 ablation configurations, bootstrap confi-dence intervals, and statistical significance tests, demonstrating near-parity retrieval qual-ity without a separate embedding model. 
+
+2 Related Work 
+
+Retrieval-Augmented Generation. RAG sys-tems ground LLM outputs in retrieved evidence to reduce hallucination and improve factuality (Lewis et al., 2020). The standard architecture uses a retrieve-then-generate pipeline where a query is en-coded by a dedicated embedding model (Karpukhin et al., 2020; Reimers and Gurevych, 2019) and matched against a pre-indexed document collec-tion. Conversational RAG extends this to multi-turn settings, where query understanding requires resolving coreferences and topic shifts across di-alogue history. Our work targets this pipeline but questions the necessity of the dedicated embedding model. 
+
+Conversational Query Rewriting. In multi-turn retrieval, raw user utterances are often ambigu-ous without context (Anantha et al., 2021). Query rewriting approaches use the LLM to generate a self-contained search query that incorporates di-alogue history. While effective, this produces text that must still be encoded by a separate em-bedding model. Our approach bypasses this en-code step entirely by projecting the LLM’s hid-den states—which already reflect the full conversa-tional context—directly into the embedding space. 
+
+LLM-Based Embeddings. Recent work has ex-plored using LLMs themselves as embedding mod-els. LLM2Vec (BehnamGhader et al., 2024) modi-fies pretrained LLMs with bidirectional attention and contrastive training to produce general-purpose text embeddings. NV-Embed (Lee et al., 2024) applies latent attention pooling over LLM hidden states. These methods repurpose the LLM as a re-placement embedding model, requiring a separate forward pass in embedding mode. In contrast, our approach operates on hidden states that are already computed during the LLM’s normal generative in-ference, adding only a lightweight projection head rather than a full additional forward pass. 
+
+Knowledge Distillation for Retrieval. Knowl-edge distillation (Hinton et al., 2015) has been widely applied to compress retrieval models, typi-cally by training a smaller student encoder to mimic a larger teacher’s representations or rankings. Rank distillation specifically transfers document rank-ing preferences rather than point-wise embeddings (Hofstätter et al., 2021). Our setting differs in that the student is not a standalone encoder but a pro-jection head attached to an LLM, and the goal is not compression but elimination of the encoder entirely. 
+
+Hypothetical Document Embeddings. HyDE (Gao et al., 2022) generates a hypothetical doc-ument in response to a query and embeds that document for retrieval, improving query-document matching. While creative, this approach increases generation cost and still requires an embedding model. Our method moves in the opposite direc-tion: rather than generating more text to embed, we avoid text generation for retrieval purposes alto-gether. 
+
+3 Method 
+
+3.1 Problem Setting 
+
+Consider an LLM agent engaged in multi-turn con-versation that periodically needs to retrieve ex-ternal documents. In the standard pipeline, the agent (1) generates a search query q as text tokens 
+
+t1, t 2, . . . , t n via autoregressive decoding, then (2) encodes q with a separate embedding model 
+
+E to obtain a dense vector v = E(q) ∈ Rd for retrieval against a document index. During step (1), the LLM produces hidden states 
+
+h1, h2, . . . , hn as a byproduct of generation, where 
+
+hi ∈ Rdh is the last-layer hidden state at the i-th generated token. These hidden states encode the full conversational context but are discarded. Our goal is to learn a projection function f such that 
+
+f (h1, . . . , hn) ≈ E(q), eliminating the need for 
+
+E at inference time. 
+
+3.2 Hidden State Extraction 
+
+We extract hidden states from the LLM’s normal au-toregressive generation process. At each decoding step i, the LLM computes a forward pass (reusing the KV cache from previous steps) and produces 2the next token ti along with its last-layer hidden state hi. We collect hi for all non-special tokens (excluding BOS, EOS, and padding), forming the hidden state sequence H = [ h1; h2; . . . ; hn] ∈
+
+Rn×dh .This extraction adds negligible overhead since the hidden states are already computed during generation—we simply retain them rather than dis-carding them. 
+
+3.3 Projection Head Architecture 
+
+The projection head f transforms the variable-length hidden state sequence H into a fixed-dimensional embedding vector. It consists of four components: 
+
+Input Projection. A linear layer maps from the LLM’s hidden dimension to the mapper’s inter-nal dimension: X = HW in + bin , where Win ∈
+
+Rdh×dm .
+
+Transformer Encoder. Learnable positional em-beddings are added to X, which is then pro-cessed by a stack of L transformer encoder lay-ers (Vaswani et al., 2017) with dm-dimensional representations. The self-attention mechanism al-lows the model to aggregate information across the full generated sequence, capturing dependencies between tokens. 
+
+Pooling. The encoded sequence is compressed into a single vector. We use mean pooling over non-padding positions: 
+
+p = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+xi (1) where xi are the transformer outputs at valid (non-padding) positions. 
+
+Output Projection and Normalization. A final linear layer projects to the target embedding dimen-sion, followed by L2 normalization: 
+
+f (H) = pW out + bout 
+
+∥pW out + bout ∥2
+
+(2) where Wout ∈ Rdm×d and d is the target embed-ding space dimension. The L2 normalization en-sures that retrieval via dot product is equivalent to cosine similarity, matching the embedding model’s expected similarity metric. 
+
+3.4 Training Objectives 
+
+We train the projection head via knowledge distil-lation from the embedding model (the teacher ). Given a training set of query hidden state se-quences H(j) paired with teacher embeddings 
+
+y(j) = E(q(j)), we optimize a combination of three losses. 
+
+Alignment Loss. Directly minimizes the angu-lar distance between predicted and teacher embed-dings: 
+
+Lalign = 1 − 1
+
+B
+
+> B
+
+X
+
+> j=1
+
+cos  f (H(j)), y(j) (3) where B is the batch size. This provides a direct training signal toward the teacher’s embedding for each query. 
+
+Contrastive Loss. An InfoNCE (van den Oord et al., 2018) loss that encourages the projected em-beddings to preserve discriminative structure across queries within each batch: 
+
+Lcontra = − 1
+
+B
+
+> B
+
+X
+
+> j=1
+
+log exp  f (H(j)) · y(j)/τ PBk=1 exp  f (H(j)) · y(k)/τ 
+
+(4) where τ is a temperature hyperparameter. Each predicted embedding should be most similar to its own teacher embedding relative to other teacher embeddings in the batch. 
+
+Rank Distillation Loss. Transfers the teacher’s document ranking preferences via KL divergence. For each query, we retrieve the teacher’s top-K can-didate documents {d1, . . . , dK } and their teacher similarity scores sk = y(j) · dk. The loss aligns the student’s ranking distribution with the teacher’s: 
+
+Lrank = KL 
+
+
+
+softmax  s/τ r
+
+ softmax  ˆs/τ r
+
+
+
+(5) where ˆsk = f (H(j)) · dk are the student’s scores and τr is the rank distillation temperature. 
+
+Combined Objective. The total training loss is: 
+
+L = λaLalign + λcLcontra + λrLrank (6) where λa, λc, and λr control the relative contribu-tion of each component. We optimize with AdamW (Loshchilov and Hutter, 2019) and cosine learning rate scheduling. 34 Experimental Setup 
+
+4.1 Dataset 
+
+We evaluate on QReCC (Question Rewriting in Conversational Context; Anantha et al., 2021), a large-scale conversational search dataset con-taining multi-turn dialogues paired with manually rewritten queries and relevant document annota-tions. We use the qrecc_eval_large split com-prising 346 conversations with 2,189 retrieval trig-gers. The data is partitioned into train, validation, and test splits at the conversation level to prevent information leakage across turns of the same dia-logue. 
+
+4.2 Models 
+
+We adopt a same-family setting using Qwen3-8B as the LLM agent and Qwen3-Embedding-8B as the teacher embedding model (Qwen Team, 2024). This pairing is motivated by the practical scenario where an organization deploys a single model fam-ily: the LLM handles generation while its embed-ding sibling handles retrieval. The hidden state dimension is dh = 4096 and the target embedding dimension is d = 1024 .
+
+4.3 Baselines 
+
+Our baseline is the standard generate-then-encode 
+
+pipeline: the LLM generates a rewritten search query via greedy decoding (up to 32 tokens), and the embedding model encodes it into a dense vec-tor. Documents are retrieved via cosine similar-ity against a pre-built index. This represents the conventional two-model approach that our method aims to replace. 
+
+4.4 Projection Head Configuration 
+
+The projection head uses dm = 1024 internal di-mension, L = 2 transformer encoder layers with 8 attention heads, and mean pooling. No intermedi-ate projector is used. The total parameter count is approximately 25M—negligible compared to the 8B-parameter LLM. 
+
+4.5 Training Details 
+
+The best configuration uses 80 training epochs with a learning rate of 2 × 10 −4, cosine annealing to 
+
+1 × 10 −5, batch size 16, AdamW with weight de-cay 1 × 10 −4, and gradient clipping at norm 1.0. Loss weights are λa = 0 .5, λc = 0 .5, λr = 0 .5
+
+with temperatures τ = τr = 0 .05 . For rank distilla-
+
+Recall MRR nDCG Latency @10 @10 @10 (p50) 
+
+Baseline 0.637 0.329 0.402 43.5ms Ours 0.607 0.293 0.367 2.0ms 
+
+∆ –3.0% –3.6% –3.5% 21.8 ×
+
+95% CI [–4.7, –1.4] [–4.7, –2.4] [–4.5, –2.4] —   
+
+> Table 1: Main results on QReCC test set. Our projection head achieves near-parity retrieval quality while elimi-nating the embedding model. Latency is measured per query on an NVIDIA RTX PRO 6000. McNemar’s test:
+> χ2= 12 .21 ,p= 0 .0005 .
+
+tion, we use the teacher’s top-K = 128 candidate documents. Training data is generated by running the LLM on training conversations and caching the resulting hidden state traces. This allows rapid experimen-tation: the initial trace generation takes approxi-mately 2 hours on an NVIDIA RTX PRO 6000, but subsequent mapper training runs complete in 15–20 minutes using cached traces. 
+
+4.6 Evaluation Metrics 
+
+We report Recall@10, MRR@10 (Mean Recipro-cal Rank), and nDCG@10 (normalized Discounted Cumulative Gain), computed over the test split. Sta-tistical significance is assessed via McNemar’s test on per-trigger retrieval success, and 95% bootstrap confidence intervals are computed with 1,000 re-samples. We also report inference latency (p50) measured on the same GPU. 
+
+5 Results 
+
+5.1 Main Results 
+
+Table 1 compares our best projection head config-uration against the standard generate-then-encode baseline. Our method retains 95–97% of baseline retrieval quality across all metrics while completely eliminating the embedding model from the infer-ence pipeline. The latency reduction from 43.5ms to 2.0ms (21.8 ×) reflects the removal of the embedding model forward pass. The projection head adds only a lightweight matrix multiplication over the already-computed hidden states. McNemar’s test confirms the quality gap is statistically significant (p = 0 .0005 ), with a per-trigger win/tie/loss break-down of 140/1843/206—indicating that the two methods agree on 84.2% of triggers. 4Configuration La / Lc / Lr R@10 MRR 
+
+Align only 1.0 / 0.0 / 0.0 0.567 0.273 Contrastive only 0.0 / 1.0 / 0.0 0.498 0.231 Rank distill only 0.0 / 0.0 / 1.0 0.001 0.000 Align + Contra 0.5 / 0.5 / 0.0 0.582 0.281 Align + Rank 0.5 / 0.0 / 0.5 0.579 0.272 All three 0.5 / 0.5 / 0.5 0.595 0.288 All three + recipe 0.5 / 0.5 / 0.5 0.607 0.293         
+
+> Table 2: Loss ablation results. La: alignment, Lc: con-trastive, Lr: rank distillation. The last row uses ex-tended training (80 epochs, lr 2×10 −4).
+
+Epochs / LR R@10 MRR Status 
+
+30 / 3 × 10 −4 0.595 0.288 converged 50 / 3 × 10 −4 0.552 0.261 converged 80 / 2 × 10 −4 0.607 0.293 converged 30 / 5 × 10 −4 0.001 0.000 collapsed 
+
+> Table 3: Effect of training epochs and learning rate. Too-high learning rate causes training collapse; longer training with lower learning rate yields the best results.
+
+5.2 Loss Ablation 
+
+To understand the contribution of each loss compo-nent, we conduct a systematic ablation (Table 2). All ablation experiments use 30 epochs with learn-ing rate 3 × 10 −4; only the best configuration uses the extended 80-epoch recipe. Several findings emerge. First, alignment is the strongest individual loss : it alone achieves Re-call@10 of 0.567, outperforming contrastive-only (0.498) by a large margin. This is expected, as alignment provides direct per-query supervision toward the teacher embedding. Second, rank dis-tillation cannot stand alone —it collapses com-pletely without alignment to anchor the embedding space. However, when combined with alignment, it provides consistent gains. Third, all three losses together outperform any pair , with the full com-bination reaching 0.595 Recall@10 under standard training. Finally, extended training with lower learning rate provides the largest single improve-ment, pushing from 0.595 to 0.607. 
+
+5.3 Training Recipe Analysis 
+
+Table 3 examines the effect of training duration and learning rate. The results reveal that this projection task is sen-sitive to optimization dynamics. A learning rate 
+
+Config λa / λr K R@10 MRR 
+
+Align-heavy 1.0 / 0.5 128 0.591 0.280 RD-heavy 0.5 / 1.0 128 0.516 0.236 Top-256 0.5 / 0.5 256 0.584 0.284       
+
+> Table 4: Rank distillation weight and top-Ksensitivity. All use λc= 0 .0, 30 epochs, lr 3×10 −4.
+
+of 5 × 10 −4 causes complete collapse, while the combination of 80 epochs with 2 × 10 −4 yields the best performance. Interestingly, 50 epochs at 
+
+3 × 10 −4 underperforms 30 epochs at the same rate, suggesting that longer training without reducing the learning rate can lead to overfitting or oscillation around the optimum. 
+
+5.4 Loss Weight Tuning 
+
+We also examine the sensitivity to rank distillation weight and top-K (Table 4). Over-weighting rank distillation ( λr = 1.0)degrades performance substantially, while giving more weight to alignment ( λa = 1 .0, λ r = 0 .5)remains competitive. Increasing the candidate pool from K = 128 to K = 256 has minimal effect, suggesting that the ranking signal saturates beyond a moderate number of candidates. 
+
+6 Analysis 
+
+6.1 Per-Conversation Agreement 
+
+To understand where our method succeeds and fails, we analyze retrieval agreement at the conversation level. Across 346 conversations, the average per-conversation agreement rate between our method and the baseline is 84.5%. However, this average masks substantial variance: we identify 48 failure-concentrated conversations where our method’s recall is substantially below the baseline (with at least 3 triggers per conversation). This suggests that failures are not uniformly distributed but clus-ter around specific conversational patterns. 
+
+6.2 When Does Projection Fail? 
+
+The win/tie/loss breakdown (140/1843/206) reveals that our method loses on more triggers than it wins (206 vs. 140), though the majority are ties. We hy-pothesize that failure cases correspond to queries where the mapping from hidden states to embed-ding space is particularly difficult—for example, when the generated query involves rare terms, com-plex coreference chains, or domain-specific vocab-5ulary that the projection head has not seen suffi-cient training examples for. The projection head must learn a cross-space mapping from the LLM’s causal hidden states to the embedding model’s bidi-rectional representations, and this mapping may be less reliable in the long tail of query types. 
+
+6.3 The Role of Training Duration 
+
+A striking finding is that extended training (80 epochs) with a lower learning rate provides the single largest improvement, contributing more than any individual loss component. This suggests that the projection task requires careful optimization: the mapping between LLM hidden space and em-bedding space involves subtle geometric relation-ships that benefit from slow, thorough convergence. The sensitivity to learning rate—with 5 × 10 −4
+
+causing complete collapse while 2×10 −4 produces the best results—further supports this interpreta-tion. 
+
+6.4 Why Rank Distillation Cannot Stand Alone 
+
+Rank distillation alone collapses entirely (Re-call@10 = 0 .001 ), despite being a well-motivated objective. This is because rank distillation operates on relative document scores without anchoring the predicted embeddings to any absolute location in the embedding space. Without alignment loss to establish a reasonable initial embedding geometry, the rank distillation gradients provide no useful signal—the model cannot learn to rank documents correctly if its embeddings are not yet in a meaning-ful region of the space. However, once alignment establishes the geometric foundation, rank distilla-tion provides complementary gains by refining the local ranking structure. 
+
+Limitations 
+
+Our work has several limitations. First, we evalu-ate on a single dataset (QReCC); generalization to other conversational search benchmarks or open-domain retrieval tasks remains to be demonstrated. Second, our experiments use a same-family setting (Qwen3-8B and Qwen3-Embedding-8B), which may benefit from shared pretraining representa-tions. Cross-family settings (e.g., projecting from one LLM family into an unrelated embedding space) are likely more challenging and are left for future work. Third, while the quality gap is small (–3.0% to –3.6%), it is statistically signifi-cant ( p = 0 .0005 ), meaning our method does not yet fully match the baseline. Fourth, the projection head requires training data generated by running both the LLM and the embedding model, so the embedding model is still needed during the training phase—only inference-time deployment is simpli-fied. Finally, we have not explored whether the projection head can generalize to documents out-side the training distribution without retraining. 
+
+References                
+
+> Raviteja Anantha, Svitlana Vakulenko, Zhucheng Tu, Shayne Longpre, Stephen Pulber, and Srinivas Chap-pidi. 2021. Open-domain question answering goes conversational via question rewriting. In Proceedings of the 2021 Conference of the North American Chap-ter of the Association for Computational Linguistics: Human Language Technologies , pages 520–534. Parishad BehnamGhader, Vaibhav Adlakha, Marius Mosbach, Derry Baez, Vivek Srikumar, and Siva Reddy. 2024. LLM2Vec: Large language models are secretly powerful text encoders. arXiv preprint arXiv:2404.05961 .Luyu Gao, Xueguang Ma, Jimmy Lin, and Jamie Callan. 2022. Precise zero-shot dense retrieval without rele-vance labels. arXiv preprint arXiv:2212.10496 .Geoffrey Hinton, Oriol Vinyals, and Jeff Dean. 2015. Distilling the knowledge in a neural network. In
+> NIPS Deep Learning and Representation Learning Workshop .Sebastian Hofstätter, Sophia Althammer, Michael Schröder, Mete Sertkan, and Allan Hanbury. 2021. Improving efficient neural ranking models with cross-architecture knowledge distillation. In Advances in Information Retrieval: 43rd European Conference on IR Research , pages 459–473. Vladimir Karpukhin, Barlas O˘ guz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, and Wen-tau Yih. 2020. Dense passage retrieval for open-domain question answering. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing , pages 6769–6781. Chankyu Lee, Rajarshi Roy, Menber Xu, Jonathan Raiman, Mohammad Shoeybi, Bryan Catanzaro, and Wei Han. 2024. NV-Embed: Improved techniques for training LLMs as generalist embedding models.
+> arXiv preprint arXiv:2405.17428 .Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Hein-rich Küttler, Mike Lewis, Wen-tau Yih, Tim Rock-täschel, Sebastian Riedel, and Douwe Kiela. 2020. Retrieval-augmented generation for knowledge-intensive NLP tasks. Advances in Neural Information Processing Systems , 33:9459–9474.
+
+6Ilya Loshchilov and Frank Hutter. 2019. Decou-pled weight decay regularization. arXiv preprint arXiv:1711.05101 .Qwen Team. 2024. Qwen2 technical report. arXiv preprint arXiv:2407.10671 .Nils Reimers and Iryna Gurevych. 2019. Sentence-BERT: Sentence embeddings using siamese BERT-networks. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Process-ing and the 9th International Joint Conference on Natural Language Processing , pages 3982–3992. Aäron van den Oord, Yazhe Li, and Oriol Vinyals. 2018. Representation learning with contrastive predictive coding. arXiv preprint arXiv:1807.03748 .Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. Attention is all you need. Advances in Neural Information Process-ing Systems , 30. 
+
+A Full Experiment Results 
+
+Table 5 presents all 12 experimental configurations sorted by Recall@10, with bootstrap 95% confi-dence intervals for the gap to the baseline. 
+
+B Implementation Details 
+
+Hidden State Extraction. The LLM generates queries via greedy decoding with a maximum of 32 new tokens. At each autoregressive step, we extract the last-layer hidden state ( dh = 4096 ) and retain only non-special tokens (excluding BOS, EOS, and padding). KV caching is used for efficient genera-tion. All hidden states are stored as float32. 
+
+Trace Caching. To enable rapid experimenta-tion, we cache the LLM’s generation traces (hid-den states, query text, token counts) as per-trigger 
+
+.npz files, keyed by a hash of the model name, to-kenizer max length, and generation length. A total of 11,017 traces are cached. On cache hit, the LLM is not loaded at all, reducing experiment time from 
+
+∼2 hours to ∼15–20 minutes. 
+
+Projection Head. The transformer encoder uses pre-norm layer normalization, 8 attention heads, and a feedforward dimension of 4 × dm = 4096 .Dropout is set to 0. Learnable positional embed-dings (initialized to zeros) support sequences up to 128 tokens. The output projection maps from 
+
+dm = 1024 to d = 1024 (the embedding model’s output dimension), followed by L2 normalization. 
+
+Training. We use AdamW with β1 = 0 .9, β2 =0.999 , weight decay 10 −4, and gradient clipping at norm 1.0. The learning rate follows a cosine schedule from 2 × 10 −4 to 10 −5 over 80 epochs. Batch size is 16. For rank distillation, the top-K =128 documents are retrieved per query using the teacher’s embeddings, and their similarity scores serve as the soft targets. 
+
+Evaluation. Bootstrap confidence intervals use 1,000 resamples with replacement at the trigger level. McNemar’s test compares per-trigger binary retrieval success (whether the relevant document appears in the top-10 results) between our method and the baseline. All experiments run on a single NVIDIA RTX PRO 6000 (Blackwell architecture, 98GB VRAM). 7Group Experiment R@10 ∆ R@10 95% CI MRR ∆ MRR 95% CI 
+
+C recipe_e80_lr2e4 0.607 –0.030 [–0.047, –0.014] 0.293 –0.036 [–0.047, –0.024] A All three losses 0.595 –0.042 [–0.058, –0.025] 0.288 –0.040 [–0.052, –0.029] B Align-heavy RD 0.591 –0.046 [–0.063, –0.029] 0.280 –0.049 [–0.060, –0.037] B RD top-256 0.584 –0.053 [–0.070, –0.037] 0.284 –0.045 [–0.057, –0.033] A Align + Contra 0.582 –0.055 [–0.072, –0.038] 0.281 –0.047 [–0.059, –0.036] A Align + Rank 0.579 –0.058 [–0.075, –0.041] 0.272 –0.057 [–0.069, –0.045] A Align only 0.567 –0.070 [–0.088, –0.053] 0.273 –0.056 [–0.068, –0.044] C recipe_e50 0.552 –0.085 [–0.102, –0.068] 0.261 –0.067 [–0.080, –0.055] B RD-heavy 0.516 –0.121 [–0.140, –0.102] 0.236 –0.093 [–0.106, –0.079] A Contrastive only 0.498 –0.139 [–0.159, –0.119] 0.231 –0.097 [–0.110, –0.084] A Rank distill only 0.001 collapsed 0.000 collapsed C recipe_lr5e4 0.001 collapsed 0.000 collapsed         
+
+> Table 5: Full results for all 12 configurations across three experiment groups. Group A: loss ablation (30 epochs, lr 3×10 −4). Group B: loss weight tuning (30 epochs, lr 3×10 −4,λc= 0 ). Group C: training recipe variations. Baseline: Recall@10 = 0.637, MRR@10 = 0.329.
+
+8

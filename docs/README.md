@@ -9,73 +9,73 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-03-13
-- 运行时间：2026-03-13 19:30:39 UTC
+- 最新运行日期：2026-03-15
+- 运行时间：2026-03-15 19:21:47 UTC
 - 运行状态：成功
 - 本次总论文数：17
 - 精读区：6
 - 速读区：11
 
 ### 今日简报（AI）
-10.0) - Yes.
-    - Chow-Liu (9.0) - Yes.
-    - RetroAgent (
-- 详情：[/202603/13/README](/202603/13/README)
+今日深度研读 17 篇前沿成果，聚焦大模型长效记忆机制与多轮视频推理的突破性进展。
+重点推荐 CXL 驱动的 LLM 内存池化技术，以及通过分段流式记忆提升多模态模型在复杂视频场景下的思考能力。
+建议开发者关注“记忆增强”与底层硬件协同的趋势，以优化多模态智能体在长周期任务中的表现。
+- 详情：[/202603/15/README](/202603/15/README)
 
 ### 精读区论文标签
-1. [Governing Evolving Memory in LLM Agents: Risks, Mechanisms, and the Stability and Safety Governed Memory (SSGM) Framework](/202603/13/2603.11768v1-governing-evolving-memory-in-llm-agents-risks-mechanisms-and-the-stability-and-safety-governed-memory-ssgm-framework)  
-   标签：评分：10.0/10、query:agimem
-   evidence：LLM 智能体记忆风险与治理的综述
-2. [Chow-Liu Ordering for Long-Context Reasoning in Chain-of-Agents](/202603/13/2603.09835v1-chow-liu-ordering-for-long-context-reasoning-in-chain-of-agents)  
+1. [Pooling Engram Conditional Memory in Large Language Models using CXL](/202603/15/2603.10087v1-pooling-engram-conditional-memory-in-large-language-models-using-cxl)  
    标签：评分：9.0/10、query:agimem
-   evidence：智能体中的有界共享记忆与长上下文推理
-3. [When OpenClaw Meets Hospital: Toward an Agentic Operating System for Dynamic Clinical Workflows](/202603/13/2603.11721v1-when-openclaw-meets-hospital-toward-an-agentic-operating-system-for-dynamic-clinical-workflows)  
+   evidence：使用Engram记忆将静态知识查找与动态计算解耦
+2. [Think While Watching: Online Streaming Segment-Level Memory for Multi-Turn Video Reasoning in Multimodal Large Language Models](/202603/15/2603.11896v1-think-while-watching-online-streaming-segment-level-memory-for-multi-turn-video-reasoning-in-multimodal-large-language-models)  
    标签：评分：9.0/10、query:agimem
-   evidence：临床LLM代理中长期记忆机制不足的问题
-4. [Adaptive Loops and Memory in Transformers: Think Harder or Know More?](/202603/13/2603.08391v3-adaptive-loops-and-memory-in-transformers-think-harder-or-know-more)  
+   evidence：用于长程依赖建模的在线流式片段级记忆
+3. [XSkill: Continual Learning from Experience and Skills in Multimodal Agents](/202603/15/2603.12056v1-xskill-continual-learning-from-experience-and-skills-in-multimodal-agents)  
+   标签：评分：9.0/10、query:agimem
+   evidence：无需参数更新即可从经验和技能中进行持续学习
+4. [One Model Is Enough: Native Retrieval Embeddings from LLM Agent Hidden States](/202603/15/2603.08429v1-one-model-is-enough-native-retrieval-embeddings-from-llm-agent-hidden-states)  
    标签：评分：8.0/10、query:agimem
-   evidence：自适应循环与门控记忆库存储
-5. [SPIRAL: A Closed-Loop Framework for Self-Improving Action World Models via Reflective Planning Agents](/202603/13/2603.08403v1-spiral-a-closed-loop-framework-for-self-improving-action-world-models-via-reflective-planning-agents)  
+   evidence：从智能体隐藏状态中获取原生检索能力
+5. [Evaluate-as-Action: Self-Evaluated Process Rewards for Retrieval-Augmented Agents](/202603/15/2603.09203v1-evaluate-as-action-self-evaluated-process-rewards-for-retrieval-augmented-agents)  
    标签：评分：8.0/10、query:agimem
-   evidence：具有长程记忆的迭代反思动作，用于自我改进的智能体
-6. [SecAgent: Efficient Mobile GUI Agent with Semantic Context](/202603/13/2603.08533v1-secagent-efficient-mobile-gui-agent-with-semantic-context)  
+   evidence：检索智能体与交互轨迹对齐的过程信号
+6. [AR-VLA: True Autoregressive Action Expert for Vision-Language-Action Models](/202603/15/2603.10126v1-ar-vla-true-autoregressive-action-expert-for-vision-language-action-models)  
    标签：评分：8.0/10、query:agimem
-   evidence：提炼历史表示的语义上下文机制
+   evidence：用于上下文感知动作生成的长效记忆
 
 ### 速读区论文标签
-1. [LycheeCluster: Efficient Long-Context Inference with Structure-Aware Chunking and Hierarchical KV Indexing](/202603/13/2603.08453v1-lycheecluster-efficient-long-context-inference-with-structure-aware-chunking-and-hierarchical-kv-indexing)  
+1. [Memory-Guided View Refinement for Dynamic Human-in-the-loop EQA](/202603/15/2603.09541v1-memory-guided-view-refinement-for-dynamic-human-in-the-loop-eqa)  
    标签：评分：8.0/10、query:agimem
-   evidence：长上下文推理的高效 KV 缓存管理
-2. [RetroAgent: From Solving to Evolving via Retrospective Dual Intrinsic Feedback](/202603/13/2603.08561v2-retroagent-from-solving-to-evolving-via-retrospective-dual-intrinsic-feedback)  
+   evidence：动态EQA智能体的记忆引导优化与评估数据集
+2. [MM-tau-p$^2$: Persona-Adaptive Prompting for Robust Multi-Modal Agent Evaluation in Dual-Control Settings](/202603/15/2603.09643v1-mm-tau-p2-persona-adaptive-prompting-for-robust-multi-modal-agent-evaluation-in-dual-control-settings)  
    标签：评分：8.0/10、query:agimem
-   evidence：事后自我反思和经验学习机制促进智能体进化
-3. [Semantic Level of Detail: Multi-Scale Knowledge Representation via Heat Kernel Diffusion on Hyperbolic Manifolds](/202603/13/2603.08965v1-semantic-level-of-detail-multi-scale-knowledge-representation-via-heat-kernel-diffusion-on-hyperbolic-manifolds)  
+   evidence：包含评估多模态智能体指标的基准测试
+3. [Adaptive RAN Slicing Control via Reward-Free Self-Finetuning Agents](/202603/15/2603.10564v1-adaptive-ran-slicing-control-via-reward-free-self-finetuning-agents)  
    标签：评分：8.0/10、query:agimem
-   evidence：通过热核扩散实现多尺度知识表示与记忆编排
-4. [MSSR: Memory-Aware Adaptive Replay for Continual LLM Fine-Tuning](/202603/13/2603.09892v1-mssr-memory-aware-adaptive-replay-for-continual-llm-fine-tuning)  
+   evidence：将经验内化到参数中而非依赖基于提示的记忆
+4. [Structured Linked Data as a Memory Layer for Agent-Orchestrated Retrieval](/202603/15/2603.10700v1-structured-linked-data-as-a-memory-layer-for-agent-orchestrated-retrieval)  
    标签：评分：8.0/10、query:agimem
-   evidence：用于大模型持续微调的内存感知自适应重放，防止遗忘
-5. [Building AI Coding Agents for the Terminal: Scaffolding, Harness, Context Engineering, and Lessons Learned](/202603/13/2603.05344v1-building-ai-coding-agents-for-the-terminal-scaffolding-harness-context-engineering-and-lessons-learned)  
+   evidence：结构化链接数据作为智能体RAG系统的记忆层
+5. [Governance Architecture for Autonomous Agent Systems: Threats, Framework, and Engineering Practice](/202603/15/2603.07191v2-governance-architecture-for-autonomous-agent-systems-threats-framework-and-engineering-practice)  
    标签：评分：7.0/10、query:agimem
-   evidence：防止上下文膨胀和推理退化的上下文管理
-6. [SPIRAL: A Closed-Loop Framework for Self-Improving Action World Models via Reflective Planning Agents](/202603/13/2603.08403v2-spiral-a-closed-loop-framework-for-self-improving-action-world-models-via-reflective-planning-agents)  
+   evidence：针对RAG中毒和工具调用评估的治理架构及基准测试
+6. [MASEval: Extending Multi-Agent Evaluation from Models to Systems](/202603/15/2603.08835v1-maseval-extending-multi-agent-evaluation-from-models-to-systems)  
    标签：评分：7.0/10、query:agimem
-   evidence：具有长程记忆的迭代反思动作建模
-7. [RetroAgent: From Solving to Evolving via Retrospective Dual Intrinsic Feedback](/202603/13/2603.08561v3-retroagent-from-solving-to-evolving-via-retrospective-dual-intrinsic-feedback)  
+   evidence：用于代理系统系统级评估的框架无关库
+7. [AgenticCyOps: Securing Multi-Agentic AI Integration in Enterprise Cyber Operations](/202603/15/2603.09134v1-agenticcyops-securing-multi-agentic-ai-integration-in-enterprise-cyber-operations)  
    标签：评分：7.0/10、query:agimem
-   evidence：通过回顾性反馈进行持续适应和经验学习
-8. [Hindsight Credit Assignment for Long-Horizon LLM Agents](/202603/13/2603.08754v1-hindsight-credit-assignment-for-long-horizon-llm-agents)  
+   evidence：智能体记忆管理中的攻击面
+8. [Evaluate-as-Action: Self-Evaluated Process Rewards for Retrieval-Augmented Agents](/202603/15/2603.09203v2-evaluate-as-action-self-evaluated-process-rewards-for-retrieval-augmented-agents)  
    标签：评分：7.0/10、query:agimem
-   evidence：长程推理中的事后信用分配
-9. [DualSpec: Accelerating Deep Research Agents via Dual-Process Action Speculation](/202603/13/2603.07416v1-dualspec-accelerating-deep-research-agents-via-dual-process-action-speculation)  
+   evidence：智能体的自我评估过程奖励与交互轨迹信号
+9. [ConflictBench: Evaluating Human-AI Conflict via Interactive and Visually Grounded Environments](/202603/15/2603.08024v1-conflictbench-evaluating-human-ai-conflict-via-interactive-and-visually-grounded-environments)  
    标签：评分：6.0/10、query:agimem
-   evidence：研究型智能体的双过程动作推测
-10. [AutoControl Arena: Synthesizing Executable Test Environments for Frontier AI Risk Evaluation](/202603/13/2603.07427v1-autocontrol-arena-synthesizing-executable-test-environments-for-frontier-ai-risk-evaluation)  
+   evidence：评估动态环境下智能体行为的基准
+10. [AgentOS: From Application Silos to a Natural Language-Driven Data Ecosystem](/202603/15/2603.08938v1-agentos-from-application-silos-to-a-natural-language-driven-data-ecosystem)  
    标签：评分：6.0/10、query:agimem
-   evidence：前沿AI风险评估和安全基准的自动化框架
-11. [Security Considerations for Multi-agent Systems](/202603/13/2603.09002v1-security-considerations-for-multi-agent-systems)  
+   evidence：解决LLM自主智能体中的上下文碎片化问题
+11. [AgentOS: From Application Silos to a Natural Language-Driven Data Ecosystem](/202603/15/2603.08938v2-agentos-from-application-silos-to-a-natural-language-driven-data-ecosystem)  
    标签：评分：6.0/10、query:agimem
-   evidence：共享持久记忆的多智能体系统的安全性
+   evidence：解决LLM自主智能体中的上下文碎片化问题
 
 
 <div class="dpr-home-promo-card">
